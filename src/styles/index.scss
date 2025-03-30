@@ -1,2 +1,8 @@
 // 统一引入样式文件
-@import './reset.scss' // 清除默认样式
+@import url(./reset.scss); // 清除默认样式
+
+// 总体不能滚动
+body {
+  margin: 0;
+  overflow: hidden;
+}

@@ -1,7 +1,7 @@
-import { fileURLToPath, URL } from 'node:url';
+import path from 'path'
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import vueDevTools from 'vite-plugin-vue-devtools';
+// import vueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,11 +10,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@': path.resolve('./src'), // 相对路径别名配置，使用 @ 代替 src
       },
     },
     // scss全局变量配置
@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       preprocessorOptions: {
         scss: {
           javascriptEnabled: true,
-          additionalData: '@import "@/styles/variable.scss";',
+          additionalData: '@import url(@/styles/variable.scss);',
         },
       },
     },
