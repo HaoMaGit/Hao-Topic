@@ -2,8 +2,8 @@
 
 </script>
 <template>
-  <div class="login">
-    <h1>Hao-测试-登录页</h1>
+  <div class="">
+    <h1>Hao-测试-首页</h1>
   </div>
 </template>
 <style lang="scss" scoped></style>

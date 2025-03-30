@@ -5,10 +5,15 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 // 引入路由
 import router from './router'
+// 引入ant组件库
+import Antd from 'ant-design-vue';
+// 引入ant组件库样式
+import 'ant-design-vue/dist/reset.css';
 import App from './App.vue'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+app.use(Antd)
 app.mount('#app')

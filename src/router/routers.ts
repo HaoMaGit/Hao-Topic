@@ -1,0 +1,29 @@
+// 通用的路由
+export const asyncRoute = {
+  menuName: '首页',
+  route: '/index',
+  children: []
+}
+
+// 对外暴露的配置路由
+export const constantRoute = [
+   // 登录
+   {
+    path: '/login',
+    component: () => import('@/views/login.vue'),
+    name: 'login',
+    meta: {
+      title: '登录', // 菜单标题
+      hidden: true, // 代表路由标题在菜单中是否隐藏  true:隐藏 false:不隐藏
+    },
+  },
+  {
+    // 当未匹配到路由则跳转404
+    path: '/:pathMatch(.*)*',
+    redirect: '/404',
+    name: 'Any',
+    meta: {
+      title: '任意路由',
+    },
+  }
+]
