@@ -21,4 +21,16 @@ export default defineConfigWithVueTs(
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
   skipFormatting,
+
+  // 添加自定义规则
+  {
+    rules: {
+      'vue/multi-word-component-names': [
+        'warn', // 设置为警告而非错误
+        {
+          ignores: ['login'], // 允许的单单词组件名
+        },
+      ],
+    },
+  }
 )
