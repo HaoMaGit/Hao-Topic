@@ -28,7 +28,7 @@ export default defineConfigWithVueTs(
       'vue/multi-word-component-names': [
         'warn', // 设置为警告而非错误
         {
-          ignores: ['login','index'], // 允许的单单词组件名
+          ignores: ['login','index','404'], // 允许的单单词组件名
         },
       ],
     },
