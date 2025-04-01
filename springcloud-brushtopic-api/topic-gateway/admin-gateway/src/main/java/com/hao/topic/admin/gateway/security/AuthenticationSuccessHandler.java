@@ -65,7 +65,6 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
                 response.addCookie(ResponseCookie.from("token", token).maxAge(Duration.ofDays(rememberMe)).path("/").build());
                 redisTemplate.opsForValue().set(authentication.getName(), token, rememberMe, TimeUnit.SECONDS);// 保存180天
             }
-
             map.put("code", "000220");
             map.put("message", "登录成功");
             map.put("token", token);

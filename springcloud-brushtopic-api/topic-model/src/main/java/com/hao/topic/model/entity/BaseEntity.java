@@ -1,0 +1,34 @@
+package com.hao.topic.model.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * Description: 通用实体
+ * Author: Hao
+ * Date: 2025/4/1 10:07
+ */
+@Data
+public class BaseEntity implements Serializable {
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
+
+    @JsonIgnore
+    @TableLogic
+    @TableField("is_deleted")
+    private Integer isDeleted;
+}

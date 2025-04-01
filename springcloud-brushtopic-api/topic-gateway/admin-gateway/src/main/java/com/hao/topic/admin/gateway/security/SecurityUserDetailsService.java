@@ -18,7 +18,6 @@ import java.util.Collection;
 @Slf4j
 public class SecurityUserDetailsService implements ReactiveUserDetailsService {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    ;
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {

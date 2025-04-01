@@ -37,26 +37,26 @@ public class AuthorizationManager implements ReactiveAuthorizationManager<Author
         return authentication.map(auth -> {
             // 获取请求路径
             String path = authorizationContext.getExchange().getRequest().getURI().getPath();
-            log.info("Checking access for path: {}", path);
+            log.info("检查路径: {}", path);
 
             // 遍历用户的权限
             for (GrantedAuthority authority : auth.getAuthorities()) {
-                log.info("User has authority: {}", authority.getAuthority());
+                log.info("用户具有权限: {}", authority.getAuthority());
 
                 // 检查用户是否有ROLE_USER权限并且路径包含/user/normal
                 if (authority.getAuthority().equals("ROLE_USER") && path.contains("/user/normal")) {
-                    log.info("User has ROLE_USER and path contains /user/normal, granting access.");
+                    log.info("用户具有ROLE_USER权限且路径包含/user/normal，允许访问。");
                     return new AuthorizationDecision(true);
                 }
                 // 检查用户是否有ROLE_ADMIN权限并且路径包含/api/user/admin
                 else if (authority.getAuthority().equals("ROLE_ADMIN") && path.contains("/api/user/admin")) {
-                    log.info("User has ROLE_ADMIN and path contains /api/user/admin, granting access.");
+                    log.info("用户具有ROLE_ADMIN权限且路径包含/api/user/admin，允许访问。");
                     return new AuthorizationDecision(true);
                 }
             }
 
             // 如果没有匹配的权限，拒绝访问
-            log.info("No matching authority found for path: {}", path);
+            log.info("未找到匹配的权限，拒绝访问路径: {}", path);
             return new AuthorizationDecision(false);
         }).defaultIfEmpty(new AuthorizationDecision(false));
     }

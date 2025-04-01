@@ -21,12 +21,13 @@
         <module>topic-model</module>
         <module>topic-client</module>
         <module>topic-gateway</module>
+        <module>topic-security</module>
     </modules>
 
     <properties>
         <bootstrap.version>4.0.2</bootstrap.version>
         <hutool.version>5.8.26</hutool.version>
-        <jwt.version>0.9.1</jwt.version>
+        <jwt.version>3.4.0</jwt.version>
         <commons.lang3.version>3.4</commons.lang3.version>
         <!-- bug3.5.3版本问题 -->
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
@@ -136,8 +137,8 @@
 
             <!-- jwt -->
             <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt</artifactId>
+                <groupId>com.auth0</groupId>
+                <artifactId>java-jwt</artifactId>
                 <version>${jwt.version}</version>
             </dependency>
 
