@@ -45,7 +45,6 @@ public class SecurityConfig {
         http
                 // 配置HTTP请求的授权规则
                 .authorizeHttpRequests(auth -> auth
-                        // 所有请求都需要认证
                         .requestMatchers("/system/captchaImage").permitAll()
                         .anyRequest().authenticated()
                 )

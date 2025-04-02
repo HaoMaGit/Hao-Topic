@@ -3,6 +3,7 @@ package com.hao.topic.system.service.impl;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.captcha.generator.RandomGenerator;
+import com.hao.topic.system.constant.SystemConstant;
 import com.hao.topic.system.service.SystemService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class SystemServiceImpl implements SystemService {
     public void getCode(HttpServletResponse response) {
         // 生成随机6位
         RandomGenerator randomGenerator = new RandomGenerator("0123456789", 4);
-        LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 100);
+        LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(SystemConstant.IMAGE_WIDTH, SystemConstant.IMAGE_HEIGHT);
         lineCaptcha.setGenerator(randomGenerator);
         // 重新生成code
         lineCaptcha.createCode();
