@@ -5,33 +5,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.hao.topic</groupId>
-        <artifactId>topic</artifactId>
+        <artifactId>topic-api</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>topic-api</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>topic-api-topic</module>
-        <module>topic-api-system</module>
-    </modules>
+    <artifactId>topic-api-system</artifactId>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <dependencies>
-        <!-- mvc -->
+        <!-- hutool工具包 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- 授权服务 -->
-        <dependency>
-            <groupId>com.hao.topic</groupId>
-            <artifactId>topic-common-security</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
         </dependency>
     </dependencies>
 </project>

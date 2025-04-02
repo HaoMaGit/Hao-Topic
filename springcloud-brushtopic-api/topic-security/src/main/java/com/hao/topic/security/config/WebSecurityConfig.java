@@ -66,7 +66,7 @@ public class WebSecurityConfig {
                 .authenticationManager(reactiveAuthenticationManager())  // 添加认证管理器
                 .addFilterBefore(cookieToHeadersFilter, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/security/user/login").permitAll()
+                        .pathMatchers("/security/user/login", "system/captchaImage").permitAll()
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .anyExchange().permitAll()// 权限
                 )
