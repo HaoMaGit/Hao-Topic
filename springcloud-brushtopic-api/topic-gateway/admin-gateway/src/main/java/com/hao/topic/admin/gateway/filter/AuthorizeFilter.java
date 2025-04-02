@@ -1,12 +1,16 @@
-package com.haoma.topic.gateway.filter;
+package com.hao.topic.admin.gateway.filter;
 
 
-import com.alibaba.cloud.commons.lang.StringUtils;
-import com.haoma.topic.gateway.utils.AppJwtUtil;
-import io.jsonwebtoken.Claims;
+import com.hao.topic.admin.gateway.properties.IgnoreWhiteProperties;
+import com.hao.topic.common.utils.JWTUtils;
+import com.hao.topic.common.utils.StringUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -15,6 +19,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.Map;
 
 
 /**
@@ -22,7 +27,13 @@ import java.util.Arrays;
  */
 
 @Component
+@Slf4j
 public class AuthorizeFilter implements Ordered, GlobalFilter {
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private IgnoreWhiteProperties ignoreWhiteProperties;
 
     /**
      * @param exchange 请求访问
@@ -35,59 +46,49 @@ public class AuthorizeFilter implements Ordered, GlobalFilter {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        // 定义需要放行的路径数组
-        String[] allowedPaths = {"/api/user/login", "/api/user/captchaImage"};
 
-        // 检查请求路径是否是放行路径之一
-        boolean isAllowedPath = Arrays.stream(allowedPaths)
-                .anyMatch(path -> request.getURI().getPath().equals(path));
-
-        // 判断是否可以放行
-        if (isAllowedPath) {
-            // 放行
+        String url = request.getURI().getPath();
+        // 跳过不需要验证的路径
+        if (StringUtils.matches(url, ignoreWhiteProperties.getWhites())) {
             return chain.filter(exchange);
         }
 
-
         // 3.获取token
-        String token = request.getHeaders().getFirst("authorization");
+        String token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         // 4.判断token是否存在
-        if (StringUtils.isBlank(token)) {
+        if (com.alibaba.nacos.common.utils.StringUtils.isBlank(token)) {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return response.setComplete();
         }
 
-        // 5.判断token是否有效
         try {
-            // 获取payload信息
-            Claims claimsBody = AppJwtUtil.getClaimsBody(token);
-            // 是否是过期
-            int result = AppJwtUtil.verifyToken(claimsBody);
-            if (result == 1 || result == 2) {
-                System.out.println("token过期了");
-                // 过期了
+            // 5.解析JWT获取用户信息
+            Map<String, Object> userInfo = JWTUtils.getTokenInfo(token);
+            String username = (String) userInfo.get("username");
+
+            // 从Redis验证token
+            String cachedToken = (String) redisTemplate.opsForValue().get(username);
+            if (!token.equals(cachedToken)) {
+                log.warn("Token验证失败: {}", username);
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return response.setComplete();
             }
-            // 6.解析token存入用户信息
-            Object userId = claimsBody.get("id");
-            // 向header中添加用户信息
-            ServerHttpRequest serverHttpRequest = request.mutate().headers(
-                    httpHeaders -> {
-                        httpHeaders.add("userId", userId + "");
-                    }
-            ).build();
-            // 重置请求头
-            exchange.mutate().request(serverHttpRequest).build();
+
+            // 将用户信息传递给下游服务方便获取
+            ServerHttpRequest newRequest = request.mutate()
+                    .header("userId", String.valueOf(userInfo.get("userId")))
+                    .header("username", username)
+                    .header("role", String.valueOf(userInfo.get("role")))
+                    .build();
+
+            return chain.filter(exchange.mutate().request(newRequest).build());
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Token解析失败: {}", e.getMessage());
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return response.setComplete();
         }
-
-        // 6.放行
-        return chain.filter(exchange);
     }
 
     /**

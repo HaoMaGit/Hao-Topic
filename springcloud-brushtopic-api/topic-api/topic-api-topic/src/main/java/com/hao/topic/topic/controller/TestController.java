@@ -1,9 +1,7 @@
 package com.hao.topic.topic.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Description:
@@ -11,16 +9,22 @@ import org.springframework.web.bind.annotation.RestController;
  * Date: 2025/3/31 22:29
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/system/user")
+@PreAuthorize("hasAuthority('admin')")
 public class TestController {
 
     @GetMapping("/admin")
-    public String test() {
-        return "访问成功";
+    public String test1() {
+        return "管理员访问成功";
     }
 
-    @PostMapping("/login")
-    public String login() {
-        return "登录成功";
+    @GetMapping("/member")
+    public String test2() {
+        return "会员访问成功";
+    }
+
+    @GetMapping("/user")
+    public String test3() {
+        return "用户访问成功";
     }
 }

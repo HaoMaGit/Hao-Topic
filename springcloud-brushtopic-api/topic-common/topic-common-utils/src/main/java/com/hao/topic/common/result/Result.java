@@ -1,10 +1,9 @@
-package com.haoma.topic.service.result;
+package com.hao.topic.common.result;
 
-import com.haoma.topic.service.enums.ResultCodeEnum;
+import com.hao.topic.common.enums.ResultCodeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Description: 统一返回结果类

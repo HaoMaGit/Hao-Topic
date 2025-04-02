@@ -1,4 +1,4 @@
-package com.hao.topic.admin.gateway.security;
+package com.hao.topic.security.service;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * 用户信息类
+ * Security用户信息类
  */
 public class SecurityUserDetails extends User implements Serializable {
 

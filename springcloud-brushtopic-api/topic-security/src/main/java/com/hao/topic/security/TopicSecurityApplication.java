@@ -1,6 +1,27 @@
-package com.hao.topic.security;/**
- * Description: 
+package com.hao.topic.security;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
+/**
+ * Description: 认证服务
  * Author: Hao
  * Date: 2025/4/1 10:32
- */public class TopicSecurityApplication {
+ */
+@SpringBootApplication
+@EnableDiscoveryClient
+public class TopicSecurityApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(TopicSecurityApplication.class, args);
+        System.out.println("  _   _             \n" +
+                " | | | | __ _  ___  \n" +
+                " | |_| |/ _` |/ _ \\ \n" +
+                " |  _  | (_| | (_) |\n" +
+                " |_| |_|\\__,_|\\___/ \n" +
+                " >>> 认证服务启动成功 <<<\n");
+    }
 }

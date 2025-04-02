@@ -1,15 +1,21 @@
-package com.hao.topic.admin.gateway.config;
+package com.hao.topic.security.config;
 
-import com.hao.topic.admin.gateway.security.*;
+import com.hao.topic.security.filter.CookieToHeadersFilter;
+import com.hao.topic.security.handle.*;
+import com.hao.topic.security.security.AuthenticationEntryPoint;
+import com.hao.topic.security.security.SecurityRepository;
+import com.hao.topic.security.service.SecurityUserDetailsService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.DelegatingReactiveAuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -18,79 +24,92 @@ import reactor.core.publisher.Mono;
 
 import java.util.LinkedList;
 
-@EnableWebFluxSecurity
 @Configuration
 @Slf4j
+@EnableWebFluxSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
+    // 用户信息类
     @Autowired
     SecurityUserDetailsService securityUserDetailsService;
-    @Autowired
-    AuthorizationManager authorizationManager;
+    // 拒绝处理器
     @Autowired
     AccessDeniedHandler accessDeniedHandler;
+    // 认证成功处理器
     @Autowired
     AuthenticationSuccessHandler authenticationSuccessHandler;
+    // 处理认证失败
     @Autowired
-    AuthenticationFaillHandler authenticationFaillHandler;
+    AuthenticationFailHandler authenticationFailHandler;
+    // 校验权限
     @Autowired
     SecurityRepository securityRepository;
+    // 将token添加到请求头中
     @Autowired
     CookieToHeadersFilter cookieToHeadersFilter;
+    // 处理登出成功的情况
     @Autowired
     LogoutSuccessHandler logoutSuccessHandler;
+    // 登出成功处理器
     @Autowired
     LogoutHandler logoutHandler;
-
+    // 处理未认证
     @Autowired
     AuthenticationEntryPoint authenticationEntryPoint;
-    private final String[] path = {
-            "/favicon.ico",
-            "/book/**",
-            "/user/login/**",
-            "/user/__MACOSX/**",
-            "/user/css/**",
-            "/user/fonts/**",
-            "/user/images/**"};
+    @Resource
+    private SecurityConfig securityConfig;
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        http.addFilterBefore(cookieToHeadersFilter, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER);
-        // SecurityWebFiltersOrder枚举类定义了执行次序
-        http.authorizeExchange(exchange -> exchange // 请求拦截处理
-                                .pathMatchers(path).permitAll()
-                                .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                                .anyExchange().access(authorizationManager)// 权限
-                        //.and().authorizeExchange().pathMatchers("/user/normal/**").hasRole("ROLE_USER")
-                        //.and().authorizeExchange().pathMatchers("/user/admin/**").hasRole("ROLE_ADMIN")
-                        // 也可以这样写 将匹配路径和角色权限写在一起
+        http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .securityContextRepository(securityRepository)
+                .authenticationManager(reactiveAuthenticationManager())  // 添加认证管理器
+                .addFilterBefore(cookieToHeadersFilter, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/security/user/login").permitAll()
+                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                        .anyExchange().permitAll()// 权限
                 )
-                .httpBasic()
-                .and()
-                .formLogin().loginPage("/api/user/login")// 登录接口
-                .authenticationSuccessHandler(authenticationSuccessHandler) // 认证成功
-                .authenticationFailureHandler(authenticationFaillHandler) // 登陆验证失败
-                .and().exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
-                .accessDeniedHandler(accessDeniedHandler)// 基于http的接口请求鉴权失败
-                .and().csrf().disable()// 必须支持跨域
-                .logout().logoutUrl("/user/logout")
-                .logoutHandler(logoutHandler)
-                .logoutSuccessHandler(logoutSuccessHandler);
-        http.securityContextRepository(securityRepository);
-        // http.securityContextRepository(NoOpServerSecurityContextRepository.getInstance());//无状态 默认情况下使用的WebSession
+                .httpBasic(httpBasicSpec -> {
+                })
+                .formLogin(formLoginSpec -> formLoginSpec
+                        .loginPage("/security/user/login")
+                        .authenticationSuccessHandler(authenticationSuccessHandler)
+                        .authenticationFailureHandler(authenticationFailHandler)
+                )
+                .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
+                .logout(logoutSpec -> logoutSpec
+                        .logoutUrl("/security/user/logout")
+                        .logoutHandler(logoutHandler)
+                        .logoutSuccessHandler(logoutSuccessHandler)
+                );
+
+
         return http.build();
     }
+
 
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         LinkedList<ReactiveAuthenticationManager> managers = new LinkedList<>();
+        UserDetailsRepositoryReactiveAuthenticationManager userDetailsManager =
+                new UserDetailsRepositoryReactiveAuthenticationManager(securityUserDetailsService);
+        userDetailsManager.setPasswordEncoder(securityConfig.passwordEncoder());
+        managers.add(userDetailsManager);
+
+        // 添加一个处理已认证用户的管理器
         managers.add(authentication -> {
-            // 其他登陆方式
+            if (authentication.isAuthenticated()) {
+                return Mono.just(authentication);
+            }
             return Mono.empty();
         });
-        managers.add(new UserDetailsRepositoryReactiveAuthenticationManager(securityUserDetailsService));
+
         return new DelegatingReactiveAuthenticationManager(managers);
     }
-
 }
  
  

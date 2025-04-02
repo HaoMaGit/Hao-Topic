@@ -49,7 +49,7 @@
         <!-- 通用工具类 -->
         <dependency>
             <groupId>com.hao.topic</groupId>
-            <artifactId>common-utils</artifactId>
+            <artifactId>topic-common-utils</artifactId>
             <version>1.0-SNAPSHOT</version>
             <!-- 排除spring-boot-starter-web -->
             <exclusions>
@@ -69,6 +69,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
         <!-- 实体工具类 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -78,11 +79,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <!--JWT的依赖-->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
         </dependency>
     </dependencies>
 </project>

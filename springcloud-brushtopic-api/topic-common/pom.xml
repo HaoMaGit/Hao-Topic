@@ -12,8 +12,9 @@
     <artifactId>topic-common</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>common-utils</module>
-        <module>api-utils</module>
+        <module>topic-common-utils</module>
+        <module>topic-api-utils</module>
+        <module>topic-common-security</module>
     </modules>
 
     <properties>
@@ -36,6 +37,11 @@
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
+        </dependency>
+        <!-- 实体工具类 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 </project>

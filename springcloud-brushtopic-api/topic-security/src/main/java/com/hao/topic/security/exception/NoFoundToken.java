@@ -1,4 +1,4 @@
-package com.hao.topic.admin.gateway.exception;
+package com.hao.topic.security.exception;
 
 /**
  * 自定义异常类，用于表示在请求中未找到token的情况

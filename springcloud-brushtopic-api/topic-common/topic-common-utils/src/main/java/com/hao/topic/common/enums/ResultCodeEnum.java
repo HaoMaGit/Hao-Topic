@@ -14,7 +14,7 @@ public enum ResultCodeEnum {
 
     SUCCESS(200, "成功"),
     FAIL(201, "失败"),
-    LOGIN_ERROR(401, "未登录"),
+    LOGIN_ERROR(401, "认证失败请重新登录"),
     LOGIN_ERROR_SECURITY(403, "未授权不能访问"),
     LOGOUT_SUCCESS(202, "退出登录成功"),
 

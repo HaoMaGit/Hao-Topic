@@ -26,7 +26,7 @@ import java.util.HashMap;
  */
 @Slf4j
 @Component
-public class AuthenticationFaillHandler implements ServerAuthenticationFailureHandler {
+public class AuthenticationFailHandler implements ServerAuthenticationFailureHandler {
 
     /**
      * 处理认证失败的请求
