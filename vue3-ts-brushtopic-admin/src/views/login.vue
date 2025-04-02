@@ -1,5 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { apiGetCode } from '@/api/system'
+
+onMounted(() => {
+  getCaptchaImage()
+})
+
+// 图片验证码
+const codeImage = ref('')
+// 获取图片验证码
+const getCaptchaImage = async () => {
+  // 不需要ts校验
+  apiGetCode().then((res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    codeImage.value = URL.createObjectURL(new Blob([res], { type: 'image/png' }))
+  })
+}
+
 // 表单数据
 const formData = ref({
   account: 'admin',
@@ -37,8 +55,7 @@ const adminRef = ref(null)
 //   adminRef.value.resetFields()
 // }
 
-// 图片
-const codeImage = ref('')
+
 
 // 获取验证码图片
 const getCode = async () => {
@@ -125,7 +142,7 @@ const loginLoading = ref(true)
                   </template>
                 </a-input>
                 <!-- 验证码图片 -->
-                <img @click="getCode" :src="codeImage" alt="验证码" class="login-code" />
+                <img @click="getCaptchaImage" :src="codeImage" alt="验证码" class="login-code" />
               </div>
             </a-form-item>
             <a-form-item class="check-item">

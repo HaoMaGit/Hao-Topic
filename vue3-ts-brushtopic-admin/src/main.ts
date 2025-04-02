@@ -2,7 +2,7 @@
 import './styles/index.scss'
 import { createApp } from 'vue'
 // 引入pinia
-import { createPinia } from 'pinia'
+import pinia from './stores/index'
 // 引入路由
 import router from './router'
 // 引入ant组件库
@@ -13,7 +13,7 @@ import App from './App.vue'
 
 const app = createApp(App)
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(Antd)
 app.mount('#app')
