@@ -40,7 +40,7 @@ public class SystemServiceImpl implements SystemService {
             // 关闭流
             response.getOutputStream().close();
             // 将生成的验证码放入redis中
-            stringRedisTemplate.opsForValue().set("captcha:" + lineCaptcha.getCode(), lineCaptcha.getCode(), 60, TimeUnit.SECONDS);
+            stringRedisTemplate.opsForValue().set(lineCaptcha.getCode(), lineCaptcha.getCode(), SystemConstant.CODE_EXPIRE_TIME, TimeUnit.SECONDS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

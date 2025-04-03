@@ -41,8 +41,6 @@ import java.util.Map;
 @Component
 public class SecurityRepository implements ServerSecurityContextRepository {
 
-    @Autowired
-    private RedisTemplate redisTemplate;
 
     /**
      * 保存安全上下文（未实现）

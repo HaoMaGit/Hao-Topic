@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -45,8 +46,6 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
 
     @Autowired
     private SysRoleMapper sysRoleMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
 
     /**
@@ -91,6 +90,10 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
         // 校验
         if (sysRole == null) {
             throw new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE);
+        }
+        // user用户不能访问
+        if (sysRole.getIdentify() == 0) {
+            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT);
         }
         log.info(sysRole.toString());
         // 存储权限

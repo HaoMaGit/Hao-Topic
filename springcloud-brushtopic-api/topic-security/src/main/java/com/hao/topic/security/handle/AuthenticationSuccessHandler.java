@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,6 +64,9 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
         ServerWebExchange exchange = webFilterExchange.getExchange();
         // 获取响应对象
         ServerHttpResponse response = exchange.getResponse();
+        // 从请求头获取 remember，并正确处理类型转换
+        Object remember_obj = exchange.getAttribute("remember");
+        boolean remember_me = remember_obj != null && (remember_obj instanceof Boolean ? (Boolean) remember_obj : Boolean.parseBoolean(remember_obj.toString()));
 
         // 设置响应头
         HttpHeaders httpHeaders = response.getHeaders();
@@ -71,8 +75,6 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
 
         // 设置响应体
         HashMap<String, String> map = new HashMap<>();
-        // 获取请求头中的"Remember-me"字段
-        String remember_me = exchange.getRequest().getHeaders().getFirst("Remember-me");
 
         ObjectMapper mapper = new ObjectMapper();
         // 获取用户的权限列表
@@ -87,7 +89,7 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
             log.info(authentication.toString());
 
             // 根据"Remember-me"字段生成不同的JWT令牌
-            if (remember_me == null) {
+            if (!remember_me) {
                 // 如果没有"Remember-me"字段，生成一个有效期为24小时的令牌
                 token = JWTUtils.creatToken(load, JwtConstant.EXPIRE_TIME * ignoreWhiteProperties.getTimeout());
                 response.addCookie(ResponseCookie.from("token", token).path("/").build());
@@ -106,7 +108,8 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
             map.put("code", String.valueOf(ResultCodeEnum.SUCCESS.getCode()));
             map.put("message", ResultCodeEnum.SUCCESS.getMessage());
             map.put("token", token);
-        } catch (Exception ex) {
+        } catch (
+                Exception ex) {
             ex.printStackTrace();
             // 设置响应体内容为登录失败
             map.put("code", String.valueOf(ResultCodeEnum.FAIL.getCode()));

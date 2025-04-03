@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.DelegatingReactiveAuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
@@ -66,16 +67,9 @@ public class WebSecurityConfig {
                 .authenticationManager(reactiveAuthenticationManager())  // 添加认证管理器
                 .addFilterBefore(cookieToHeadersFilter, SecurityWebFiltersOrder.HTTP_HEADERS_WRITER)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/security/user/login", "system/captchaImage").permitAll()
-                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyExchange().permitAll()// 权限
-                )
-                .httpBasic(httpBasicSpec -> {
-                })
-                .formLogin(formLoginSpec -> formLoginSpec
-                        .loginPage("/security/user/login")
-                        .authenticationSuccessHandler(authenticationSuccessHandler)
-                        .authenticationFailureHandler(authenticationFailHandler)
+                        .pathMatchers("/security/user/login").permitAll()  // 登录接口不需要权限
+                        .pathMatchers("/system/captcha").permitAll()       // 验证码接口不需要权限
+                        .anyExchange().authenticated()                     // 其他所有接口都需要认证
                 )
                 .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
                         .authenticationEntryPoint(authenticationEntryPoint)
@@ -86,7 +80,6 @@ public class WebSecurityConfig {
                         .logoutHandler(logoutHandler)
                         .logoutSuccessHandler(logoutSuccessHandler)
                 );
-
 
         return http.build();
     }

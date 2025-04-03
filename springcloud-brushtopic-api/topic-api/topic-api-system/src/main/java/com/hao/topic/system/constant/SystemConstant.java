@@ -11,4 +11,7 @@ public class SystemConstant {
     public static final int IMAGE_WIDTH = 80;
     // 图片高度
     public static final int IMAGE_HEIGHT = 38;
+    // 验证码过期时间
+    public static final int CODE_EXPIRE_TIME = 60;
+
 }
