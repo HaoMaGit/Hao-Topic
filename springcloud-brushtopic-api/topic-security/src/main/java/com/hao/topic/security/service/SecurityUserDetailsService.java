@@ -2,6 +2,7 @@ package com.hao.topic.security.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.common.constant.ExceptionConstant;
+import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
@@ -70,11 +71,12 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
         // System.out.println(encode);
         // 校验
         if (sysUser == null) {
-            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT_EXIST);
+            // 返回给前端
+            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_EXIST));
         }
         // 判断是否正常
         if (sysUser.getStatus() == 1) {
-            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT_STOP);
+            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_STOP));
         }
         log.info(sysUser.toString());
         // 根据用户id获取用户角色信息
@@ -83,17 +85,17 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
         SysUserRole sysUserRole = sysUserRoleMapper.selectOne(sysUserRoleLambdaQueryWrapper);
         // 校验
         if (sysUserRole == null) {
-            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE);
+            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
         }
         // 根据角色id获取用户角色信息
         SysRole sysRole = sysRoleMapper.selectById(sysUserRole.getRoleId());
         // 校验
         if (sysRole == null) {
-            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE);
+            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
         }
         // user用户不能访问
         if (sysRole.getIdentify() == 0) {
-            throw new UsernameNotFoundException(ExceptionConstant.USER_NOT);
+            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT));
         }
         log.info(sysRole.toString());
         // 存储权限

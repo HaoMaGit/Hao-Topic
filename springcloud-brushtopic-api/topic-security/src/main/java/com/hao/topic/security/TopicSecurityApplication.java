@@ -3,6 +3,7 @@ package com.hao.topic.security;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
@@ -13,6 +14,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
  */
 @SpringBootApplication
 @EnableDiscoveryClient
+@ComponentScan(basePackages = {
+        "com.hao.topic.common.handler"  // 添加这一行，扫描通用模块的异常处理器
+})
 public class TopicSecurityApplication {
 
     public static void main(String[] args) {
