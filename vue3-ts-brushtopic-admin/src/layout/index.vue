@@ -1,9 +1,14 @@
 <script setup lang="ts">
 
+
+
+
 </script>
 <template>
   <div class="">
-    <h1 style="color: #16f;">首页</h1>
+    好
+    <!-- 二级菜单 -->
+    <router-view></router-view>
   </div>
 </template>
 <style lang="scss" scoped></style>

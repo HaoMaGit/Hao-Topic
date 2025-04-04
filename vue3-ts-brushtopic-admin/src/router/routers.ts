@@ -17,6 +17,26 @@ export const constantRoute = [
       hidden: true, // 代表路由标题在菜单中是否隐藏  true:隐藏 false:不隐藏
     },
   },
+  // 登录成功后显示的路由
+  {
+    path: '/',
+    component: () => import('../layout/index.vue'),
+    name: 'layout',
+    meta: {
+      title: '',
+      icon: '',
+    },
+    redirect: '/home',
+    children: [{
+      path: '/home',
+      component: () => import('@/views/index.vue'),
+      meta: {
+        title: '首页',
+        hidden: false,
+        icon: 'HomeFilled',
+      },
+    }]
+  },
   // 404页面
   {
     path: '/404',

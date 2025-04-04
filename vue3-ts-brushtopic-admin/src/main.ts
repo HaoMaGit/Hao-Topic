@@ -9,7 +9,10 @@ import router from './router'
 import Antd from 'ant-design-vue';
 // 引入ant组件库样式
 import 'ant-design-vue/dist/reset.css';
+// 引入路由鉴权
+import './permisstion.ts'
 import App from './App.vue'
+
 
 const app = createApp(App)
 
