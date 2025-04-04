@@ -1,13 +1,15 @@
 import request from "@/utils/request.ts";
-import type { LoginType } from "./type";
+import type { LoginType, LoginResultType, CommonResultType, UserResponse } from "./type";
+
 const prefix = "/security/user/"
+
 
 /**
  * 登录接口
  * @param {} data 
  * @returns 
  */
-export const apiLogin = (data: LoginType) => {
+export const apiLogin = (data: LoginType): Promise<LoginResultType> => {
   return request({
     url: prefix + "login",
     method: "post",
@@ -28,7 +30,7 @@ export const apiLogout = () => {
 }
 
 // 获取用户信息
-export const apiGetUserInfo = (token: string | null) => {
+export const apiGetUserInfo = (token: string | null): Promise<CommonResultType<UserResponse>> => {
   return request({
     url: prefix + "userInfo",
     method: "get",

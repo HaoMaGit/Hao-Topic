@@ -5,40 +5,33 @@ import {
   ref
 } from 'vue'
 import { apiLogin, apiGetUserInfo } from '@/api/auth/index.ts'
-import type { LoginType, LoginResultType } from '@/api/auth/type';
+import type { LoginType, UserResponse } from '@/api/auth/type';
 import { message } from 'ant-design-vue';
 import router from '@/router';
 
 // import { asyncRoute } from '@/router/routers';
 export const useUserStore = defineStore('user', () => {
   // 用户信息
-  const userInfo = ref<LoginResultType>({
-    id: null,
+  const userInfo = ref<UserResponse>({
     account: '',
     avatar: '',
-    role: '',
-    token: ''
+    identity: null,
+    menuList: []
   });
   // token
   const token = ref<string | null>(null)
   // 菜单
-  const menu = ref(null)
+  const menu = ref([])
   // 登录
   const login = async (data: LoginType) => {
     const res = await apiLogin(data)
     console.log(res);
     // 登录失败
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     if (res.code !== 200 && res.code !== '200') {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
       message.error(res.message)
       return
     }
     // 将token信息存储
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     token.value = res.token
     // 获取用户信息
     getUserInfo()
@@ -46,27 +39,25 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const getUserInfo = async () => {
     const res = await apiGetUserInfo(token.value)
+    // TODO 菜单信息
     menu.value = res.data.menuList
     // menu.value.unshift({ ...asyncRoute })
     userInfo.value = res.data
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     if (res.code === 200) {
       message.success("登录成功")
       router.push('/')
     }
   }
-  // 清除用户信息
+  // TODO 清除用户信息
   const clearUserInfo = () => {
     userInfo.value = {
-      id: null,
       account: '',
       avatar: '',
-      role: '',
-      token: ''
+      identity: null,
+      menuList: []
     }
     token.value = null
-    menu.value = null
+    menu.value = []
     window.localStorage.removeItem("user")
   }
   // 返回出去
