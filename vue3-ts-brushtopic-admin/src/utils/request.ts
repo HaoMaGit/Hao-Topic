@@ -33,7 +33,7 @@ request.interceptors.response.use(
   },
   (error) => {
     console.log(error);
-
+    
     const status = error.response.status
     const userStore = useUserStore()
 

@@ -1,17 +1,21 @@
 import request from "@/utils/request.ts";
-
-const prefix = "/security/user"
+import type { LoginType } from "./type";
+const prefix = "/security/user/"
 
 /**
  * 登录接口
  * @param {} data 
  * @returns 
  */
-export const apiLogin = (data: unknown) => {
+export const apiLogin = (data: LoginType) => {
   return request({
     url: prefix + "login",
     method: "post",
-    data,
+    data: JSON.stringify(data),  // 确保数据被正确序列化
+    headers: {
+      'Content-Type': 'application/json',  // 明确指定 Content-Type
+      'remember': data.remember
+    },
   })
 }
 

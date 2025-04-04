@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { apiGetCode } from '@/api/system'
+import { useUserStore } from '@/stores/modules/user'
+import type { LoginType } from '@/api/auth/type';
 
-onMounted(() => {
-  getCaptchaImage()
-})
+// 初始化仓库
+const userStore = useUserStore()
 
 // 图片验证码
 const codeImage = ref('')
@@ -18,19 +19,20 @@ const getCaptchaImage = async () => {
   })
 }
 
+// 表单实例
+const adminRef = ref(null)
 // 表单数据
-const formData = ref({
-  account: 'admin',
+const formData = ref<LoginType>({
+  username: 'admin',
   password: '123456',
   // 验证码
   code: '',
   // 是否记住密码
   remember: false,
 })
-
 // 表单校验规则
 const formRule = ref({
-  account: [
+  username: [
     { required: true, message: '请输入您的账号', trigger: 'blur' }
   ],
   password: [
@@ -40,70 +42,63 @@ const formRule = ref({
     { required: true, message: '请输入验证码', trigger: 'blur' }
   ]
 })
-// 表单实例
-const adminRef = ref(null)
-
-// 清除默认样式
-// const clearStyle = () => {
-//   formData.value = {
-//     account: 'admin',
-//     password: '123456',
-//     code: '',
-//     remember: false,
-//     activeRole: activeRdentity.value
-//   }
-//   adminRef.value.resetFields()
-// }
-
-
-
-// 获取验证码图片
-const getCode = async () => {
-  // // 获取但返回参数
-  // const res = await apiGetCodeImage()
-  // // 转换为图片对象
-  // codeImage.value = URL.createObjectURL(new Blob([res], { type: 'image/png' }))
-}
-
-// 页面加载需要获取验证码
-onMounted(() => {
-  // // 记住我
-  // const item = window.localStorage.getItem("userPassword")
-  // if (item) {
-  //   const userPassword = JSON.parse(window.localStorage.getItem("userPassword"))
-  //   formData.value.account = userPassword.account
-  //   formData.value.password = userPassword.password
-  // }
-  // // 获取验证码
-  // getCode()
-})
-
-// 实例化仓库
-// const userStore = useUserStore()
-// 登录接口
-const goToHome = () => {
-  // loginLoading.value = true
-  // // 开始校验
-  // adminRef.value.validate(async (valid) => {
-  //   if (valid) {
-  //     // 调用登录方法
-  //     userStore.login(formData.value)
-  //     if (userStore.token) {
-  //       if (formData.value.remember) {
-  //         // 记住密码
-  //         window.localStorage.setItem("userPassword", JSON.stringify({
-  //           account: formData.value.account,
-  //           password: formData.value.password
-  //         }))
-  //       }
-  //     }
-  //     loginLoading.value = false
-  //   }
-  // })
-}
 
 // 登录loading
-const loginLoading = ref(true)
+const loginLoading = ref(false)
+// 登录
+const login = () => {
+  if (!adminRef.value) return // 确保表单实例存在
+  loginLoading.value = true
+  if (adminRef.value) {
+    // 表单校验
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    adminRef.value.validate().then(async (valid) => {
+      if (valid) {
+        // 发起请求
+        userStore.login(formData.value)
+        if (formData.value.remember) {
+          // 记住密码
+          window.localStorage.setItem("userPassword", JSON.stringify({
+            username: formData.value.username,
+            password: formData.value.password
+          }))
+        }
+        clearStyle()
+        loginLoading.value = false
+      }
+    })
+  }
+}
+
+// 清除默认样式
+const clearStyle = () => {
+  formData.value = {
+    username: 'admin',
+    password: '123456',
+    code: '',
+    remember: false,
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  adminRef.value.resetFields()
+}
+
+// 获取记住我
+const getRemember = () => {
+  const item = window.localStorage.getItem("userPassword")
+  if (item) {
+    const userPassword = JSON.parse(item)
+    formData.value.username = userPassword.username
+    formData.value.password = userPassword.password
+    formData.value.remember = true
+  }
+}
+
+onMounted(() => {
+  getCaptchaImage()
+  getRemember()
+})
 </script>
 <template>
   <div class="login-body">
@@ -120,8 +115,8 @@ const loginLoading = ref(true)
         <!-- 会员表单 -->
         <div class="form-member">
           <a-form :model="formData" ref="adminRef" :rules="formRule" layout="vertical">
-            <a-form-item label="账号" name="account">
-              <a-input v-model:value="formData.account" placeholder="请输入手机号或者邮箱" size="large">
+            <a-form-item label="账号" name="username">
+              <a-input v-model:value="formData.username" placeholder="请输入手机号或者邮箱" size="large">
                 <template #prefix>
                   <UserOutlined />
                 </template>
@@ -136,7 +131,7 @@ const loginLoading = ref(true)
             </a-form-item>
             <a-form-item label="验证码" name="code">
               <div class="code-box">
-                <a-input v-model:value="formData.code" placeholder="验证码" size="large" style="flex: 1;">
+                <a-input maxlength="4" v-model:value="formData.code" placeholder="验证码" size="large" style="flex: 1;">
                   <template #prefix>
                     <CheckCircleOutlined />
                   </template>
@@ -149,7 +144,8 @@ const loginLoading = ref(true)
               <a-checkbox v-model:checked="formData.remember" class="check">记住密码</a-checkbox>
             </a-form-item>
             <a-form-item>
-              <a-button :loading="loginLoading" type="primary" block size="large" @click="goToHome()">登录</a-button>
+              <a-button :loading="loginLoading" :disabled="loginLoading" type="primary" block size="large"
+                @click="login">登录</a-button>
             </a-form-item>
           </a-form>
         </div>
