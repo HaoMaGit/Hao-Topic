@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Data
 public class SysUser extends BaseEntity {
     private String account;
+    private String avatar;
     private String password;
     private Integer identity;
-    private String avatar;
     private Long aiCount;
     private String email;
     private Integer status;

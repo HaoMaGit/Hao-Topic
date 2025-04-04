@@ -1,5 +1,6 @@
 package com.hao.topic.system.service;
 
+import com.hao.topic.model.vo.system.UserInfoVo;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**

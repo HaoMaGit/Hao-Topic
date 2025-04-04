@@ -2,10 +2,13 @@ package com.hao.topic.security.controller;
 
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.security.SecurityRepository;
+import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
@@ -37,12 +40,19 @@ public class SecurityController {
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
     @Autowired
-    private SecurityRepository securityContextRepository;
-
-    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Autowired
+    private SysUserService sysUserService;
 
+
+    /**
+     * 登录接口
+     *
+     * @param exchange
+     * @param loginRequest
+     * @return
+     */
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Mono<Void> login(ServerWebExchange exchange, @Validated @RequestBody LoginRequestDto loginRequest) {
         // 查询redis校验图片验证码
@@ -71,5 +81,18 @@ public class SecurityController {
                     log.error("认证失败", e);
                     return Mono.error(e);
                 });
+    }
+
+
+    /**
+     * 根据token获取用户信息
+     *
+     * @param token
+     * @return
+     */
+    @GetMapping("/userInfo")
+    public Result<UserInfoVo> getUserInfo(String token) {
+        UserInfoVo userInfoVo = sysUserService.getUserInfo(token);
+        return Result.success(userInfoVo);
     }
 }
