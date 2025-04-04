@@ -27,4 +27,14 @@ export const apiLogout = () => {
   })
 }
 
+// 获取用户信息
+export const apiGetUserInfo = (token: string | null) => {
+  return request({
+    url: prefix + "userInfo",
+    method: "get",
+    params: {
+      token
+    }
+  })
+}
 
