@@ -3,6 +3,8 @@ package com.hao.topic.security.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -40,29 +42,25 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      */
     public UserInfoVo getUserInfo(String token) {
         if (token == null) {
-            // TODO 暂时返回null 待会抛出自定义异常
-            return null;
+            throw new TopicException(ResultCodeEnum.LOGIN_ERROR);
         }
         // 解析token
         Map<String, Object> tokenInfo = JWTUtils.getTokenInfo(token);
         // 校验
         if (CollectionUtils.isEmpty(tokenInfo)) {
-            // TODO 暂时返回null 待会抛出自定义异常
-            return null;
+            throw new TopicException(ResultCodeEnum.LOGIN_ERROR);
         }
         // 获取唯一用户名
         String username = (String) tokenInfo.get("username");
         // 校验
         if (username == null) {
-            // TODO 暂时返回null 待会抛出自定义异常
-            return null;
+            throw new TopicException(ResultCodeEnum.LOGIN_ERROR);
         }
         // 根据用户名获取用户信息
         SysUser sysUser = findByUserName(username);
         // 校验
         if (sysUser == null) {
-            // TODO 暂时返回null 待会抛出自定义异常
-            return null;
+            throw new TopicException(ResultCodeEnum.ACCOUNT_ERROR);
         }
         // 封装返回信息
         UserInfoVo userInfoVo = new UserInfoVo();

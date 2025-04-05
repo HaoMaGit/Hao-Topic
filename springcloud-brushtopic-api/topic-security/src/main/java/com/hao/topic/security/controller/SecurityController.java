@@ -1,5 +1,6 @@
 package com.hao.topic.security.controller;
 
+import com.hao.topic.common.constant.ExceptionConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -59,7 +60,7 @@ public class SecurityController {
         String s = stringRedisTemplate.opsForValue().get(loginRequest.getCode());
         if (s == null || !s.equals(loginRequest.getCode())) {
             log.error("验证码错误");
-            return Mono.error(new RuntimeException("验证码错误"));
+            return Mono.error(new RuntimeException(ExceptionConstant.CODE_ERROR));
         }
 
         exchange.getAttributes().put("remember", loginRequest.getRemember());

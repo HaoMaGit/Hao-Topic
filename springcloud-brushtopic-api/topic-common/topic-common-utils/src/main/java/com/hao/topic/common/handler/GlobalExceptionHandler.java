@@ -1,10 +1,12 @@
 package com.hao.topic.common.handler;
 
 import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -66,5 +68,21 @@ public class GlobalExceptionHandler {
     public Mono<Result<String>> handleException(Exception e, ServerWebExchange exchange) {
         log.error("系统异常: ", e);
         return Mono.just(Result.fail(e.getMessage()));
+    }
+
+    /**
+     * 处理自定义的异常
+     *
+     * @param e
+     * @return
+     */
+    @ExceptionHandler(TopicException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Result> handleTopicException(TopicException e) {
+        // 将异常抛出处理
+        System.out.println("自定义异常" + e);
+        e.printStackTrace();
+        // 返回带有状态码和消息的结果对象
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.fail(e.getMessage(), e.getCode()));
     }
 }
