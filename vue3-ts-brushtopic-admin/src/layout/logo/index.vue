@@ -14,7 +14,7 @@ const settingStore = useSettingStore();
 .logo {
   width: 100%;
   height: $base-menu-logo-height;
-  color: white;
+  color: #1677ff;
   display: flex;
   align-items: center;
   padding: 15px;
