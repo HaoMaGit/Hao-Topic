@@ -1,9 +1,13 @@
 package com.hao.topic.security;
 
+import com.hao.topic.common.config.FeignConfig;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
@@ -15,8 +19,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @SpringBootApplication
 @EnableDiscoveryClient
 @ComponentScan(basePackages = {
-        "com.hao.topic.common.handler"  // 添加这一行，扫描通用模块的异常处理器
+        "com.hao.topic.common.handler",  // 添加这一行，扫描通用模块的异常处理器
 })
+@EnableFeignClients(basePackages = {"com.hao.topic.client.system"})
+@Import(FeignConfig.class)
 public class TopicSecurityApplication {
 
     public static void main(String[] args) {

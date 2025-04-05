@@ -21,6 +21,8 @@ public enum ResultCodeEnum {
     PASSWORD_ERROR(202, "账号或密码错误"),
     ACCOUNT_ERROR(205, "账号不存在"),
     ACCOUNT_LOCKED(206, "普通用户不能访问"),
+    NO_ROLE_FAIL(99901, "用户无角色"),
+    NO_MENU_FAIL(99901, "用户无菜单权限"),
 
 
     SERVICE_ERROR(2012, "服务异常"),
