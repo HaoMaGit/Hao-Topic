@@ -11,6 +11,8 @@ import Logo from './logo/index.vue'
 import Menu from './menu/index.vue'
 // 顶部导航
 import Tabbar from './tabbar/index.vue'
+
+
 </script>
 <template>
   <div class="layout_container">
@@ -21,11 +23,8 @@ import Tabbar from './tabbar/index.vue'
       <!-- 滚动组件 -->
       <div class="scrollbar">
         <!-- 菜单组件 -->
-        <a-menu :collapse="settingStore.fold ? true : false" :default-active="$route.path" unique-opened
-          collapse-transition background-color="#304156" text-color="#BFC8D9">
-          <!-- 根据路由动态生成菜单 -->
-          <Menu :menuList="userStore.menu" />
-        </a-menu>
+        <!-- 根据路由动态生成菜单 -->
+        <Menu :menuList="userStore.userInfo.menuList" />
       </div>
     </div>
     <!-- 顶部导航 -->
@@ -62,9 +61,6 @@ import Tabbar from './tabbar/index.vue'
       width: 100%;
       height: calc(100vh - $base-menu-logo-height);
 
-      .a-menu {
-        border-right: none;
-      }
     }
   }
 

@@ -1,8 +1,11 @@
+import { HomeOutlined } from '@ant-design/icons-vue'
+import { h } from 'vue'
 // 通用的路由
 export const asyncRoute = {
-  menuName: '首页',
-  route: '/index',
-  children: []
+  label: '首页',
+  key: '/home',
+  icon: () => h(HomeOutlined),
+  // children: []
 }
 
 // 对外暴露的配置路由
@@ -33,7 +36,6 @@ export const constantRoute = [
       meta: {
         title: '首页',
         hidden: false,
-        icon: 'HomeFilled',
       },
     }]
   },

@@ -35,6 +35,7 @@ const settingStore = useSettingStore();
   }
 
   .text-preview {
+    padding-top: 15px;
     white-space: nowrap;
     overflow: hidden;
   }

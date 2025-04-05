@@ -43,12 +43,10 @@ const formRule = ref({
   ]
 })
 
-// 登录loading
-const loginLoading = ref(false)
+
 // 登录
 const login = () => {
   if (!adminRef.value) return // 确保表单实例存在
-  loginLoading.value = true
   if (adminRef.value) {
     // 表单校验
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -65,7 +63,6 @@ const login = () => {
           }))
         }
         clearStyle()
-        loginLoading.value = false
       }
     })
   }
@@ -144,8 +141,7 @@ onMounted(() => {
               <a-checkbox v-model:checked="formData.remember" class="check">记住密码</a-checkbox>
             </a-form-item>
             <a-form-item>
-              <a-button :loading="loginLoading" :disabled="loginLoading" type="primary" block size="large"
-                @click="login">登录</a-button>
+              <a-button type="primary" block size="large" @click="login">登录</a-button>
             </a-form-item>
           </a-form>
         </div>

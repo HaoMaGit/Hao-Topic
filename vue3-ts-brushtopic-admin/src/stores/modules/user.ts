@@ -8,8 +8,7 @@ import { apiLogin, apiGetUserInfo } from '@/api/auth/index.ts'
 import type { LoginType, UserResponse } from '@/api/auth/type';
 import { message } from 'ant-design-vue';
 import router from '@/router';
-
-// import { asyncRoute } from '@/router/routers';
+import { asyncRoute } from '@/router/routers';
 export const useUserStore = defineStore('user', () => {
   // 用户信息
   const userInfo = ref<UserResponse>({
@@ -20,8 +19,6 @@ export const useUserStore = defineStore('user', () => {
   });
   // token
   const token = ref<string | null>(null)
-  // 菜单
-  const menu = ref([])
   // 登录
   const login = async (data: LoginType) => {
     const res = await apiLogin(data)
@@ -39,9 +36,12 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const getUserInfo = async () => {
     const res = await apiGetUserInfo(token.value)
-    // TODO 菜单信息
-    menu.value = res.data.menuList
-    // menu.value.unshift({ ...asyncRoute })
+    if (res.data.menuList) {
+      userInfo.value.menuList = res.data.menuList
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      userInfo.value.menuList.unshift({ ...asyncRoute })
+    }
     userInfo.value = res.data
     if (res.code === 200) {
       message.success("登录成功")
@@ -57,7 +57,6 @@ export const useUserStore = defineStore('user', () => {
       menuList: []
     }
     token.value = null
-    menu.value = []
     window.localStorage.removeItem("user")
   }
   // 返回出去
@@ -67,7 +66,6 @@ export const useUserStore = defineStore('user', () => {
     clearUserInfo,
     login,
     token,
-    menu
   }
 }, {
   persist: true

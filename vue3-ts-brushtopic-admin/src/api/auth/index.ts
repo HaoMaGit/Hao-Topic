@@ -1,5 +1,6 @@
 import request from "@/utils/request.ts";
-import type { LoginType, LoginResultType, CommonResultType, UserResponse } from "./type";
+import type { LoginType, LoginResultType, UserResponse } from "./type";
+import type { CommonResultType } from "../common";
 
 const prefix = "/security/user/"
 

@@ -155,51 +155,54 @@ console.log("settingStore", settingStore.themeColor);
       </a-space>
     </a-form-item>
   </a-drawer>
-  <!-- 按钮位置 -->
-  <a-button :icon="h(ReloadOutlined)" shape="circle" @click="updateRefsh"></a-button>
-  <a-button :icon="h(FullscreenOutlined)" shape="circle" @click="fullScreen"></a-button>
-  <!-- 通知：审核题目 会员购买 -->
-  <a-popover placement="bottom">
-    <!-- 自定义内容 -->
-    <template #content>
-      <div class="bell-box">
-        <!-- 顶部标题和清除通知 -->
-        <div class="bell-top">
-          <span class="tz">通知</span>
-          <span class="clear" @click="clearBell">清空</span>
+  <a-space>
+    <!-- 按钮位置 -->
+    <a-button :icon="h(ReloadOutlined)" shape="circle" @click="updateRefsh"></a-button>
+    <a-button :icon="h(FullscreenOutlined)" shape="circle" @click="fullScreen"></a-button>
+    <!-- 通知：审核题目 会员购买 -->
+    <a-popover placement="bottom">
+      <!-- 自定义内容 -->
+      <template #content>
+        <div class="bell-box">
+          <!-- 顶部标题和清除通知 -->
+          <div class="bell-top">
+            <span class="tz">通知</span>
+            <span class="clear" @click="clearBell">清空</span>
+          </div>
+          <!-- 内容区域是通知信息 -->
+          <div class="bell-content">
+            <ul class="infinite-list" style="overflow: auto">
+              <li v-for="i in 10" :key="i" class="infinite-list-item">{{ i }}</li>
+            </ul>
+          </div>
+          <!-- 底部关闭通知 -->
+          <div class="bell-bottom">
+            <a-link type="primary">已读</a-link>
+          </div>
         </div>
-        <!-- 内容区域是通知信息 -->
-        <div class="bell-content">
-          <ul class="infinite-list" style="overflow: auto">
-            <li v-for="i in 10" :key="i" class="infinite-list-item">{{ i }}</li>
-          </ul>
-        </div>
-        <!-- 底部关闭通知 -->
-        <div class="bell-bottom">
-          <a-link type="primary">已读</a-link>
-        </div>
-      </div>
-    </template>
-    <a-button :icon="h(BellOutlined)" shape="circle" @click="viewBell"></a-button>
-  </a-popover>
-  <!-- 设置 -->
-  <a-button @click="viewSetting" :icon="h(SettingOutlined)" shape="circle"></a-button>
-  <!-- 头像 -->
-  <img class="user-avatar" :src="userStore.userInfo?.avatar == null ? userStore.userInfo.avatar : Hao" alt="" srcset="">
-  <!-- 下拉菜单：个人中心 退出登录 -->
-  <a-dropdown class="dropdown">
-    <span class="el-dropdown-link">
-      {{ userStore.userInfo?.account }}
-      <DownOutlined />
-    </span>
-    <template #overlay>
-      <a-menu>
-        <a-menu-item>个人中心</a-menu-item>
-        <a-menu-item
-          @click="userStore.clearUserInfo(), $router.push('/login'), message.success('退出登录')">退出登录</a-menu-item>
-      </a-menu>
-    </template>
-  </a-dropdown>
+      </template>
+      <a-button :icon="h(BellOutlined)" shape="circle" @click="viewBell"></a-button>
+    </a-popover>
+    <!-- 设置 -->
+    <a-button @click="viewSetting" :icon="h(SettingOutlined)" shape="circle"></a-button>
+    <!-- 头像 -->
+    <img class="user-avatar" :src="userStore.userInfo?.avatar == null ? userStore.userInfo.avatar : Hao" alt=""
+      srcset="">
+    <!-- 下拉菜单：个人中心 退出登录 -->
+    <a-dropdown class="dropdown">
+      <span class="el-dropdown-link">
+        {{ userStore.userInfo?.account }}
+        <DownOutlined />
+      </span>
+      <template #overlay>
+        <a-menu>
+          <a-menu-item>个人中心</a-menu-item>
+          <a-menu-item
+            @click="userStore.clearUserInfo(), $router.push('/login'), message.success('退出登录')">退出登录</a-menu-item>
+        </a-menu>
+      </template>
+    </a-dropdown>
+  </a-space>
 </template>
 <style lang="scss" scoped>
 .space {

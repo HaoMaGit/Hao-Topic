@@ -11,7 +11,7 @@ export interface UserResponse {
   account: string,
   avatar: string,
   identity: number | null,
-  menuList: []
+  menuList: MenuType[]
 }
 
 // 登录返回结果类型
@@ -21,9 +21,11 @@ export interface LoginResultType {
   message: string;
 }
 
-// 通用的返回结果类型
-export interface CommonResultType<T> {
-  code: number | string;
-  message: string;
-  data: T;
+// 菜单类型
+export interface MenuType {
+  children: MenuType[];
+  key: string;
+  icon: unknown;
+  label: string;
 }
+

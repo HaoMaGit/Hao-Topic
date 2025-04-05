@@ -8,7 +8,7 @@ export const useSettingStore = defineStore('setting', () => {
   // 左侧菜单是否折叠
   const fold = ref(false)
   // 主题颜色
-  const themeColor = ref('#409eff')
+  const themeColor = ref('#1677ff')
   // 是否为暗黑模式
   const isDark = ref(false)
   // 判断本地是否存储了主题配置

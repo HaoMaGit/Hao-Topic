@@ -42,8 +42,8 @@ router.beforeEach(async (to, from, next) => {
           next({
             ...to
           })
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
+          console.log(error);
           message.success('请重新登录')
           //退出登录->用户相关的数据清空
           await userStore.clearUserInfo()
@@ -61,8 +61,7 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 })
-//全局后置守卫
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-router.afterEach((to, from) => {
+// 全局后置守卫
+router.afterEach(() => {
   nprogress.done()
 })

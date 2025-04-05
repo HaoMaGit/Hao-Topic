@@ -6,3 +6,19 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
+
+// 滚动条外观设置
+::-webkit-scrollbar {
+  width: $base-webkit-scrollbar;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: $base-webkit-track;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $base-webkit-background;
+  border-radius: $base-webkit-radius;
+}
