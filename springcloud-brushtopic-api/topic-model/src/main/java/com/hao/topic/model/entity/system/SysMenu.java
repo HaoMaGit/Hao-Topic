@@ -11,8 +11,8 @@ import lombok.Data;
 @Data
 public class SysMenu extends BaseEntity {
     private String menuName;
-    private Long parentId;
     private Integer sorted;
     private String route;
     private String icon;
+    private Long parentId;
 }

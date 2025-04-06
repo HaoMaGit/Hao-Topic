@@ -13,15 +13,17 @@ import org.springframework.web.bind.annotation.*;
  * Date: 2025/3/31 22:29
  */
 @RestController
-@RequestMapping("/system/user")
+@RequestMapping("/topic/user")
 public class TestController {
 
     @GetMapping("/admin")
+    @PreAuthorize("hasAuthority('admin')")
     public String test1() {
         return "管理员访问成功";
     }
 
     @GetMapping("/member")
+    @PreAuthorize("hasAuthority('member')")
     public String test2() {
         return "会员访问成功";
     }

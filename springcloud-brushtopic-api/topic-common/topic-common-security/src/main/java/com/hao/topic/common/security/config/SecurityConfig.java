@@ -46,6 +46,7 @@ public class SecurityConfig {
                 // 配置HTTP请求的授权规则
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/system/captchaImage").permitAll()
+                        .requestMatchers("/system/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 添加自定义的JWT认证过滤器，在UsernamePasswordAuthenticationFilter之前执行

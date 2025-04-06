@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -46,7 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 从请求头中获取Authorization字段的值，即JWT令牌
         String token = request.getHeader("Authorization");
         log.info("获取到的令牌: {}", token);
-
         // 检查令牌是否存在
         if (token != null) {
             try {
