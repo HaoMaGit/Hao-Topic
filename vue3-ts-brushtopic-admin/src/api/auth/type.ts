@@ -23,9 +23,9 @@ export interface LoginResultType {
 
 // 菜单类型
 export interface MenuType {
-  children: MenuType[];
+  children?: MenuType[];
   key: string;
-  icon: unknown;
+  icon: string;
   label: string;
 }
 

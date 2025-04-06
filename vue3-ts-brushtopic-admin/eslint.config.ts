@@ -31,6 +31,7 @@ export default defineConfigWithVueTs(
           ignores: ['login', 'index', '404'], // 允许的单单词组件名
         },
       ],
+      '@typescript-eslint/no-explicit-any': 'off', // 允许使用 any 类型
     },
   }
 )

@@ -5,9 +5,10 @@ const settingStore = useSettingStore();
 
 </script>
 <template>
-  <div class="logo" :style="{ 'marginLeft': settingStore.fold ? '2px' : '0px' }">
-    <img src="/public/logo.svg" alt="">
-    <p :class="{ 'text-hidden': settingStore.fold, 'text-preview': !settingStore.fold }">易题后台管理系统</p>
+  <div class="logo" :style="{ 'paddingLeft': settingStore.fold ? '25px' : '15px' }">
+    <img src="../../assets/images/logo.png" alt="">
+    <p v-if="!settingStore.fold" :class="{ 'text-hidden': settingStore.fold, 'text-preview': !settingStore.fold }">
+      易题后台管理系统</p>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -17,7 +18,6 @@ const settingStore = useSettingStore();
   color: #1677ff;
   display: flex;
   align-items: center;
-  padding: 15px;
   transition: all 0.3s ease;
 
   img {

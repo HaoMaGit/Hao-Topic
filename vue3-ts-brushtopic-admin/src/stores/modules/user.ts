@@ -4,11 +4,12 @@ import {
 import {
   ref
 } from 'vue'
-import { apiLogin, apiGetUserInfo } from '@/api/auth/index.ts'
+import { apiLogin, apiGetUserInfo, apiLogout } from '@/api/auth/index.ts'
 import type { LoginType, UserResponse } from '@/api/auth/type';
 import { message } from 'ant-design-vue';
 import router from '@/router';
 import { asyncRoute } from '@/router/routers';
+
 export const useUserStore = defineStore('user', () => {
   // 用户信息
   const userInfo = ref<UserResponse>({
@@ -36,20 +37,29 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const getUserInfo = async () => {
     const res = await apiGetUserInfo(token.value)
-    if (res.data.menuList) {
-      userInfo.value.menuList = res.data.menuList
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+    console.log(res);
+
+    if (res.data) {
+      userInfo.value = res.data
+      // 确保 menuList 已初始化
+      if (!userInfo.value.menuList) {
+        userInfo.value.menuList = []
+      }
+      // 添加异步路由
       userInfo.value.menuList.unshift({ ...asyncRoute })
+    } else {
+      message.error("获取用户信息失败")
+      return
     }
-    userInfo.value = res.data
+    console.log(userInfo.value.menuList);
+
     if (res.code === 200) {
       message.success("登录成功")
       router.push('/')
     }
   }
-  // TODO 清除用户信息
   const clearUserInfo = () => {
+    apiLogout()
     userInfo.value = {
       account: '',
       avatar: '',
