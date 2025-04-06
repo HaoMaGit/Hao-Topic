@@ -1,6 +1,7 @@
 package com.hao.topic.system.controller;
 
 import com.hao.topic.model.entity.system.SysMenu;
+import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.service.SysMenuService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,12 @@ public class SysMenuController {
      * @return
      */
     @GetMapping("userMenu/{roleId}")
-    public List<SysMenu> userMenu(@PathVariable Long roleId) {
+    public List<SysMenuVo> userMenu(@PathVariable Long roleId) {
         return sysMenuService.getUserMenu(roleId);
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return  "1111111111111";
     }
 }

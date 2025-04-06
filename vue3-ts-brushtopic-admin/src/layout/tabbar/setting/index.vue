@@ -4,16 +4,14 @@ const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting';
 const settingStore = useSettingStore()
 import Hao from '@/assets/images/H.png'
-// import { ElMessage, ElMessageBox } from 'element-plus';
 import { ref, h } from 'vue'
 import { message } from 'ant-design-vue';
 import { BellOutlined, DownOutlined, SettingOutlined, MenuFoldOutlined, MenuUnfoldOutlined, FullscreenOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 // 引入颜色选择器
 import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
-// 引入图标
-// import { Moon, Sunny, Fold, Expand } from '@element-plus/icons-vue'
-
+import { useRouter } from 'vue-router';
+const $router = useRouter()
 // 刷新
 const updateRefsh = () => {
   // 刷新页面
@@ -114,7 +112,6 @@ const resetTheme = () => {
   message.info("重置配置成功")
 }
 
-console.log("settingStore", settingStore.themeColor);
 
 </script>
 <template>

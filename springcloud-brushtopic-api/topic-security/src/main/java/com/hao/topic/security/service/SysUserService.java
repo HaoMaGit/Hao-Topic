@@ -12,6 +12,7 @@ import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
+import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.mapper.SysRoleMapper;
 import com.hao.topic.security.mapper.SysUserMapper;
@@ -101,12 +102,11 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 设置token到ThreadLocal
         TokenInterceptor.setToken(token);
         // 调用系统管理服务 查询用户菜单权限
-        List<SysMenu> sysMenus = systemFeignClient.userMenu(sysRole.getId());
+        List<SysMenuVo> sysMenus = systemFeignClient.userMenu(sysRole.getId());
         // 校验
         if (CollectionUtils.isEmpty(sysMenus)) {
             throw new TopicException(ResultCodeEnum.NO_MENU_FAIL);
         }
-
         userInfoVo.setMenuList(sysMenus);
 
         return userInfoVo;

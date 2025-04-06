@@ -6,6 +6,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.entity.system.SysRoleMenu;
+import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.mapper.SysMenuMapper;
 import com.hao.topic.system.mapper.SysRoleMenuMapper;
 import com.hao.topic.system.service.SysMenuService;
@@ -35,7 +36,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
      * @param roleId
      * @return
      */
-    public List<SysMenu> getUserMenu(Long roleId) {
+    public List<SysMenuVo> getUserMenu(Long roleId) {
         if (roleId == null) {
             throw new TopicException(ResultCodeEnum.NO_ROLE_FAIL);
         }
@@ -52,12 +53,19 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
         // 批量查询到菜单信息
         List<SysMenu> sysMenus = sysMenuMapper.selectBatchIds(menuIdList);
-        // TODO 封装返回数据减少大小
-
         if (CollectionUtils.isEmpty(sysMenus)) {
             throw new TopicException(ResultCodeEnum.NO_MENU_FAIL);
         }
+        // TODO 后续递归封装层级
+        List<SysMenuVo> sysMenuVos = sysMenus.stream().map(sysMenu -> {
+            SysMenuVo sysMenuVo = new SysMenuVo();
+            sysMenuVo.setKey(sysMenu.getRoute());
+            sysMenuVo.setIcon(sysMenu.getIcon());
+            sysMenuVo.setLabel(sysMenu.getMenuName());
+            return sysMenuVo;
+        }).toList();
+
         // 返回
-        return sysMenus;
+        return sysMenuVos;
     }
 }

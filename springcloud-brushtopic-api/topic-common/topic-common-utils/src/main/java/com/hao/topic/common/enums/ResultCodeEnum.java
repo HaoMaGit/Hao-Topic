@@ -16,7 +16,7 @@ public enum ResultCodeEnum {
     FAIL(201, "失败"),
     LOGIN_ERROR(401, "认证失败请重新登录"),
     LOGIN_ERROR_SECURITY(403, "未授权不能访问"),
-    LOGOUT_SUCCESS(202, "退出登录成功"),
+    LOGOUT_SUCCESS(200, "退出登录成功"),
     CODE_ERROR(203, "验证码错误"),
     PASSWORD_ERROR(202, "账号或密码错误"),
     ACCOUNT_ERROR(205, "账号不存在"),

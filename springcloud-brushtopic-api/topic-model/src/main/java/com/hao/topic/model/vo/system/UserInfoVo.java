@@ -16,5 +16,5 @@ public class UserInfoVo {
     private String avatar;
     private Integer identity;
     // 菜单权限
-    private List<SysMenu> menuList;
+    private List<SysMenuVo> menuList;
 }

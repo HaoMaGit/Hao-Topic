@@ -49,10 +49,10 @@ public class LogoutSuccessHandler implements ServerLogoutSuccessHandler {
         httpHeaders.add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
 
         // 设置响应体
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, Object> map = new HashMap<>();
         // 删除token
         response.addCookie(ResponseCookie.from("token", "logout").maxAge(0).path("/").build());
-        map.put("code", String.valueOf(ResultCodeEnum.LOGOUT_SUCCESS.getCode()));
+        map.put("code", ResultCodeEnum.LOGOUT_SUCCESS.getCode());
         map.put("message", ResultCodeEnum.LOGOUT_SUCCESS.getMessage());
 
         // 使用ObjectMapper将响应体转换为JSON字节数组
