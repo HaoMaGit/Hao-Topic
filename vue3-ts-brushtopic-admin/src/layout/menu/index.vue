@@ -5,9 +5,10 @@ import { useUserStore } from '@/stores/modules/user.ts'
 const settingStore = useSettingStore()
 // 引入用户信息
 const userStore = useUserStore()
-import { ref } from 'vue'
+import { ref, h, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import type { MenuProps } from 'ant-design-vue';
+import * as AntIcons from '@ant-design/icons-vue';
 // 获取路由路径的
 const $route = useRoute()
 // 操作路由实例
@@ -15,16 +16,35 @@ const $router = useRouter()
 defineProps(['menuList'])
 //点击菜单的回调
 const handleClick: MenuProps['onClick'] = menuInfo => {
-  console.log(menuInfo)
+  console.log(menuInfo);
   $router.push(String(menuInfo.key))
 };
 // 当前选中的路由
 const selectedKeys = ref([$route.path])
 
+// 菜单
+const menuAllList = ref<any[]>([])
+
+onMounted(() => {
+  // 转换图标字符串为图标组件
+  userStore.userInfo.menuList.forEach(item => {
+    if (item.icon) {
+      const icon = String(item.icon);
+      menuAllList.value.push({
+        key: item.key,
+        label: item.label,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        icon: () => h(AntIcons[icon]),
+        children: item.children
+      })
+    }
+  });
+});
 </script>
 <template>
-  <a-menu class="custom-menu" :items="userStore.userInfo.menuList" v-model:selectedKeys="selectedKeys"
-    @click="handleClick" :inline-collapsed="settingStore.fold" :theme="settingStore.isDark ? 'dark' : 'light'">
+  <a-menu class="custom-menu" :items="menuAllList" v-model:selectedKeys="selectedKeys" @click="handleClick"
+    :inline-collapsed="settingStore.fold" :theme="settingStore.isDark ? 'dark' : 'light'">
   </a-menu>
 </template>
 <style lang="scss" scoped>

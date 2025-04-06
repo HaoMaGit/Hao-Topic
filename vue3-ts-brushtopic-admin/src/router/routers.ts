@@ -1,11 +1,8 @@
-import { HomeOutlined } from '@ant-design/icons-vue'
-import { h } from 'vue'
 // 通用的路由
 export const asyncRoute = {
   label: '首页',
   key: '/home',
-  icon: () => h(HomeOutlined),
-  // children: []
+  icon: 'HomeOutlined'
 }
 
 // 对外暴露的配置路由
@@ -33,11 +30,12 @@ export const constantRoute = [
     children: [{
       path: '/home',
       component: () => import('@/views/index.vue'),
-      meta: {
-        title: '首页',
-        hidden: false,
-      },
-    }]
+    },
+    // 测试路由
+    {
+      path: '/test',
+      component: () => import('@/views/test/index.vue'),
+    },]
   },
   // 404页面
   {
@@ -50,6 +48,7 @@ export const constantRoute = [
       icon: '',
     },
   },
+
   {
     // 当未匹配到路由则跳转404
     path: '/:pathMatch(.*)*',

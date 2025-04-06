@@ -11,8 +11,6 @@ import Logo from './logo/index.vue'
 import Menu from './menu/index.vue'
 // 顶部导航
 import Tabbar from './tabbar/index.vue'
-
-
 </script>
 <template>
   <div class="layout_container">
@@ -60,7 +58,6 @@ import Tabbar from './tabbar/index.vue'
     .scrollbar {
       width: 100%;
       height: calc(100vh - $base-menu-logo-height);
-
     }
   }
 
