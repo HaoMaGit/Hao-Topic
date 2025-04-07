@@ -78,35 +78,60 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return sysMenuVoList;
     }
 
-    public Map<String, Object> menuList(SysMenu sysMenu) {
-        // 设置分页参数
-        Page<SysMenu> sysMenuPage = new Page<>(sysMenu.getPageNum(), sysMenu.getPageSize());
-        // 封装分页条件
+    /**
+     * 查询菜单列表
+     *
+     * @param sysMenu
+     * @return
+     */
+    public List<SysMenuListVo> menuList(SysMenu sysMenu) {
+        // 封装条件
         LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysMenuLambdaQueryWrapper.orderByAsc(SysMenu::getSorted);
         // 判断查询参数是否为空
         if (sysMenu.getMenuName() != null) {
             sysMenuLambdaQueryWrapper.like(SysMenu::getMenuName, sysMenu.getMenuName());
         }
-        // 开始分页查询
-        sysMenuPage = sysMenuMapper.selectPage(sysMenuPage, sysMenuLambdaQueryWrapper);
+        // 开始查询
+        List<SysMenu> sysMenus = sysMenuMapper.selectList(sysMenuLambdaQueryWrapper);
+        // 校验
+        if (CollectionUtils.isEmpty(sysMenus)) {
+            return new ArrayList<>();
+        }
         // 封装返回结果
         List<SysMenuListVo> sysMenuListVos = new ArrayList<>();
         // 遍历
-        for (SysMenu sysMenuDb : sysMenuPage.getRecords()) {
+        for (SysMenu sysMenuDb : sysMenus) {
             if (sysMenuDb.getParentId() == 0) {
                 // 是根菜单
                 SysMenuListVo sysMenuVo = new SysMenuListVo();
                 BeanUtils.copyProperties(sysMenuDb, sysMenuVo);
-                // 递归设置字菜单
-                sysMenuVo.setChildren(getMenuListChildren(sysMenuVo, sysMenuPage.getRecords()));
+                // 如果有查询条件就查询子菜单
+                if (sysMenu.getMenuName() != null) {
+                    LambdaQueryWrapper<SysMenu> sysMenuLambdaQuery = new LambdaQueryWrapper<>();
+                    sysMenuLambdaQuery.eq(SysMenu::getParentId, sysMenuDb.getId());
+                    List<SysMenu> sysMenuChildren = sysMenuMapper.selectList(sysMenuLambdaQuery);
+                    // 递归设置字菜单
+                    sysMenuVo.setChildren(getMenuListChildren(sysMenuVo, sysMenuChildren));
+                } else {
+                    // 递归设置字菜单
+                    sysMenuVo.setChildren(getMenuListChildren(sysMenuVo, sysMenus));
+                }
                 sysMenuListVos.add(sysMenuVo);
             }
         }
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("total", sysMenuPage.getTotal());
-        resultMap.put("rows", sysMenuListVos);
-        return resultMap;
+        // 处理孤立的子菜单（没有父菜单的菜单）
+        for (SysMenu sysMenuDb : sysMenus) {
+            boolean hasParent = sysMenus.stream()
+                    .anyMatch(menu -> menu.getId().equals(sysMenuDb.getParentId()));
+            if (!hasParent && sysMenuDb.getParentId() != 0) {
+                // 孤立的子菜单，直接作为根菜单处理
+                SysMenuListVo sysMenuVo = new SysMenuListVo();
+                BeanUtils.copyProperties(sysMenuDb, sysMenuVo);
+                sysMenuListVos.add(sysMenuVo);
+            }
+        }
+        return sysMenuListVos;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.hao.topic.system.service;
 
 import com.hao.topic.model.entity.system.SysMenu;
+import com.hao.topic.model.vo.system.SysMenuListVo;
 import com.hao.topic.model.vo.system.SysMenuVo;
 
 import java.util.List;
@@ -15,5 +16,5 @@ public interface SysMenuService {
     List<SysMenuVo> getUserMenu(Long roleId);
 
 
-    Map<String, Object> menuList(SysMenu sysMenu);
+    List<SysMenuListVo> menuList(SysMenu sysMenu);
 }

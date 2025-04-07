@@ -23,7 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/system/menu")
 @AllArgsConstructor
-@PreAuthorize("@hasAuthority('admin')")
+@PreAuthorize("hasAuthority('admin')")
 public class SysMenuController {
     private final SysMenuService sysMenuService;
 
@@ -34,9 +34,9 @@ public class SysMenuController {
      * @return
      */
     @GetMapping("/list")
-    public Result<Map<String, Object>> list(SysMenu sysMenu) {
-        Map<String, Object> map = sysMenuService.menuList(sysMenu);
-        return Result.success(map);
+    public Result<List<SysMenuListVo>> list(SysMenu sysMenu) {
+        List<SysMenuListVo> sysMenuListVoList = sysMenuService.menuList(sysMenu);
+        return Result.success(sysMenuListVoList);
     }
 
     /**
