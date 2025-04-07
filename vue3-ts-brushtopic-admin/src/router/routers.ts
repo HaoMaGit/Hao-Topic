@@ -31,11 +31,27 @@ export const constantRoute = [
       path: '/home',
       component: () => import('@/views/index.vue'),
     },
-    // 测试路由
-    {
-      path: '/test',
-      component: () => import('@/views/test/index.vue'),
-    },]
+    ]
+  },
+  // 系统管理=>用户管理 菜单管理 角色管理
+  {
+    path: '/system',
+    redirect: '/system/user',
+    component: () => import('../layout/index.vue'),
+    children: [
+      {
+        path: '/system/user',
+        component: () => import('@/views/system/user/index.vue'),
+      },
+      {
+        path: '/system/role',
+        component: () => import('@/views/system/role/index.vue'),
+      },
+      {
+        path: '/system/menu',
+        component: () => import('@/views/system/menu/index.vue'),
+      }
+    ]
   },
   // 404页面
   {
@@ -48,7 +64,6 @@ export const constantRoute = [
       icon: '',
     },
   },
-
   {
     // 当未匹配到路由则跳转404
     path: '/:pathMatch(.*)*',

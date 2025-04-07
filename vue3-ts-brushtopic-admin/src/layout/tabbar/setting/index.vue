@@ -187,7 +187,7 @@ const resetTheme = () => {
       srcset="">
     <!-- 下拉菜单：个人中心 退出登录 -->
     <a-dropdown class="dropdown">
-      <span class="el-dropdown-link">
+      <span>
         {{ userStore.userInfo?.account }}
         <DownOutlined />
       </span>

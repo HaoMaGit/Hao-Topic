@@ -4,3 +4,15 @@ export interface CommonResultType<T> {
   message: string;
   data: T;
 }
+
+// 分页类型
+export interface PageType {
+  pageNum: number;
+  pageSize: number;
+}
+
+// 分页返回数据
+export interface PageResultType<T> {
+  total: number;
+  rows: T[];
+}

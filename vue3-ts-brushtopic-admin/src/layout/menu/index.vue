@@ -28,23 +28,36 @@ const menuAllList = ref<any[]>([])
 onMounted(() => {
   // 转换图标字符串为图标组件
   userStore.userInfo.menuList.forEach(item => {
-    if (item.icon) {
-      const icon = String(item.icon);
-      menuAllList.value.push({
-        key: item.key,
-        label: item.label,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    const icon = item.icon ? () => h(AntIcons[item.icon]) : null;
+    let children = null;
+    if (!item.children || item.children.length === 0) {
+      children = null;
+    } else {
+      children = item.children.map(child => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        icon: () => h(AntIcons[icon]),
-        children: item.children
-      })
+        const icon = child.icon ? () => h(AntIcons[child.icon]) : null;
+        return {
+          key: child.key,
+          label: child.label,
+          icon: icon,
+        };
+      });
     }
+    menuAllList.value.push({
+      key: item.key,
+      label: item.label,
+      icon: icon,
+      children: children,
+    });
   });
 });
 </script>
 <template>
-  <a-menu class="custom-menu" :items="menuAllList" v-model:selectedKeys="selectedKeys" @click="handleClick"
-    :inline-collapsed="settingStore.fold" :theme="settingStore.isDark ? 'dark' : 'light'">
+  <a-menu mode="inline" class="custom-menu" :items="menuAllList" v-model:selectedKeys="selectedKeys"
+    @click="handleClick" :inline-collapsed="settingStore.fold" :theme="settingStore.isDark ? 'dark' : 'light'">
   </a-menu>
 </template>
 <style lang="scss" scoped>
