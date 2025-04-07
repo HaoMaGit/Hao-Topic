@@ -50,6 +50,9 @@ import Tabbar from './tabbar/index.vue'
     height: 100vh;
     background: $base-menu-background;
     transition: all 0.3s;
+    position: fixed;
+    z-index: 1000;
+    box-shadow: 2px 0 7px 0 rgba(29, 35, 41, 0.05);
 
     &.fold {
       width: $base-menu-min-width;

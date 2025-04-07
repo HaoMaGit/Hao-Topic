@@ -5,7 +5,7 @@ const settingStore = useSettingStore();
 
 </script>
 <template>
-  <div class="logo" :style="{ 'paddingLeft': settingStore.fold ? '25px' : '15px' }">
+  <div class="logo" :style="{ 'paddingLeft': settingStore.fold ? '30px' : '21px' }">
     <img src="../../assets/images/logo.png" alt="">
     <p v-if="!settingStore.fold" :class="{ 'text-hidden': settingStore.fold, 'text-preview': !settingStore.fold }">
       易题后台管理系统</p>
@@ -21,8 +21,8 @@ const settingStore = useSettingStore();
   transition: all 0.3s ease;
 
   img {
-    width: 30px;
-    height: 30px;
+    width: 21px;
+    height: 21px;
   }
 
   p {
