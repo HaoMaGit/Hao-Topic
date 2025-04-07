@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
+import { ref, onMounted, h, createVNode } from 'vue'
 import { apiGetMenuList } from '@/api/system/menu/index'
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons-vue';
 // 导入所有图标
 import * as Icons from '@ant-design/icons-vue'
+import Modal from 'ant-design-vue/es/modal/Modal';
 // ... 其他 import 保持不变 ...
 
 // 获取所有图标列表
@@ -81,9 +83,6 @@ const columns = [
     align: 'center'
   }
 ]
-
-// 是否移入删除按钮
-const isDangerHover = ref(false);
 
 // 搜索
 const handleQuery = () => {
@@ -164,7 +163,20 @@ const handleAdd = () => {
 const handleUpdate = () => {
   drawer.value = true
 }
-const handleDelete = () => { }
+const handleDelete = () => {
+  Modal.confirm({
+    title: '是否确认删除该菜单?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: createVNode('div', { style: 'color:red;' }, '删除菜单会导致相关页面丢失，请慎重考虑!'),
+    onOk() {
+      console.log('OK');
+    },
+    onCancel() {
+      console.log('Cancel');
+    },
+    class: 'test',
+  });
+}
 
 onMounted(() => {
   getMenuList()
@@ -191,9 +203,6 @@ onMounted(() => {
       <a-form-item>
         <a-space>
           <a-button ghost type="primary" :icon="h(PlusOutlined)">新增</a-button>
-          <a-button :icon="h(EditOutlined)">修改</a-button>
-          <a-button @mouseenter="isDangerHover = true" @mouseleave="isDangerHover = false" :danger="isDangerHover"
-            :icon="h(DeleteOutlined)">删除</a-button>
         </a-space>
       </a-form-item>
     </a-space>
@@ -264,5 +273,14 @@ onMounted(() => {
 .space-footer-box {
   display: flex;
   justify-content: flex-end;
+}
+
+// 添加抽屉标题样式
+::v-deep(.ant-drawer-header) {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid red;
+  color: red;
 }
 </style>
