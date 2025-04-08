@@ -8,13 +8,11 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
-import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
-import com.hao.topic.security.mapper.SysRoleMapper;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +29,13 @@ import java.util.Map;
 @Service
 public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
-    @Autowired
-    private SysRoleMapper sysRoleMapper;
 
     @Autowired
     private SysUserRoleMapper sysUserRoleMapper;
 
     @Autowired
     private SystemFeignClient systemFeignClient;
+
 
     /**
      * 根据用户名查询用户信息
@@ -93,7 +90,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
             throw new TopicException(ResultCodeEnum.ACCOUNT_ERROR);
         }
         // 根据角色id查询角色相关信息
-        SysRole sysRole = sysRoleMapper.selectById(sysUserRole.getRoleId());
+        SysRole sysRole = systemFeignClient.getById(sysUserRole.getRoleId());
         // 校验一下
         if (sysRole == null) {
             throw new TopicException(ResultCodeEnum.ACCOUNT_ERROR);
