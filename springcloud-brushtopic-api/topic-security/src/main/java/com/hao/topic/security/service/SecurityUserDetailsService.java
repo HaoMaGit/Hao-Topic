@@ -1,13 +1,11 @@
 package com.hao.topic.security.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.constant.ExceptionConstant;
-import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
-import com.hao.topic.security.config.SecurityConfig;
-import com.hao.topic.security.mapper.SysRoleMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +14,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +41,7 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
     private SysUserRoleMapper sysUserRoleMapper;
 
     @Autowired
-    private SysRoleMapper sysRoleMapper;
+    private SystemFeignClient systemFeignClient;
 
 
     /**
@@ -79,35 +74,37 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
             return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_STOP));
         }
         log.info(sysUser.toString());
-        // 根据用户id获取用户角色信息
-        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUser.getId());
-        SysUserRole sysUserRole = sysUserRoleMapper.selectOne(sysUserRoleLambdaQueryWrapper);
-        // 校验
-        if (sysUserRole == null) {
-            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
-        }
-        // 根据角色id获取用户角色信息
-        SysRole sysRole = sysRoleMapper.selectById(sysUserRole.getRoleId());
-        // 校验
-        if (sysRole == null) {
-            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
-        }
-        // user用户不能访问
-        if (sysRole.getIdentify() == 0) {
-            return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT));
-        }
-        log.info(sysRole.toString());
-        // 存储权限
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(sysRole.getRoleKey()));
-        // 创建 SecurityUserDetails 对象时，对密码进行编码
-        SecurityUserDetails securityUserDetails = new SecurityUserDetails(
-                sysUser.getAccount(),
-                "{bcrypt}" + sysUser.getPassword(),  // 加密
-                authorities,
-                sysUser.getId()
-        );
-        return Mono.just(securityUserDetails);
+        return Mono.fromCallable(() -> {
+                    // 根据用户id获取用户角色信息
+                    LambdaQueryWrapper<SysUserRole> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(SysUserRole::getUserId, sysUser.getId());
+                    return sysUserRoleMapper.selectOne(wrapper);
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(userRole -> {
+                    if (userRole == null) {
+                        return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
+                    }
+                    return Mono.fromCallable(() -> systemFeignClient.getById(userRole.getRoleId()))
+                            .subscribeOn(Schedulers.boundedElastic());
+                })
+                .flatMap(sysRole -> {
+                    if (sysRole == null) {
+                        return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
+                    }
+                    if (sysRole.getIdentify() == 0) {
+                        return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT));
+                    }
+
+                    Collection<GrantedAuthority> authorities = new ArrayList<>();
+                    authorities.add(new SimpleGrantedAuthority(sysRole.getRoleKey()));
+
+                    return Mono.just(new SecurityUserDetails(
+                            sysUser.getAccount(),
+                            "{bcrypt}" + sysUser.getPassword(),
+                            authorities,
+                            sysUser.getId()
+                    ));
+                });
     }
 }

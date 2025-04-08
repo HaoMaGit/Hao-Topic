@@ -2,6 +2,7 @@ package com.hao.topic.client.system;
 
 import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.model.entity.system.SysMenu;
+import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,4 +25,13 @@ public interface SystemFeignClient {
      */
     @GetMapping("/system/menu/userMenu/{roleId}")
     public List<SysMenuVo> userMenu(@PathVariable Long roleId);
+
+    /**
+     * 根据角色i查询角色信息
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/system/role/{id}")
+    public SysRole getById(@PathVariable Long id);
 }

@@ -45,6 +45,7 @@ public class TokenInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate requestTemplate) {
         // 从 ThreadLocal 中获取当前线程的 token
         String token = tokenThreadLocal.get();
+        System.out.println("token:" + token);
         if (token != null) {
             // 将 token 添加到请求头中
             requestTemplate.header("Authorization", token);

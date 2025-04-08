@@ -1,4 +1,4 @@
-package com.hao.topic.security.mapper;
+package com.hao.topic.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.hao.topic.model.entity.system.SysRole;
