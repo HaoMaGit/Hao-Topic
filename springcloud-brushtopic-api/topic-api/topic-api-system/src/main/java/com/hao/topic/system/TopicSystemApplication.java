@@ -1,10 +1,13 @@
 package com.hao.topic.system;
 
+import com.hao.topic.common.config.MyMetaObjectHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
+import org.springframework.context.annotation.Import;
 
 /**
  * Description: 系统管理服务
@@ -13,9 +16,11 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @EnableDiscoveryClient
 @SpringBootApplication
-@ComponentScan(basePackages = {
-        "com.hao.topic.common.security"  // 添加这行，扫描security模块
+@ComponentScans({
+        @ComponentScan("com.hao.topic.common.security")
+        , @ComponentScan("com.hao.topic.common.handler"),
 })
+@Import(MyMetaObjectHandler.class)  // 直接导入配置类
 @EnableFeignClients(basePackages = {"com.hao.topic.client.system"})
 public class TopicSystemApplication {
     public static void main(String[] args) {
