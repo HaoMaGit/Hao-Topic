@@ -1,69 +1,65 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { apiGetMenuList } from '@/api/system/menu/index'
+import { apiGetRoleList } from '@/api/system/role/index'
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  DownloadOutlined,
-  UploadOutlined
 } from '@ant-design/icons-vue';
+import type { RoleQueryType } from '@/api/system/role/type';
 
-// 查询菜单列表
-const getMenuList = async () => {
-  const res = await apiGetMenuList(params.value)
-  tableData.value = res.data
+// 查询角色列表
+const getRoleList = async () => {
+  const res = await apiGetRoleList(params.value)
+  console.log("====>", res);
+  tableData.value = res.data.rows
+  total.value = res.data.total
 }
 // 定义查询参数
-const params = ref({
+const params = ref<RoleQueryType>({
   pageNum: 1,
   pageSize: 10,
-  total: 0,
-  menuName: '',
+  name: '',
 })
+// 数量
+const total = ref<number>(0)
 
 // 表格数据
 const tableData = ref([])
 // 表格字段
 const columns = [
   {
-    title: '菜单名称',
-    dataIndex: 'menuName',
-    key: 'menuName',
+    title: '角色名称',
+    dataIndex: 'name',
+    key: 'name',
     align: 'center',
     width: 180,
   },
+
   {
-    title: '图标',
-    dataIndex: 'icon',
-    key: 'icon',
+    title: '备注',
+    dataIndex: 'remark',
+    key: 'remark',
     align: 'center',
-    width: 100,
+    width: 350,
   },
   {
-    title: '排序',
-    dataIndex: 'sorted',
-    key: 'sorted',
+    title: '权限标识',
+    dataIndex: 'roleKey',
+    key: 'roleKey',
     align: 'center',
-    width: 100,
   },
   {
-    title: '路径',
-    dataIndex: 'route',
-    key: 'route',
+    title: '角色标识',
+    dataIndex: 'identify',
+    key: 'identify',
     align: 'center',
-    width: 150,
+    width: 100,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
-    align: 'center'
-  },
-  {
-    title: '修改时间',
-    dataIndex: 'updateTime',
-    key: 'updateTime',
     align: 'center'
   },
   {
@@ -74,27 +70,26 @@ const columns = [
   }
 ]
 
-// 是否移入删除按钮
-const isDangerHover = ref(false);
+
 
 // 搜索
 const handleQuery = () => {
-  getMenuList()
+  getRoleList()
 }
 
 // 重置
 const handleReset = () => {
   params.value = {
-    menuName: '',
+    name: '',
     pageNum: 1,
     pageSize: 10,
-    total: 0,
   }
-  getMenuList()
+  total.value = 0
+  getRoleList()
 }
 
 onMounted(() => {
-  getMenuList()
+  getRoleList()
 })
 </script>
 <template>
@@ -103,8 +98,8 @@ onMounted(() => {
       <div class="query-box">
         <a-space>
           <!-- 查询条件 -->
-          <a-form-item label="菜单名称">
-            <a-input placeholder="请输入菜单名称" v-model:value="params.menuName"></a-input>
+          <a-form-item label="角色名称">
+            <a-input placeholder="请输入菜单名称" v-model:value="params.name"></a-input>
           </a-form-item>
           <a-form-item>
             <a-space>
@@ -118,11 +113,6 @@ onMounted(() => {
       <a-form-item>
         <a-space>
           <a-button ghost type="primary" :icon="h(PlusOutlined)">新增</a-button>
-          <a-button :icon="h(EditOutlined)">修改</a-button>
-          <a-button @mouseenter="isDangerHover = true" @mouseleave="isDangerHover = false" :danger="isDangerHover"
-            :icon="h(DeleteOutlined)">删除</a-button>
-          <a-button :icon="h(DownloadOutlined)">导出</a-button>
-          <a-button :icon="h(UploadOutlined)">导入</a-button>
         </a-space>
       </a-form-item>
     </a-space>
@@ -130,7 +120,7 @@ onMounted(() => {
     <a-table :pagination="{
       current: params.pageNum,
       pageSize: params.pageSize,
-      total: params.total,
+      total: total,
       showTotal: (total: any) => `共 ${total} 条`,
       showSizeChanger: true,
       showQuickJumper: true,
@@ -141,11 +131,12 @@ onMounted(() => {
           <a-button type="link" size="small" :icon="h(EditOutlined)">修改</a-button>
           <a-button type="link" size="small" :icon="h(DeleteOutlined)">删除</a-button>
         </template>
-        <!-- 处理icon -->
-        <template v-else-if="column.key === 'icon'">
-          <span v-if="record.icon">
-            <component :is="record.icon" />
-          </span>
+        <template v-if="column.key === 'remark'">
+          <a-tooltip>
+            <template #title>{{ record.remark }}</template>
+            <!-- 超出部分显示为 tooltip截取20个字符 -->
+            {{ record.remark.slice(0, 20) }}
+          </a-tooltip>
         </template>
       </template>
     </a-table>
