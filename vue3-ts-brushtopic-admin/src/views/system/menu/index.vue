@@ -12,7 +12,8 @@ import {
 import * as Icons from '@ant-design/icons-vue'
 import Modal from 'ant-design-vue/es/modal/Modal';
 import { message } from 'ant-design-vue';
-
+// import { useUserStore } from '@/stores/modules/user'
+// const userStore = useUserStore()
 // 获取所有图标列表
 const iconList = ref(
   Object.keys(Icons)
@@ -152,9 +153,10 @@ const getTreeData = async () => {
 }
 
 // 新增菜单
-const handleAdd = () => {
+const handleAdd = (pId: number) => {
   drawerTitle.value = '新增菜单'
   clearFormData()
+  formData.value.parentId = pId
   getTreeData()
   drawer.value = true
 }
@@ -217,13 +219,17 @@ const handleDelete = (id: number) => {
     title: '是否确认删除该菜单?',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除菜单会导致相关页面丢失，请慎重考虑!'),
-    onOk() {
-      apiDeleteMenu(id).then(() => {
+    async onOk() {
+      try {
+        await apiDeleteMenu(id)
         getMenuList()
         clearFormData()
         drawer.value = false
-      })
-      message.success('删除成功')
+        message.success('删除成功')
+      } catch {
+        drawer.value = false
+      }
+
     },
     onCancel() {
       console.log('Cancel');
@@ -255,7 +261,7 @@ onMounted(() => {
       <!-- 操作按钮 -->
       <a-form-item>
         <a-space>
-          <a-button ghost type="primary" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
+          <a-button ghost type="primary" :icon="h(PlusOutlined)" @click="handleAdd(0)">新增</a-button>
         </a-space>
       </a-form-item>
     </a-space>
@@ -263,7 +269,7 @@ onMounted(() => {
     <a-table :pagination="false" :dataSource="tableData" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
-          <a-button type="link" size="small" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
+          <a-button type="link" size="small" :icon="h(PlusOutlined)" @click="handleAdd(record.parentId)">新增</a-button>
           <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleUpdate(record)">修改</a-button>
           <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record.id)">删除</a-button>
         </template>

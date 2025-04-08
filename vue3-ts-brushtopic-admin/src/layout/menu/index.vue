@@ -45,13 +45,6 @@ onMounted(() => {
           icon: icon,
         };
       });
-      // 如果 children 是一个空数组，将其设置为 null
-      if (children.length === 0) {
-        children = null;
-      }
-    }
-    if (children && children.length === 0) {
-      children = null;
     }
     menuAllList.value.push({
       key: item.key,

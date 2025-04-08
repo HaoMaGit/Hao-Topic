@@ -6,6 +6,7 @@ import {
 } from 'vue'
 import { apiLogin, apiGetUserInfo, apiLogout } from '@/api/auth/index.ts'
 import type { LoginType, UserResponse } from '@/api/auth/type';
+import type { CommonResultType } from '@/api/common.ts'
 import { message } from 'ant-design-vue';
 import router from '@/router';
 import { asyncRoute } from '@/router/routers';
@@ -32,10 +33,14 @@ export const useUserStore = defineStore('user', () => {
     // 将token信息存储
     token.value = res.token
     // 获取用户信息
-    getUserInfo()
+    const userInfoRes = await getUserInfo()
+    if (userInfoRes && userInfoRes.code === 200) {
+      message.success("登录成功")
+      router.push('/')
+    }
   }
   // 获取用户信息
-  const getUserInfo = async () => {
+  const getUserInfo = async (): Promise<CommonResultType<UserResponse> | undefined> => {
     const res = await apiGetUserInfo(token.value)
     console.log(res);
 
@@ -49,15 +54,11 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value.menuList.unshift({ ...asyncRoute })
     } else {
       message.error("获取用户信息失败")
-      return
+      return undefined
     }
-    console.log(userInfo.value.menuList);
-
-    if (res.code === 200) {
-      message.success("登录成功")
-      router.push('/')
-    }
+    return res
   }
+
   const clearUserInfo = () => {
     apiLogout()
     userInfo.value = {
