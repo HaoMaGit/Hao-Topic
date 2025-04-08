@@ -20,7 +20,7 @@ const getCaptchaImage = async () => {
 }
 
 // 表单实例
-const adminRef = ref(null)
+const adminRef = ref<any>(null)
 // 表单数据
 const formData = ref<LoginType>({
   username: 'admin',
@@ -76,8 +76,6 @@ const clearStyle = () => {
     code: '',
     remember: false,
   }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   adminRef.value.resetFields()
 }
 

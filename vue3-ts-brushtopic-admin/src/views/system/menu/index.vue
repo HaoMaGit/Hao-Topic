@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, h, createVNode } from 'vue'
-import { apiGetMenuList } from '@/api/system/menu/index'
+import { apiGetMenuList, apiAddMenu, apiDeleteMenu, apiUpdateMenu } from '@/api/system/menu/index'
+import type { MenuType } from '@/api/system/menu/type'
 import {
   PlusOutlined,
   EditOutlined,
@@ -10,7 +11,7 @@ import {
 // 导入所有图标
 import * as Icons from '@ant-design/icons-vue'
 import Modal from 'ant-design-vue/es/modal/Modal';
-// ... 其他 import 保持不变 ...
+import { message } from 'ant-design-vue';
 
 // 获取所有图标列表
 const iconList = ref(
@@ -99,18 +100,20 @@ const handleReset = () => {
 
 
 // 表单实例
-const formRef = ref()
+const formRef = ref<any>(null)
 // 标题
 const drawerTitle = ref('新增')
 // 抽屉
 const drawer = ref(false)
 // 抽屉关闭
 const onClose = () => {
+  clearFormData()
   drawer.value = false
 }
 
 // 表单数据
-const formData = ref({
+const formData = ref<MenuType>({
+  id: null,
   menuName: '',
   icon: '',
   route: '',
@@ -148,33 +151,83 @@ const getTreeData = async () => {
   }]
 }
 
+// 新增菜单
 const handleAdd = () => {
   drawerTitle.value = '新增菜单'
+  clearFormData()
+  getTreeData()
+  drawer.value = true
+}
+// 修改
+const handleUpdate = (record: any) => {
+  drawer.value = true
+  formData.value = {
+    ...record
+  }
+  getTreeData()
+}
+
+// 清除默认信息
+const clearFormData = () => {
   formData.value = {
     menuName: '',
+    id: null,
     icon: '',
     route: '',
     sorted: null,
     parentId: 0  // 默认选中主类目
   }
-  getTreeData()
-  drawer.value = true
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
 }
-const handleUpdate = () => {
-  drawer.value = true
+// 保存
+const onSave = () => {
+  formRef.value.validate().then(async () => {
+    let mes = ''
+    console.log(formData.value);
+    try {
+      // 判断是新增还是修改
+      if (formData.value.id) {
+        // 修改
+        await apiUpdateMenu(formData.value)
+        getMenuList()
+        clearFormData()
+        drawer.value = false
+        mes = '修改菜单成功'
+      } else {
+        //  新增
+        await apiAddMenu(formData.value)
+        getMenuList()
+        clearFormData()
+        drawer.value = false
+        mes = '新增菜单成功'
+      }
+      message.success(mes)
+    } catch (error: any) {
+      message.error(error.getMessage())
+    }
+  }).catch(() => {
+    message.error('信息有误')
+  })
 }
-const handleDelete = () => {
+// 删除菜单
+const handleDelete = (id: number) => {
   Modal.confirm({
     title: '是否确认删除该菜单?',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除菜单会导致相关页面丢失，请慎重考虑!'),
     onOk() {
-      console.log('OK');
+      apiDeleteMenu(id).then(() => {
+        getMenuList()
+        clearFormData()
+        drawer.value = false
+      })
+      message.success('删除成功')
     },
     onCancel() {
       console.log('Cancel');
     },
-    class: 'test',
   });
 }
 
@@ -202,7 +255,7 @@ onMounted(() => {
       <!-- 操作按钮 -->
       <a-form-item>
         <a-space>
-          <a-button ghost type="primary" :icon="h(PlusOutlined)">新增</a-button>
+          <a-button ghost type="primary" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
         </a-space>
       </a-form-item>
     </a-space>
@@ -211,8 +264,8 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
           <a-button type="link" size="small" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
-          <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleUpdate">修改</a-button>
-          <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete">删除</a-button>
+          <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleUpdate(record)">修改</a-button>
+          <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record.id)">删除</a-button>
         </template>
         <!-- 处理icon -->
         <template v-else-if="column.key === 'icon'">
@@ -224,7 +277,7 @@ onMounted(() => {
     </a-table>
     <!-- 新增和修改 -->
     <a-drawer :title="drawerTitle" placement="right" v-model:open="drawer" @close="onClose">
-      <a-form ref="formRef" :form="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+      <a-form ref="formRef" :model="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
         <a-form-item label="上级菜单" name="parentId">
           <a-tree-select v-model:value="formData.parentId" :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
             :tree-data="treeData" placeholder="请选择上级菜单" allow-clear />
@@ -253,7 +306,7 @@ onMounted(() => {
       <template #footer>
         <a-space class="space-footer-box">
           <a-button @click="onClose">取消</a-button>
-          <a-button type="primary">保存</a-button>
+          <a-button type="primary" @click="onSave">保存</a-button>
         </a-space>
       </template>
     </a-drawer>
