@@ -135,6 +135,53 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     /**
+     * 添加菜单
+     *
+     * @param sysMenu
+     */
+    public void add(SysMenu sysMenu) {
+        sysMenuMapper.insert(sysMenu);
+    }
+
+    /**
+     * 修改菜单
+     *
+     * @param sysMenu
+     */
+    public void update(SysMenu sysMenu) {
+        // 校验菜单id是否存在
+        if (sysMenu.getId() == null) {
+            throw new TopicException(ResultCodeEnum.MENU_ID_NOT_EXIST);
+        }
+        // 查询菜单是否存在
+        SysMenu sysMenuDb = sysMenuMapper.selectById(sysMenu.getId());
+        if (sysMenuDb == null) {
+            throw new TopicException(ResultCodeEnum.MENU_ID_NOT_EXIST);
+        }
+        sysMenuMapper.updateById(sysMenu);
+    }
+
+    /**
+     * 删除菜单
+     *
+     * @param id
+     */
+    public void delete(Long id) {
+        // 查询这个菜单
+        SysMenu sysMenu = sysMenuMapper.selectById(id);
+        if (sysMenu == null) {
+            throw new TopicException(ResultCodeEnum.MENU_ID_NOT_EXIST);
+        }
+        // 查询是否有子集
+        LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysMenuLambdaQueryWrapper.eq(SysMenu::getParentId, id);
+        if (sysMenuMapper.selectCount(sysMenuLambdaQueryWrapper) > 0) {
+            throw new TopicException(ResultCodeEnum.MENU_HAS_CHILDREN);
+        }
+        sysMenuMapper.deleteById(id);
+    }
+
+    /**
      * 查询子集列别菜单
      *
      * @param sysMenuVo
@@ -142,7 +189,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
      * @return
      */
     private List<SysMenuListVo> getMenuListChildren(SysMenuListVo sysMenuVo, List<SysMenu> records) {
-        return records.stream()
+        List<SysMenuListVo> children = records.stream()
                 .filter(menu -> menu.getParentId().equals(sysMenuVo.getId()))
                 .sorted(Comparator.comparingInt(SysMenu::getSorted))
                 .map(item -> {
@@ -151,6 +198,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                     sysMenuListVo.setChildren(getMenuListChildren(sysMenuListVo, records));
                     return sysMenuListVo;
                 }).toList();
+        // 如果子菜单为空，设置为 null
+        return children.isEmpty() ? null : children;
     }
 
     /**
@@ -162,7 +211,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
      */
     private List<SysMenuVo> getMenuChildren(SysMenu sysMenu, List<SysMenu> sysMenus) {
         // 遍历
-        return sysMenus.stream()
+        List<SysMenuVo> children = sysMenus.stream()
                 .filter(menu1 -> menu1.getParentId().equals(sysMenu.getId()))
                 .sorted(Comparator.comparingInt(SysMenu::getSorted)) // 子菜单排序
                 .map(item -> {
@@ -173,6 +222,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                     sysMenuVo.setChildren(getMenuChildren(item, sysMenus));
                     return sysMenuVo;
                 }).toList();
+        // 如果子菜单为空，设置为 null
+        return children.isEmpty() ? null : children;
     }
 
 

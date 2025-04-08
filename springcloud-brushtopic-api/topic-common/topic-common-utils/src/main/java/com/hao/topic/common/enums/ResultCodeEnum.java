@@ -23,7 +23,8 @@ public enum ResultCodeEnum {
     ACCOUNT_LOCKED(206, "普通用户不能访问"),
     NO_ROLE_FAIL(99901, "用户无角色"),
     NO_MENU_FAIL(99901, "用户无菜单权限"),
-
+    MENU_ID_NOT_EXIST(99902, "菜单不存在"),
+    MENU_HAS_CHILDREN(99902, "菜单下还有子菜单"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

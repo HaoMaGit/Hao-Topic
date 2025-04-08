@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,11 +47,16 @@ public class SecurityConfig {
                 // 配置HTTP请求的授权规则
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/system/captchaImage").permitAll()
-                        .requestMatchers("/system/**").permitAll()
+                        .requestMatchers(HttpMethod.GET).authenticated()  // 添加这行
+                        .requestMatchers(HttpMethod.POST).authenticated() // 添加这行
+                        .requestMatchers(HttpMethod.PUT).authenticated()  // 添加这行
+                        .requestMatchers(HttpMethod.DELETE).authenticated() // 添加这行
                         .anyRequest().authenticated()
                 )
                 // 添加自定义的JWT认证过滤器，在UsernamePasswordAuthenticationFilter之前执行
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 // 配置异常处理逻辑
                 .exceptionHandling(ex -> ex
                         // 设置认证失败时的入口点处理器

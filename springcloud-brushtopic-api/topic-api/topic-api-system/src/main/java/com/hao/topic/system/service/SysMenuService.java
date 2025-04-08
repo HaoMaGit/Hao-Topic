@@ -17,4 +17,10 @@ public interface SysMenuService {
 
 
     List<SysMenuListVo> menuList(SysMenu sysMenu);
+
+    void add(SysMenu sysMenu);
+
+    void update(SysMenu sysMenu);
+
+    void delete(Long id);
 }
