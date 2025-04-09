@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, h, createVNode } from 'vue'
-import { apiGetRoleList } from '@/api/system/role/index'
+import { apiGetRoleList, apiGetRoleMenu } from '@/api/system/role/index'
+import { apiGetMenuList } from '@/api/system/menu/index'
 import {
   PlusOutlined,
   EditOutlined,
@@ -10,7 +11,6 @@ import {
 import type { RoleQueryType, RoleType } from '@/api/system/role/type';
 import Modal from 'ant-design-vue/es/modal/Modal';
 import { message } from 'ant-design-vue';
-
 // 查询角色列表
 const getRoleList = async () => {
   const res = await apiGetRoleList(params.value)
@@ -154,17 +154,43 @@ const clearFormData = () => {
   if (formRef.value) {
     formRef.value.resetFields()
   }
+  checkedKeys.value = []
 }
 // 新增
 const handleAdd = () => {
   drawerTitle.value = '新增角色'
   drawer.value = true
 }
+
+// 获取菜单列表
+const getMenuList = async () => {
+  const res = await apiGetMenuList({ menuName: '' })
+  if (res.data) {
+    treeData.value = handleTreeData(res.data)
+  }
+}
 // 修改
-const handleEdit = (record: any) => {
+const handleEdit = async (record: RoleType) => {
   drawerTitle.value = '修改角色'
+  const res = await apiGetRoleMenu(record.id)
+  if (res.data) {
+    checkedKeys.value = res.data.map((item: any) => item.id)
+  }
   drawer.value = true
   formData.value = { ...record }
+}
+
+// 树形数据
+const treeData = ref<any>([])
+// 当前选中的树节点
+const checkedKeys = ref([])
+// 处理菜单数据为树形结构
+const handleTreeData = (data: any) => {
+  return data.map((item: any) => ({
+    key: item.id,
+    title: item.menuName,
+    children: item.children ? handleTreeData(item.children) : []
+  }))
 }
 // 删除
 const handleDelete = (id: number) => {
@@ -199,8 +225,10 @@ const onSave = () => {
   })
 }
 
+
 onMounted(() => {
   getRoleList()
+  getMenuList()
 })
 </script>
 <template>
@@ -263,9 +291,16 @@ onMounted(() => {
           <a-input placeholder="请输入角色标识" v-model:value="formData.identify"></a-input>
         </a-form-item>
         <a-form-item label="备注" name="remark">
-          <a-input placeholder="请输入备注" v-model:value="formData.remark"></a-input>
+          <a-textarea placeholder="请输入备注" type="textarea" :auto-size="{ minRows: 2, maxRows: 5 }"
+            v-model:value="formData.remark"></a-textarea>
         </a-form-item>
         <!-- 菜单权限 -->
+        <a-form-item label="菜单权限">
+          <a-card size="small">
+            <a-tree checkable v-model:checkedKeys="checkedKeys" :tree-data="treeData">
+            </a-tree>
+          </a-card>
+        </a-form-item>
       </a-form>
       <!-- 添加底部按钮 -->
       <template #footer>

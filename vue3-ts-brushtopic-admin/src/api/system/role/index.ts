@@ -37,3 +37,11 @@ export const apiDeleteRole = (id: number) => {
     method: "delete"
   });
 };
+
+// 根据角色id查询菜单
+export const apiGetRoleMenu = (id: number | null) => {
+  return request({
+    url: prefix + "menu/" + id,
+    method: "get"
+  });
+};
