@@ -1,5 +1,5 @@
 import request from "@/utils/request.ts";
-import type { RoleQueryType, RoleType } from "./type";
+import type { RoleQueryType, RoleDtoType } from "./type";
 
 const prefix = "/system/role/";
 
@@ -13,7 +13,7 @@ export const apiGetRoleList = (query: RoleQueryType) => {
 };
 
 // 添加
-export const apiAddRole = (data: RoleType) => {
+export const apiAddRole = (data: RoleDtoType) => {
   return request({
     url: prefix + "add",
     method: "post",
@@ -22,7 +22,7 @@ export const apiAddRole = (data: RoleType) => {
 };
 
 // 修改
-export const apiUpdateRole = (data: RoleType) => {
+export const apiUpdateRole = (data: RoleDtoType) => {
   return request({
     url: prefix + "update",
     method: "put",

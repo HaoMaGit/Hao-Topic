@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, h, createVNode } from 'vue'
-import { apiGetRoleList, apiGetRoleMenu } from '@/api/system/role/index'
+import { apiAddRole, apiUpdateRole, apiGetRoleList, apiGetRoleMenu } from '@/api/system/role/index'
 import { apiGetMenuList } from '@/api/system/menu/index'
 import {
   PlusOutlined,
@@ -11,6 +11,9 @@ import {
 import type { RoleQueryType, RoleType } from '@/api/system/role/type';
 import Modal from 'ant-design-vue/es/modal/Modal';
 import { message } from 'ant-design-vue';
+import { apiDeleteRole } from '@/api/system/role/index';
+import { useUserStore } from '@/stores/modules/user'
+const userStore = useUserStore()
 // 查询角色列表
 const getRoleList = async () => {
   const res = await apiGetRoleList(params.value)
@@ -200,15 +203,15 @@ const handleDelete = (id: number) => {
     content: createVNode('div', { style: 'color:red;' }, '删除角色会导致相关用户权限丢失，请慎重考虑!'),
     async onOk() {
       try {
-        // await apiDeleteMenu(id)
-        // getMenuList()
-        // clearFormData()
+        await apiDeleteRole(id)
+        getRoleList()
+        clearFormData()
+        userStore.getUserInfo()
         drawer.value = false
         message.success('删除成功')
       } catch {
         drawer.value = false
       }
-
     },
     onCancel() {
       console.log('Cancel');
@@ -218,10 +221,31 @@ const handleDelete = (id: number) => {
 }
 // 保存
 const onSave = () => {
-  formRef.value.validate().then(() => {
-    if (formData.value.id) {
-      console.log('修改');
+  formRef.value.validate().then(async () => {
+    let mes = ''
+    try {
+      // 判断是新增还是修改
+      if (formData.value.id) {
+        // 修改
+        await apiUpdateRole({ ...formData.value, menuIds: checkedKeys.value.length > 0 ? checkedKeys.value : null })
+        getRoleList()
+        clearFormData()
+        drawer.value = false
+        mes = '修改角色成功'
+      } else {
+        //  新增
+        await apiAddRole({ ...formData.value, menuIds: checkedKeys.value.length > 0 ? checkedKeys.value : null })
+        getRoleList()
+        clearFormData()
+        drawer.value = false
+        mes = '新增角色成功'
+      }
+      message.success(mes)
+    } catch (error: any) {
+      message.error(error.getMessage())
     }
+  }).catch(() => {
+    message.error('信息有误')
   })
 }
 

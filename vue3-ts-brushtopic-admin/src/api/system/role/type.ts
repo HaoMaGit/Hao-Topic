@@ -13,3 +13,8 @@ export interface RoleType {
   remark: string;
   roleKey: string;
 }
+
+// 角色实体（包含菜单）
+export interface RoleDtoType extends RoleType {
+  menuIds: number[] | null;
+}
