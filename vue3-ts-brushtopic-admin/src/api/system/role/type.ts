@@ -8,7 +8,7 @@ export interface RoleQueryType extends PageType {
 // 角色实体
 export interface RoleType {
   name: string;
-  identify: number;
+  identify: number | null;
   id: number | null;
   remark: string;
   roleKey: string;

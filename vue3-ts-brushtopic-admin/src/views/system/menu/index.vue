@@ -333,13 +333,4 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
 }
-
-// 添加抽屉标题样式
-::v-deep(.ant-drawer-header) {
-  flex-direction: row-reverse;
-  justify-content: space-between;
-  width: 100%;
-  border: 1px solid red;
-  color: red;
-}
 </style>
