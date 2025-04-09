@@ -1,6 +1,7 @@
 package com.hao.topic.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.vo.system.SysMenuVo;
 
@@ -15,9 +16,9 @@ import java.util.Map;
 public interface SysRoleService extends IService<SysRole> {
     Map<String, Object> roleList(SysRole sysRole);
 
-    void add(SysRole sysRole);
+    void add(SysRoleDto sysRoleDto);
 
-    void update(SysRole sysRole);
+    void update(SysRoleDto sysRole);
 
     void delete(Long id);
 

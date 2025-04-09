@@ -74,6 +74,20 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 sysMenuVoList.add(sysMenuVo);
             }
         }
+        // 处理孤立的子菜单（没有父菜单的菜单）
+        for (SysMenu sysMenuDb : sysMenus) {
+            boolean hasParent = sysMenus.stream()
+                    .anyMatch(menu -> menu.getId().equals(sysMenuDb.getParentId()));
+            if (!hasParent && sysMenuDb.getParentId() != 0) {
+                // 孤立的子菜单，直接作为根菜单处理
+                SysMenuVo sysMenuVo = new SysMenuVo();
+                sysMenuVo.setKey(sysMenuDb.getRoute());
+                sysMenuVo.setIcon(sysMenuDb.getIcon());
+                sysMenuVo.setLabel(sysMenuDb.getMenuName());
+                sysMenuVo.setId(sysMenuDb.getId());
+                sysMenuVoList.add(sysMenuVo);
+            }
+        }
         log.info("菜单信息：{}", sysMenuVoList.toArray());
         // 返回
         return sysMenuVoList;

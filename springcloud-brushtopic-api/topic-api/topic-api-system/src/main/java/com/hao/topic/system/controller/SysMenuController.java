@@ -20,7 +20,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/system/menu")
 @AllArgsConstructor
-@PreAuthorize("hasAuthority('admin')")
 public class SysMenuController {
     private final SysMenuService sysMenuService;
 
@@ -31,6 +30,7 @@ public class SysMenuController {
      * @return
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('admin')")
     public Result<List<SysMenuListVo>> list(SysMenu sysMenu) {
         List<SysMenuListVo> sysMenuListVoList = sysMenuService.menuList(sysMenu);
         return Result.success(sysMenuListVoList);
@@ -40,6 +40,7 @@ public class SysMenuController {
      * 添加菜单
      */
     @PostMapping("/add")
+    @PreAuthorize("hasAuthority('admin')")
     public Result add(@RequestBody SysMenu sysMenu) {
         sysMenuService.add(sysMenu);
         return Result.success();
@@ -49,6 +50,7 @@ public class SysMenuController {
      * 修改菜单
      */
     @PutMapping("/update")
+    @PreAuthorize("hasAuthority('admin')")
     public Result update(@RequestBody SysMenu sysMenu) {
         sysMenuService.update(sysMenu);
         return Result.success();
@@ -58,6 +60,7 @@ public class SysMenuController {
      * 删除菜单
      */
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public Result delete(@PathVariable Long id) {
         sysMenuService.delete(id);
         return Result.success();

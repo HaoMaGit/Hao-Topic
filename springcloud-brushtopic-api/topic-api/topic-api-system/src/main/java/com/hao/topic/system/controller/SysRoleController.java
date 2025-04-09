@@ -1,6 +1,7 @@
 package com.hao.topic.system.controller;
 
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.vo.system.SysMenuListVo;
@@ -9,6 +10,7 @@ import com.hao.topic.system.mapper.SysRoleMapper;
 import com.hao.topic.system.service.SysRoleService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +23,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/system/role")
-@PreAuthorize("hasAuthority('admin')")
+// @PreAuthorize("hasAuthority('admin')")
 @AllArgsConstructor
 public class SysRoleController {
 
@@ -34,6 +36,7 @@ public class SysRoleController {
      * @return
      */
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('admin')")
     public Result<Map<String, Object>> list(SysRole sysRole) {
         Map<String, Object> map = sysRoleService.roleList(sysRole);
         return Result.success(map);
@@ -43,8 +46,9 @@ public class SysRoleController {
      * 添加角色
      */
     @PostMapping("/add")
-    public Result add(@RequestBody SysRole sysRole) {
-        sysRoleService.add(sysRole);
+    @PreAuthorize("hasAuthority('admin')")
+    public Result add(@RequestBody @Validated SysRoleDto sysRoleDto) {
+        sysRoleService.add(sysRoleDto);
         return Result.success();
     }
 
@@ -52,8 +56,9 @@ public class SysRoleController {
      * 修改角色
      */
     @PutMapping("/update")
-    public Result update(@RequestBody SysRole sysRole) {
-        sysRoleService.update(sysRole);
+    @PreAuthorize("hasAuthority('admin')")
+    public Result update(@RequestBody @Validated SysRoleDto sysRoleDto) {
+        sysRoleService.update(sysRoleDto);
         return Result.success();
     }
 
@@ -61,6 +66,7 @@ public class SysRoleController {
      * 删除角色
      */
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public Result delete(@PathVariable Long id) {
         sysRoleService.delete(id);
         return Result.success();
@@ -82,6 +88,7 @@ public class SysRoleController {
      * @return
      */
     @GetMapping("/menu/{roleId}")
+    @PreAuthorize("hasAuthority('admin')")
     public Result<List<SysMenuVo>> getRoleMenu(@PathVariable Long roleId) {
         List<SysMenuVo> sysMenuVoList = sysRoleService.getRoleMenu(roleId);
         return Result.success(sysMenuVoList);

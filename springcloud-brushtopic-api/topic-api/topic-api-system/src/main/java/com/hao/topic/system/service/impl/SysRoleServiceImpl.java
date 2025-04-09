@@ -3,13 +3,20 @@ package com.hao.topic.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
+import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.entity.system.SysRoleMenu;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
+import com.hao.topic.system.mapper.SysRoleMenuMapper;
 import com.hao.topic.system.service.SysMenuService;
 import com.hao.topic.system.service.SysRoleService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +30,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
     private final SysMenuService service;
+    private final SysRoleMenuMapper sysRoleMenuMapper;
 
     /**
      * 获取角色列表
@@ -51,10 +59,27 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     /**
      * 添加角色
      *
-     * @param sysRole
+     * @param sysRoleDto
      */
-    public void add(SysRole sysRole) {
-        // baseMapper.insert(sysRole);
+    public void add(SysRoleDto sysRoleDto) {
+        // 拷贝
+        SysRole sysRole = new SysRole();
+        BeanUtils.copyProperties(sysRoleDto, sysRole);
+        baseMapper.insert(sysRole);
+        // 校验添加角色菜单关联
+        if (sysRoleDto.getMenuIds() != null && sysRoleDto.getMenuIds().size() > 0) {
+            // 封装角色菜单数据
+            List<SysRoleMenu> list = sysRoleDto.getMenuIds().stream().map(id -> {
+                SysRoleMenu sysRoleMenu = new SysRoleMenu();
+                sysRoleMenu.setRoleId(sysRole.getId());
+                sysRoleMenu.setMenuId(id);
+                return sysRoleMenu;
+            }).toList();
+            // 添加角色菜单关联
+            for (SysRoleMenu sysRoleMenu : list) {
+                sysRoleMenuMapper.insert(sysRoleMenu);
+            }
+        }
     }
 
     /**
@@ -62,7 +87,28 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      *
      * @param sysRole
      */
-    public void update(SysRole sysRole) {
+    public void update(SysRoleDto sysRole) {
+        SysRole sysRoleDb = baseMapper.selectById(sysRole.getId());
+        if (sysRoleDb == null) {
+            throw new TopicException(ResultCodeEnum.ROLE_NOT_EXIST);
+        }
+        BeanUtils.copyProperties(sysRole, sysRoleDb);
+        // 修改
+        baseMapper.updateById(sysRoleDb);
+        // 删除菜单角色关系
+        LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, sysRole.getId());
+        sysRoleMenuMapper.delete(sysRoleMenuLambdaQueryWrapper);
+        // 判断菜单是否发生变化
+        if (!CollectionUtils.isEmpty(sysRole.getMenuIds())) {
+            // 添加
+            for (Long menuId : sysRole.getMenuIds()) {
+                SysRoleMenu sysRoleMenu = new SysRoleMenu();
+                sysRoleMenu.setRoleId(sysRole.getId());
+                sysRoleMenu.setMenuId(menuId);
+                sysRoleMenuMapper.insert(sysRoleMenu);
+            }
+        }
     }
 
     /**
@@ -71,6 +117,16 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * @param id
      */
     public void delete(Long id) {
+        // 校验
+        if (id == null) {
+            throw new TopicException(ResultCodeEnum.DEL_ROLE_ERROR);
+        }
+        // 删除角色菜单关系表
+        LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, id);
+        sysRoleMenuMapper.delete(sysRoleMenuLambdaQueryWrapper);
+        // 删除角色
+        baseMapper.deleteById(id);
     }
 
     /**
