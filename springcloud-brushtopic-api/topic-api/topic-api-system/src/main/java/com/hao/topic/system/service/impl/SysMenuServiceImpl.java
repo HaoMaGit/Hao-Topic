@@ -68,6 +68,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 sysMenuVo.setKey(sysMenu.getRoute());
                 sysMenuVo.setIcon(sysMenu.getIcon());
                 sysMenuVo.setLabel(sysMenu.getMenuName());
+                sysMenuVo.setId(sysMenu.getId());
                 // 查询他的子集
                 sysMenuVo.setChildren(getMenuChildren(sysMenu, sysMenus));
                 sysMenuVoList.add(sysMenuVo);
@@ -219,6 +220,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                     sysMenuVo.setKey(item.getRoute());
                     sysMenuVo.setIcon(item.getIcon());
                     sysMenuVo.setLabel(item.getMenuName());
+                    sysMenuVo.setId(item.getId());
                     sysMenuVo.setChildren(getMenuChildren(item, sysMenus));
                     return sysMenuVo;
                 }).toList();

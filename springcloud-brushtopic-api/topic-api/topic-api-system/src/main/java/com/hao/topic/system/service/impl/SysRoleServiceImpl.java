@@ -4,10 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
+import com.hao.topic.system.service.SysMenuService;
 import com.hao.topic.system.service.SysRoleService;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,8 +20,9 @@ import java.util.Map;
  * Date: 2025/4/8 21:54
  */
 @Service
+@AllArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
-
+    private final SysMenuService service;
 
     /**
      * 获取角色列表
@@ -66,5 +71,24 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * @param id
      */
     public void delete(Long id) {
+    }
+
+    /**
+     * 获取角色下的菜单
+     *
+     * @param roleId
+     * @return
+     */
+    public List<SysMenuVo> getRoleMenu(Long roleId) {
+        // 校验id
+        if (roleId == null) {
+            return null;
+        }
+        try {
+            // 查询该角色下的菜单
+            return service.getUserMenu(roleId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

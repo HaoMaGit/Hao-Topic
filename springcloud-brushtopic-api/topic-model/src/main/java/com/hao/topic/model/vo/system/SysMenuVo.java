@@ -17,6 +17,8 @@ public class SysMenuVo {
     private String icon;
     // 菜单名称
     private String label;
+    // id
+    private Long id;
     // 子菜单
     private List<SysMenuVo> children;
 }

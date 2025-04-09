@@ -20,6 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/system/menu")
 @AllArgsConstructor
+@PreAuthorize("hasAuthority('admin')")
 public class SysMenuController {
     private final SysMenuService sysMenuService;
 

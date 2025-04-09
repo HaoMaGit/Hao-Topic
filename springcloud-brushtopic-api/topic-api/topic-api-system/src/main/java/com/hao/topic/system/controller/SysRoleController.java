@@ -3,11 +3,15 @@ package com.hao.topic.system.controller;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.vo.system.SysMenuListVo;
+import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
 import com.hao.topic.system.service.SysRoleService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,6 +21,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/system/role")
+@PreAuthorize("hasAuthority('admin')")
 @AllArgsConstructor
 public class SysRoleController {
 
@@ -68,5 +73,17 @@ public class SysRoleController {
     @GetMapping("/{id}")
     public SysRole getById(@PathVariable Long id) {
         return sysRoleService.getById(id);
+    }
+
+    /**
+     * 获取角色下的菜单
+     *
+     * @param roleId
+     * @return
+     */
+    @GetMapping("/menu/{roleId}")
+    public Result<List<SysMenuVo>> getRoleMenu(@PathVariable Long roleId) {
+        List<SysMenuVo> sysMenuVoList = sysRoleService.getRoleMenu(roleId);
+        return Result.success(sysMenuVoList);
     }
 }
