@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Import;
         , @ComponentScan("com.hao.topic.common.handler"),
 })
 @Import(MyMetaObjectHandler.class)  // 直接导入配置类
-@EnableFeignClients(basePackages = {"com.hao.topic.client.system"})
+@EnableFeignClients(basePackages = {"com.hao.topic.client.system", "com.hao.topic.client.security"})
 public class TopicSystemApplication {
     public static void main(String[] args) {
         SpringApplication.run(TopicSystemApplication.class, args);

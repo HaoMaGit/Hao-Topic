@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>topic-client-system</module>
+        <module>topic-client-security</module>
     </modules>
 
     <properties>

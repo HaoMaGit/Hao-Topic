@@ -3,6 +3,7 @@ package com.hao.topic.security.controller;
 import com.hao.topic.common.constant.ExceptionConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
@@ -95,5 +96,17 @@ public class SecurityController {
     public Result<UserInfoVo> getUserInfo(String token) {
         UserInfoVo userInfoVo = sysUserService.getUserInfo(token);
         return Result.success(userInfoVo);
+    }
+
+
+    /**
+     * 查询用户列表
+     *
+     * @param sysUserListDto
+     * @return
+     */
+    @RequestMapping("/list")
+    public Map<String, Object> list(SysUserListDto sysUserListDto) {
+        return sysUserService.userList(sysUserListDto);
     }
 }

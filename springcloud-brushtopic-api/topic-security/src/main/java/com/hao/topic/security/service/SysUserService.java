@@ -2,19 +2,23 @@ package com.hao.topic.security.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
+import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
 import com.hao.topic.model.vo.system.SysMenuVo;
+import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,7 @@ import java.util.Map;
  * Date: 2025/4/1 10:54
  */
 @Service
+@Slf4j
 public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
 
@@ -35,6 +40,9 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
     @Autowired
     private SystemFeignClient systemFeignClient;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
 
 
     /**
@@ -107,5 +115,21 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         userInfoVo.setMenuList(sysMenus);
 
         return userInfoVo;
+    }
+
+    /**
+     * 获取用户列表
+     *
+     * @param sysUserListDto
+     * @return
+     */
+    public Map<String, Object> userList(SysUserListDto sysUserListDto) {
+        // 开始分页查询
+        List<SysUserListVo> sysUserListVos = sysUserMapper.selectUserListVo(sysUserListDto);
+        log.info("查询结果：{}", sysUserListVos);
+        return Map.of(
+                "total", sysUserListVos.size(),
+                "rows", sysUserListVos
+        );
     }
 }

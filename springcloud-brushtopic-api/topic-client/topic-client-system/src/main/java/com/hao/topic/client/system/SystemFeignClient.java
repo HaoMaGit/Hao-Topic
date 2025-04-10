@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 /**
- * Description: 表示：已被【认证服务】调用
+ * Description: 系统远程服务客户端 已被【认证服务】调用
  * Author: Hao
  * Date: 2025/4/5 15:47
  */
