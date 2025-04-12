@@ -193,18 +193,16 @@ const onSave = () => {
       if (formData.value.id) {
         // 修改
         await apiUpdateMenu(formData.value)
-        getMenuList()
-        clearFormData()
-        drawer.value = false
         mes = '修改菜单成功'
       } else {
         //  新增
         await apiAddMenu(formData.value)
-        getMenuList()
-        clearFormData()
-        drawer.value = false
+
         mes = '新增菜单成功'
       }
+      getMenuList()
+      clearFormData()
+      drawer.value = false
       message.success(mes)
     } catch (error: any) {
       message.error(error.getMessage())

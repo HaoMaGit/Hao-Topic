@@ -228,18 +228,15 @@ const onSave = () => {
       if (formData.value.id) {
         // 修改
         await apiUpdateRole({ ...formData.value, menuIds: checkedKeys.value.length > 0 ? checkedKeys.value : null })
-        getRoleList()
-        clearFormData()
-        drawer.value = false
         mes = '修改角色成功'
       } else {
         //  新增
         await apiAddRole({ ...formData.value, menuIds: checkedKeys.value.length > 0 ? checkedKeys.value : null })
-        getRoleList()
-        clearFormData()
-        drawer.value = false
         mes = '新增角色成功'
       }
+      getRoleList()
+      clearFormData()
+      drawer.value = false
       message.success(mes)
     } catch (error: any) {
       message.error(error.getMessage())

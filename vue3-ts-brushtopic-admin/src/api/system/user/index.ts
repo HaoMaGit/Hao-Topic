@@ -19,3 +19,12 @@ export const apiGetRoleList = () => {
     method: "get",
   });
 };
+
+// 添加角色
+export const apiAddRole = (data: any) => {
+  return request({
+    url: prefix + "add",
+    method: "post",
+    data
+  });
+};

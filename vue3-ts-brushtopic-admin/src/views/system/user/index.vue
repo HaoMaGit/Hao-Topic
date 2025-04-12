@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, h } from 'vue'
-import { apiGetUserList, apiGetRoleList } from '@/api/system/user/index'
+import { apiGetUserList, apiGetRoleList, apiAddRole } from '@/api/system/user/index'
 import type { UserQueryType } from '@/api/system/user/type'
 import {
   PlusOutlined,
@@ -12,6 +12,16 @@ import {
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue';
 import type { UploadChangeParam, UploadProps } from 'ant-design-vue';
+import { useUserStore } from '@/stores/modules/user';
+import { addDateRange, clearDateRange } from '@/utils/date';
+
+const userStore = useUserStore()
+// 获取上传路径
+const { VITE_SERVE } = import.meta.env
+// 头像上传路径
+const uploadUrl = VITE_SERVE + '/api/system/user/avatar'
+// 请求头
+const headers = { authorization: userStore.token };
 
 // 查询用户列表
 const getUserList = async () => {
@@ -39,10 +49,12 @@ const params = ref<UserQueryType>({
   pageNum: 1,
   pageSize: 10,
   account: '',
-  memberTime: '',
   roleName: '管理员',
-  createTime: '',
+  params: {}
 })
+// 时间
+const createTimeDateRange = ref([]);
+const memberTimeDateRange = ref([]);
 
 // 总数量
 const total = ref(0)
@@ -84,21 +96,21 @@ const columns = [
     dataIndex: 'roleName',
     key: 'roleName',
     align: 'center',
-    width: 110,
+    width: 100,
   },
   {
     title: '邮箱',
     dataIndex: 'email',
     key: 'email',
     align: 'center',
-    width: 120,
+    width: 80,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     align: 'center',
-    width: 100,
+    width: 80,
   },
   {
     title: '注册时间',
@@ -118,7 +130,7 @@ const columns = [
     title: '操作',
     dataIndex: 'operation',
     key: 'operation',
-    align: 'center'
+    align: 'center',
   }
 ]
 
@@ -127,6 +139,16 @@ const isDangerHover = ref(false)
 
 // 搜索
 const handleQuery = () => {
+  if (createTimeDateRange.value && createTimeDateRange.value.length > 0) {
+    params.value = addDateRange(params.value, createTimeDateRange.value, 'CreateTime')
+  } else {
+    params.value = clearDateRange(params.value, 'CreateTime')
+  }
+  if (memberTimeDateRange.value && memberTimeDateRange.value.length > 0) {
+    params.value = addDateRange(params.value, memberTimeDateRange.value, 'MemberTime')
+  } else {
+    params.value = clearDateRange(params.value, 'MemberTime')
+  }
   getUserList()
 }
 
@@ -136,10 +158,11 @@ const handleReset = () => {
     pageNum: 1,
     pageSize: 10,
     account: '',
-    memberTime: '',
     roleName: '管理员',
-    createTime: '',
+    params: null
   }
+  memberTimeDateRange.value = []
+  createTimeDateRange.value = []
   total.value = 0
   activeKey.value = '管理员'
   getUserList()
@@ -172,7 +195,7 @@ const formRef = ref<any>(null)
 // 表单数据
 const formData = ref({
   account: '',
-  memberTime: '',
+  password: null,
   roleName: '',
   id: null,
   avatar: '',
@@ -196,6 +219,13 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
+  password: [
+    {
+      required: true,
+      message: '请输入密码',
+      trigger: 'blur',
+    },
+  ]
 })
 // 标题
 const drawerTitle = ref('新增')
@@ -208,16 +238,20 @@ const onClose = () => {
 }
 // 清空表单数据
 const clearFormData = () => {
-  // formData.value = {
-  //   name: '',
-  //   remark: '',
-  //   roleKey: '',
-  //   identify: null,
-  //   id: null,
-  // }
+  formData.value = {
+    account: '',
+    password: null,
+    roleName: '',
+    id: null,
+    avatar: '',
+    email: '',
+    status: null,
+  }
   if (formRef.value) {
     formRef.value.resetFields()
   }
+  createTimeDateRange.value = []
+  memberTimeDateRange.value = []
 }
 
 // 新增
@@ -226,16 +260,45 @@ const handleAdd = () => {
   drawerTitle.value = '新增用户'
 }
 
+// 修改
+const handleEdit = (record: any) => {
+  drawer.value = true
+  console.log(record);
+  drawerTitle.value = '修改用户'
+  formData.value = {
+    account: record.account,
+    password: null,
+    roleName: record.roleName,
+    id: record.id,
+    avatar: record.avatar,
+    email: record.email,
+    status: record.status,
+  }
+}
+
 // 保存
 const onSave = () => {
+  formRef.value.validate().then(async () => {
+    let mes = ''
+    // 判断是新增还是修改
+    if (formData.value.id) {
+      mes = '修改用户成功'
+    } else {
+      mes = '新增用户成功'
+      await apiAddRole(formData.value)
+    }
+    getRoleList()
+    getUserList()
+    clearFormData()
+    drawer.value = false
+    message.success(mes)
+  })
 }
 
 // 文件列表
 const fileList = ref([]);
 // 图片loading
 const loading = ref<boolean>(false);
-// 图片地址
-const imageUrl = ref<string>('');
 
 /**
  * 文件校验
@@ -267,11 +330,8 @@ const handleChange = (info: UploadChangeParam) => {
   }
   // 上传完成
   if (info.file.status === 'done') {
-    // 获取图片地址
-    getBase64(info.file.originFileObj, (base64Url: string) => {
-      imageUrl.value = base64Url;
-      loading.value = false;
-    });
+    formData.value.avatar = info.file.response.data;
+    loading.value = false;
   }
   // 上传失败
   if (info.file.status === 'error') {
@@ -279,14 +339,6 @@ const handleChange = (info: UploadChangeParam) => {
     message.error('上传失败');
   }
 };
-
-// 获取图片地址
-function getBase64(img: any, callback: (base64Url: string) => void) {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result as string));
-  reader.readAsDataURL(img);
-}
-
 
 
 onMounted(() => {
@@ -305,10 +357,10 @@ onMounted(() => {
             <a-input placeholder="请输入账户名称" v-model:value="params.account"></a-input>
           </a-form-item>
           <a-form-item label="注册时间">
-            <a-range-picker class="range-picker" v-model:value="params.createTime" />
+            <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
           </a-form-item>
           <a-form-item label="会员时间">
-            <a-range-picker class="range-picker" v-model:value="params.memberTime" />
+            <a-range-picker class="range-picker" v-model:value="memberTimeDateRange" />
           </a-form-item>
           <a-form-item>
             <a-space>
@@ -349,7 +401,7 @@ onMounted(() => {
           :row-selection="{ selectedRowKeys: onSelectedRowKeys, onChange: onSelectChange, fixed: true }">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'operation'">
-              <a-button type="link" size="small" :icon="h(EditOutlined)">修改</a-button>
+              <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>
               <a-button type="link" size="small" :icon="h(DeleteOutlined)">删除</a-button>
             </template>
             <template v-if="column.key === 'avatar'">
@@ -374,14 +426,17 @@ onMounted(() => {
         </a-form-item>
         <a-form-item label="头像" name=avatar>
           <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
-            class="avatar-uploader" :show-upload-list="false" action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+            class="avatar-uploader" :show-upload-list="false" :headers="headers" :action="uploadUrl"
             :before-upload="beforeUpload" @change="handleChange">
-            <img v-if="imageUrl" :src="imageUrl" alt="avatar" />
+            <img v-if="formData.avatar" :src="formData.avatar" alt="avatar" class="avatar" />
             <div v-else>
               <loading-outlined v-if="loading"></loading-outlined>
               <plus-outlined v-else></plus-outlined>
             </div>
           </a-upload>
+        </a-form-item>
+        <a-form-item v-if="!formData.id" label="密码" name="password">
+          <a-input placeholder="请输入密码" v-model:value="formData.password"></a-input>
         </a-form-item>
         <a-form-item label="角色" name="roleName">
           <a-select v-model:value="formData.roleName" show-search placeholder="请选择角色" :options="roleListSelect">
@@ -391,10 +446,8 @@ onMounted(() => {
           <a-input placeholder="请输入邮箱" v-model:value="formData.email"></a-input>
         </a-form-item>
         <a-form-item label="状态" name="status">
-          <a-switch v-model:checked="formData.status" checked-children="正常" un-checked-children="停用" />
-        </a-form-item>
-        <a-form-item label="会员时间" name="memberTime">
-          <a-range-picker v-model:value="formData.memberTime" />
+          <a-switch v-model:checked="formData.status" :checkedValue="0" :unCheckedValue="1" checked-children="正常"
+            un-checked-children="停用" />
         </a-form-item>
       </a-form>
       <!-- 添加底部按钮 -->
@@ -418,7 +471,7 @@ onMounted(() => {
     justify-content: flex-end;
 
     .range-picker {
-      width: 200px;
+      width: 240px;
     }
   }
 }
@@ -426,5 +479,11 @@ onMounted(() => {
 .space-footer-box {
   display: flex;
   justify-content: flex-end;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 5%;
 }
 </style>
