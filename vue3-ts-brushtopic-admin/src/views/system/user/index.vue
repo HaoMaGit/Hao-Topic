@@ -43,14 +43,15 @@ const getRoleList = async () => {
     }
   })
   roleList.value = res.data.map((item: any) => item.roleName)
+  roleList.value.unshift("全部")
 }
 
 // 定义查询参数
 const params = ref<UserQueryType>({
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 5,
   account: '',
-  roleName: '管理员',
+  roleName: '',
   params: {}
 })
 // 时间
@@ -66,7 +67,7 @@ const tableData = ref([])
 // 角色数据
 const roleList = ref(['管理员', '用户', '会员'])
 // 当前选中角色
-const activeKey = ref('管理员')
+const activeKey = ref('全部')
 // 选择角色列表
 const roleListSelect = ref([])
 // 表格字段
@@ -157,15 +158,15 @@ const handleQuery = () => {
 const handleReset = () => {
   params.value = {
     pageNum: 1,
-    pageSize: 10,
+    pageSize: 5,
     account: '',
-    roleName: '管理员',
+    roleName: '',
     params: null
   }
   memberTimeDateRange.value = []
   createTimeDateRange.value = []
   total.value = 0
-  activeKey.value = '管理员'
+  activeKey.value = '全部'
   getUserList()
 }
 
@@ -185,8 +186,22 @@ const onSelectChange = (selectedRowKeys: any) => {
 
 // 点击了tabs
 const handleTabClick = (key: any) => {
+  params.value = {
+    pageNum: 1,
+    pageSize: 5,
+    account: '',
+    roleName: '',
+    params: null
+  }
+  memberTimeDateRange.value = []
+  createTimeDateRange.value = []
+  total.value = 0
   activeKey.value = key
-  params.value.roleName = key
+  if (key == '全部') {
+    params.value.roleName = ''
+  } else {
+    params.value.roleName = key
+  }
   getUserList()
 
 }
@@ -277,17 +292,20 @@ const handleEdit = (record: any) => {
   }
 }
 // 删除
-const handleDelete = (id: any) => {
+const handleDelete = (record: any) => {
   Modal.confirm({
     title: '是否确认删除该用户?',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除用户会导致相关用户功能丢失，请慎重考虑!'),
     async onOk() {
-      if (id) {
-        onSelectedRowKeys.value.push(id)
+      if (record.id) {
+        onSelectedRowKeys.value.push(record.id)
       }
-      console.log(onSelectedRowKeys.value);
-
+      // 判断是否为当前用户
+      if (record.account === userStore.userInfo.account) {
+        message.error('不能删除自己')
+        return
+      }
       await apiDeleteUser(onSelectedRowKeys.value)
       getRoleList()
       getUserList()
@@ -298,7 +316,6 @@ const handleDelete = (id: any) => {
       console.log('Cancel');
     },
   });
-  console.log(id);
 }
 
 // 保存
@@ -315,9 +332,12 @@ const onSave = () => {
     }
     getRoleList()
     getUserList()
-    clearFormData()
     drawer.value = false
     message.success(mes)
+    if (formData.value.account == userStore.userInfo.account) {
+      userStore.logout()
+    }
+    clearFormData()
   })
 }
 
@@ -371,6 +391,12 @@ const handleErrorImg = (event: any) => {
   event.target.src = Hao
 };
 
+// 分页变化处理
+const handleTableChange = (pagination: any) => {
+  params.value.pageNum = pagination.current;
+  params.value.pageSize = pagination.pageSize;
+  getUserList();
+}
 onMounted(() => {
   getUserList()
   getRoleList()
@@ -426,14 +452,12 @@ onMounted(() => {
           total: total,
           showTotal: (total: any) => `共 ${total} 条`,
           showSizeChanger: true,
-          showQuickJumper: true,
-        }" :loading="tableLoading" :dataSource="tableData" :columns="columns" rowKey="id"
+        }" @change="handleTableChange" :loading="tableLoading" :dataSource="tableData" :columns="columns" rowKey="id"
           :row-selection="{ selectedRowKeys: onSelectedRowKeys, onChange: onSelectChange, fixed: true }">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'operation'">
               <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>
-              <a-button type="link" size="small" :icon="h(DeleteOutlined)"
-                @click="handleDelete(record.id)">删除</a-button>
+              <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record)">删除</a-button>
             </template>
             <template v-if="column.key === 'avatar'">
               <img class="user-avatar" :src="record.avatar != null ? record.avatar : 'Hao'" @error="handleErrorImg"

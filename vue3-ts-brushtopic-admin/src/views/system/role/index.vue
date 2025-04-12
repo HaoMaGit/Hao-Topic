@@ -204,10 +204,11 @@ const handleDelete = (id: number) => {
     async onOk() {
       await apiDeleteRole(id)
       getRoleList()
-      clearFormData()
-      userStore.getUserInfo()
       message.success('删除成功')
-
+      if (userStore.userInfo.identity === formData.value.identify) {
+        userStore.logout()
+      }
+      clearFormData()
     },
     onCancel() {
       console.log('Cancel');
@@ -231,9 +232,12 @@ const onSave = () => {
         mes = '新增角色成功'
       }
       getRoleList()
-      clearFormData()
       drawer.value = false
       message.success(mes)
+      if (userStore.userInfo.identity === formData.value.identify) {
+        userStore.logout()
+      }
+      clearFormData()
     } catch (error: any) {
       message.error(error.getMessage())
     }
@@ -242,6 +246,12 @@ const onSave = () => {
   })
 }
 
+// 分页变化处理
+const handleTableChange = (pagination: any) => {
+  params.value.pageNum = pagination.current;
+  params.value.pageSize = pagination.pageSize;
+  getRoleList();
+}
 
 onMounted(() => {
   getRoleList()
@@ -279,8 +289,7 @@ onMounted(() => {
       total: total,
       showTotal: (total: any) => `共 ${total} 条`,
       showSizeChanger: true,
-      showQuickJumper: true,
-    }" :dataSource="tableData" :columns="columns">
+    }" @change="handleTableChange" :dataSource="tableData" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
           <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>

@@ -71,6 +71,17 @@ export const useUserStore = defineStore('user', () => {
     window.localStorage.removeItem("user")
   }
 
+  const logout = () => {
+    userInfo.value = {
+      account: '',
+      avatar: '',
+      identity: null,
+      menuList: []
+    }
+    token.value = null
+    router.push('/login')
+  }
+
   // 返回出去
   return {
     userInfo,
@@ -78,6 +89,7 @@ export const useUserStore = defineStore('user', () => {
     clearUserInfo,
     login,
     token,
+    logout
   }
 }, {
   persist: true
