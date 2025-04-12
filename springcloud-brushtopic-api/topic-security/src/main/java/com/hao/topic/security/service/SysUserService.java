@@ -15,6 +15,7 @@ import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
+import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -28,8 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Description: 系统用户接口层
@@ -130,7 +130,9 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @return
      */
     public Map<String, Object> userList(SysUserListDto sysUserListDto) {
-        sysUserListDto.setPageNum((sysUserListDto.getPageNum() - 1) * sysUserListDto.getPageSize());
+        if (sysUserListDto.getPageNum() != null) {
+            sysUserListDto.setPageNum((sysUserListDto.getPageNum() - 1) * sysUserListDto.getPageSize());
+        }
         // 开始分页查询
         List<SysUserListVo> sysUserListVos = sysUserMapper.selectUserListVo(sysUserListDto);
         // 查询总记录数
@@ -239,5 +241,56 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 获取excelVo数据
+     *
+     * @param sysUserListDto
+     * @param ids
+     * @return
+     */
+    public List<SysUserExcel> getExcelVo(SysUserListDto sysUserListDto, Long[] ids) {
+        if (ids[0] != 0) {
+            // 查询用户
+            List<SysUser> sysUsers = sysUserMapper.selectBatchIds(Arrays.asList(ids));
+            if (!CollectionUtils.isEmpty(sysUsers)) {
+                // 遍历
+                List<SysUserExcel> sysUserExcels = new ArrayList<>();
+                for (SysUser sysUser : sysUsers) {
+                    SysUserExcel sysUserExcel = new SysUserExcel();
+                    BeanUtils.copyProperties(sysUser, sysUserExcel);
+                    // 根据用户id查询用户角色信息
+                    LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUser.getId());
+                    SysUserRole sysUserRole = sysUserRoleMapper.selectOne(sysUserRoleLambdaQueryWrapper);
+                    if (sysUserRole != null) {
+                        SysRole byId = systemFeignClient.getById(sysUserRole.getRoleId());
+                        if (byId != null) {
+                            sysUserExcel.setRoleName(byId.getName());
+                        }
+                    }
+                    sysUserExcels.add(sysUserExcel);
+                }
+                // 排序
+                sysUserExcels.sort(Comparator.comparing(SysUserExcel::getId));
+                return sysUserExcels;
+            }
+        }
+        // 没有选择
+        // 开始分页查询
+        List<SysUserListVo> sysUserListVos = sysUserMapper.selectUserListVo(sysUserListDto);
+        // 封装
+        if (!CollectionUtils.isEmpty(sysUserListVos)) {
+            // 遍历
+            List<SysUserExcel> sysUserExcels = new ArrayList<>();
+            for (SysUserListVo sysUserListVo : sysUserListVos) {
+                SysUserExcel sysUserExcel = new SysUserExcel();
+                BeanUtils.copyProperties(sysUserListVo, sysUserExcel);
+                sysUserExcels.add(sysUserExcel);
+            }
+            return sysUserExcels;
+        }
+        return null;
     }
 }

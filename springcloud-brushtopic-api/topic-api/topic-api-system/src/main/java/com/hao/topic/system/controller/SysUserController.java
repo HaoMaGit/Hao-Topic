@@ -3,21 +3,27 @@ package com.hao.topic.system.controller;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.api.utils.helper.MinioHelper;
+import com.hao.topic.api.utils.utils.ExcelUtil;
 import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.vo.system.SysRoleVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -152,4 +158,40 @@ public class SysUserController {
         securityFeignClient.delete(ids);
         return Result.success();
     }
+
+
+    /**
+     * 导出excel
+     *
+     * @param response
+     */
+    @GetMapping("/export/{ids}")
+    public void exportExcel(HttpServletResponse response, SysUserListDto sysUserListDto, @PathVariable Long[] ids) {
+        List<SysUserExcel> sysUserExcels = securityFeignClient.getExcelVo(sysUserListDto, ids);
+        if (CollectionUtils.isEmpty(sysUserExcels)) {
+            throw new TopicException(ResultCodeEnum.EXPORT_USER_ERROR);
+        }
+        // 导出
+        try {
+            ExcelUtil.download(response, sysUserExcels, SysUserExcel.class);
+        } catch (IOException e) {
+            throw new TopicException(ResultCodeEnum.EXPORT_USER_ERROR);
+        }
+    }
+
+    // /**
+    //  * 导入excel
+    //  */
+    // @PostMapping("/import")
+    // public void importExcel(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+    //     securityFeignClient.importExcel(multipartFile);
+    // }
+    //
+    // /**
+    //  * 下载excel模板
+    //  */
+    // @GetMapping("/template")
+    // public void getExcelTemplate(HttpServletResponse response) {
+    //     securityFeignClient.getExcelTemplate(response);
+    // }
 }

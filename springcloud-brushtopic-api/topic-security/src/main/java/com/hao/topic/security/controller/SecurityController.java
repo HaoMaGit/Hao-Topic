@@ -5,6 +5,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
+import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
@@ -149,5 +150,17 @@ public class SecurityController {
     @GetMapping("/getByRoleId/{roleId}")
     Boolean getByRoleId(@PathVariable Long roleId) {
         return sysUserService.getByRoleId(roleId);
+    }
+
+    /**
+     * 获取excelVo数据
+     *
+     * @param sysUserListDto
+     * @param ids
+     * @return
+     */
+    @GetMapping("/export/{ids}")
+    List<SysUserExcel> getExcelVo(SysUserListDto sysUserListDto, @PathVariable Long[] ids) {
+        return sysUserService.getExcelVo(sysUserListDto, ids);
     }
 }

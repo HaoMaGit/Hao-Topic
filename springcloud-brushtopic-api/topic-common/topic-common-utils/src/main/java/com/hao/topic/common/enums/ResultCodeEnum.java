@@ -33,6 +33,7 @@ public enum ResultCodeEnum {
     ROLE_NO_EXIST(99908, "角色不存在"),
     UPLOAD_FILE_ERROR(99909, "上传文件失败"),
     ROLE_USER_ERROR(99910, "该角色下还有用户"),
+    EXPORT_USER_ERROR(99911, "导出用户信息失败"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
