@@ -113,10 +113,31 @@ public class SecurityController {
 
     /**
      * 添加用户
+     *
      * @param sysUserDto
      */
     @PostMapping("/add")
-    void add(@RequestBody SysUserDto sysUserDto){
+    void add(@RequestBody SysUserDto sysUserDto) {
         sysUserService.add(sysUserDto);
+    }
+
+    /**
+     * 修改用户
+     *
+     * @param sysUserDto
+     */
+    @PostMapping("/update")
+    void update(@RequestBody SysUserDto sysUserDto) {
+        sysUserService.update(sysUserDto);
+    }
+
+    /**
+     * 删除用户
+     *
+     * @param ids
+     */
+    @DeleteMapping("/delete/{ids}")
+    void delete(@PathVariable Long[] ids) {
+        sysUserService.delete(ids);
     }
 }

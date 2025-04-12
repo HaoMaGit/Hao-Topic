@@ -7,10 +7,7 @@ import com.hao.topic.model.dto.system.SysUserListDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -23,8 +20,14 @@ import java.util.Map;
 public interface SecurityFeignClient {
 
     @GetMapping("/security/user/list")
-    public Map<String, Object> list(@SpringQueryMap SysUserListDto sysUserListDto);
+    Map<String, Object> list(@SpringQueryMap SysUserListDto sysUserListDto);
 
     @PostMapping("/security/user/add")
     void add(@RequestBody SysUserDto sysUserDto);
+
+    @PostMapping("/security/user/update")
+    void update(@RequestBody SysUserDto sysUserDto);
+
+    @DeleteMapping("/security/user/delete/{ids}")
+    void delete(@PathVariable Long[] ids);
 }

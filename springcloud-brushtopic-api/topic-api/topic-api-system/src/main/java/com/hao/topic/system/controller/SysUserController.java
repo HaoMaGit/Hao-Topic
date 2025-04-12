@@ -95,12 +95,42 @@ public class SysUserController {
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('admin')")
     public Result add(@RequestBody SysUserDto sysUserDto) {
+        Boolean result = prepareSysUserDto(sysUserDto);
+        if (!result) {
+            return Result.fail(ResultCodeEnum.ROLE_NO_EXIST);
+        }
+        securityFeignClient.add(sysUserDto);
+        return Result.success();
+    }
+
+    /**
+     * 修改角色
+     */
+    @PutMapping("/update")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result update(@RequestBody SysUserDto sysUserDto) {
+        Boolean result = prepareSysUserDto(sysUserDto);
+        if (!result) {
+            return Result.fail(ResultCodeEnum.ROLE_NO_EXIST);
+        }
+        securityFeignClient.update(sysUserDto);
+        return Result.success();
+    }
+
+
+    /**
+     * 添加用户时准备数据校验角色
+     *
+     * @param sysUserDto
+     * @return
+     */
+    private Boolean prepareSysUserDto(SysUserDto sysUserDto) {
         // 查询角色是否存在
         LambdaQueryWrapper<SysRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysRoleLambdaQueryWrapper.eq(SysRole::getName, sysUserDto.getRoleName());
         SysRole sysRole = sysRoleMapper.selectOne(sysRoleLambdaQueryWrapper);
         if (StringUtils.isNull(sysRole)) {
-            return Result.fail(ResultCodeEnum.ROLE_NO_EXIST);
+            return false;
         }
         // 如果是会员添加会员时间
         if (sysRole.getIdentify() == 1) {
@@ -110,27 +140,16 @@ public class SysUserController {
         }
         // 存在赋值
         sysUserDto.setRoleId(sysRole.getId());
-        securityFeignClient.add(sysUserDto);
-        return Result.success();
+        return true;
     }
 
-    // /**
-    //  * 修改角色
-    //  */
-    // @PutMapping("/update")
-    // @PreAuthorize("hasAuthority('admin')")
-    // public Result update(@RequestBody SysUserDto sysUserDto) {
-    //     securityFeignClient.update(sysUserDto);
-    //     return Result.success();
-    // }
-    //
-    // /**
-    //  * 删除角色
-    //  */
-    // @DeleteMapping("/delete/{id}")
-    // @PreAuthorize("hasAuthority('admin')")
-    // public Result delete(@PathVariable Long id) {
-    //     securityFeignClient.delete(id);
-    //     return Result.success();
-    // }
+    /**
+     * 删除角色
+     */
+    @DeleteMapping("/delete/{ids}")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result delete(@PathVariable Long[] ids) {
+        securityFeignClient.delete(ids);
+        return Result.success();
+    }
 }

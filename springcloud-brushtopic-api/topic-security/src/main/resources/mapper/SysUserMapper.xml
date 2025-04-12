@@ -13,7 +13,7 @@
         u.create_time as createTime,
         r.name as roleName
         from sys_user u
-        left join sys_user_role ur on u.id = ur.user_id
+        left join sys_user_role ur on u.id = ur.user_id and ur.is_deleted = 0
         left join sys_role r on ur.role_id = r.id and r.is_deleted = 0
         where u.is_deleted = 0
         <if test="account != null and account != ''">

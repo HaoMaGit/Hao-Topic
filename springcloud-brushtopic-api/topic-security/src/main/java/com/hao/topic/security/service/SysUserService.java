@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -144,6 +145,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      *
      * @param sysUserDto
      */
+    @Transactional
     public void add(SysUserDto sysUserDto) {
         // 校验账户不能为空
         if (StringUtils.isEmpty(sysUserDto.getAccount())) {
@@ -171,5 +173,53 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         sysUserRole.setUserId(sysUser.getId());
         sysUserRole.setRoleId(sysUserDto.getRoleId());
         sysUserRoleMapper.insert(sysUserRole);
+    }
+
+    /**
+     * 修改用户
+     *
+     * @param sysUserDto
+     */
+    @Transactional
+    public void update(SysUserDto sysUserDto) {
+        // 校验账户不能为空
+        if (StringUtils.isEmpty(sysUserDto.getAccount())) {
+            throw new TopicException(ResultCodeEnum.PARAM_ACCOUNT_ERROR);
+        }
+        // 校验角色是否为空
+        if (StringUtils.isEmpty(sysUserDto.getRoleName())) {
+            throw new TopicException(ResultCodeEnum.PARAM_ROLE_ERROR);
+        }
+        // 修改用户
+        SysUser sysUser = new SysUser();
+        BeanUtils.copyProperties(sysUserDto, sysUser);
+        sysUserMapper.updateById(sysUser);
+        // 删除角色关联表
+        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUserDto.getId());
+        sysUserRoleMapper.delete(sysUserRoleLambdaQueryWrapper);
+        // 修改用户角色关联表
+        SysUserRole sysUserRole = new SysUserRole();
+        sysUserRole.setUserId(sysUser.getId());
+        sysUserRole.setRoleId(sysUserDto.getRoleId());
+        sysUserRoleMapper.insert(sysUserRole);
+    }
+
+    /**
+     * 删除用户
+     *
+     * @param ids
+     */
+    @Transactional
+    public void delete(Long[] ids) {
+        // 遍历
+        for (Long id : ids) {
+            // 删除用户
+            sysUserMapper.deleteById(id);
+            // 删除用户角色关联表
+            LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, id);
+            sysUserRoleMapper.delete(sysUserRoleLambdaQueryWrapper);
+        }
     }
 }
