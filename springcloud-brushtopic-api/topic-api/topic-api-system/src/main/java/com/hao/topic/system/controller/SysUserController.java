@@ -1,5 +1,6 @@
 package com.hao.topic.system.controller;
 
+import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.api.utils.helper.MinioHelper;
 import com.hao.topic.client.security.SecurityFeignClient;
@@ -17,6 +18,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -97,6 +101,12 @@ public class SysUserController {
         SysRole sysRole = sysRoleMapper.selectOne(sysRoleLambdaQueryWrapper);
         if (StringUtils.isNull(sysRole)) {
             return Result.fail(ResultCodeEnum.ROLE_NO_EXIST);
+        }
+        // 如果是会员添加会员时间
+        if (sysRole.getIdentify() == 1) {
+            // 添加当前时间格式化
+            LocalDateTime now = LocalDateTime.now();
+            sysUserDto.setMemberTime(now);  // 直接设置 LocalDate
         }
         // 存在赋值
         sysUserDto.setRoleId(sysRole.getId());

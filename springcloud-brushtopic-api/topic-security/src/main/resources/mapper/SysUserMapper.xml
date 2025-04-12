@@ -22,6 +22,18 @@
         <if test="roleName != null and roleName != ''">
             and r.name = #{roleName}
         </if>
+        <if test="beginCreateTime != null and beginCreateTime != ''">
+            and date_format(u.create_time,'%Y%m%d') &gt;= date_format(#{beginCreateTime},'%Y%m%d')
+        </if>
+        <if test="endCreateTime != null and endCreateTime != ''">
+            and date_format(u.create_time,'%Y%m%d') &lt;= date_format(#{endCreateTime},'%Y%m%d')
+        </if>
+        <if test="beginMemberTime != null and beginMemberTime != ''">
+            and date_format(u.member_time,'%Y%m%d') &gt;= date_format(#{beginCreateTime},'%Y%m%d')
+        </if>
+        <if test="endMemberTime != null and endMemberTime != ''">
+            and date_format(u.member_time,'%Y%m%d') &lt;= date_format(#{endMemberTime},'%Y%m%d')
+        </if>
         order by u.create_time desc
         <if test="pageNum != null and pageSize != null">
             limit #{pageNum}, #{pageSize}
