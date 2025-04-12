@@ -17,6 +17,7 @@
     "ant-design-vue": "^4.2.6",
     "axios": "^1.8.4",
     "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
     "nprogress": "^0.2.0",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^22.13.9",
     "@types/nprogress": "^0.2.3",
     "@vitejs/plugin-vue": "^5.2.1",

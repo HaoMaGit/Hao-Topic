@@ -45,3 +45,13 @@ export const apiDeleteUser = (ids: number[]) => {
     method: "delete",
   });
 };
+
+// 导出用户
+export const apiExportUser = (query: UserQueryType | null, ids: number[] | null) => {
+  return request({
+    url: prefix + "export/" + ids,
+    method: "get",
+    params: query,
+    responseType: "blob"
+  });
+};

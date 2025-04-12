@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, h, createVNode } from 'vue'
-import { apiGetUserList, apiGetRoleList, apiAddUser, apiUpdateUser, apiDeleteUser } from '@/api/system/user/index'
+import { apiGetUserList, apiExportUser, apiGetRoleList, apiAddUser, apiUpdateUser, apiDeleteUser } from '@/api/system/user/index'
 import type { UserQueryType } from '@/api/system/user/type'
 import {
   PlusOutlined,
@@ -16,6 +16,8 @@ import type { UploadChangeParam, UploadProps } from 'ant-design-vue';
 import { useUserStore } from '@/stores/modules/user';
 import { addDateRange, clearDateRange } from '@/utils/date';
 import Hao from '@/assets/images/H.png'
+import FileSaver from 'file-saver'
+
 const userStore = useUserStore()
 // 获取上传路径
 const { VITE_SERVE } = import.meta.env
@@ -23,6 +25,7 @@ const { VITE_SERVE } = import.meta.env
 const uploadUrl = VITE_SERVE + '/api/system/user/avatar'
 // 请求头
 const headers = { authorization: userStore.token };
+
 
 // 查询用户列表
 const getUserList = async () => {
@@ -172,16 +175,10 @@ const handleReset = () => {
 
 // 选中数组
 const onSelectedRowKeys = ref<number[]>([])
-// 显示操作
-const operation = ref(false)
+
 // 选中菜单
 const onSelectChange = (selectedRowKeys: any) => {
   onSelectedRowKeys.value = selectedRowKeys
-  if (onSelectedRowKeys.value.length > 0) {
-    operation.value = true
-  } else {
-    operation.value = false
-  }
 }
 
 // 点击了tabs
@@ -397,6 +394,39 @@ const handleTableChange = (pagination: any) => {
   params.value.pageSize = pagination.pageSize;
   getUserList();
 }
+
+// 导出数据
+const handleExport = async () => {
+  tableLoading.value = true
+  let response: any = null
+  // 判断是否有数据
+  if (onSelectedRowKeys.value.length > 0) {
+    // 导出excel数据
+    response = await apiExportUser(params.value, onSelectedRowKeys.value)
+  } else {
+    // 导出excel数据
+    response = await apiExportUser(params.value, [0])
+    // 下载下来
+  }
+  FileSaver.saveAs(response, `易题后台用户数据_${new Date().getTime()}.xlsx`) // 下载文件
+  message.success('导出成功')
+  tableLoading.value = false
+}
+
+// 导入数据
+const handleImport = () => {
+  // Modal.confirm({
+  //   title: '是否确认导入用户?',
+  //   icon: createVNode(ExclamationCircleOutlined),
+  //   content: createVNode('div', { style: 'color:red;' }, '导入用户会导致相关用户功能丢失，请慎重考虑!'),
+  //   async onOk() {
+  //     await apiImportUser()
+  //     getRoleList()
+  //     getUserList()
+  //   }
+  // })
+}
+
 onMounted(() => {
   getUserList()
   getRoleList()
@@ -426,22 +456,16 @@ onMounted(() => {
           </a-form-item>
         </a-space>
       </div>
-      <!-- 操作按钮 -->
-      <a-form-item>
-        <a-space>
-          <a-button @click="handleAdd" v-if="!operation" class="add-btn" type="primary"
-            :icon="h(PlusOutlined)">新增</a-button>
-        </a-space>
-      </a-form-item>
     </a-space>
     <!-- 操作按钮 -->
-    <a-form-item v-if="operation">
+    <a-form-item>
       <a-space>
         <a-button type="primary" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
-        <a-button @mouseenter="isDangerHover = true" @mouseleave="isDangerHover = false" :danger="isDangerHover"
-          :icon="h(DeleteOutlined)" @click="handleDelete(null)">删除</a-button>
-        <a-button :icon="h(DownloadOutlined)">导出</a-button>
-        <a-button :icon="h(UploadOutlined)">导入</a-button>
+        <a-button :disabled="onSelectedRowKeys.length == 0" @mouseenter="isDangerHover = true"
+          @mouseleave="isDangerHover = false" :danger="isDangerHover" :icon="h(DeleteOutlined)"
+          @click="handleDelete(null)">删除</a-button>
+        <a-button :disabled="tableData.length == 0" :icon="h(DownloadOutlined)" @click="handleExport">导出</a-button>
+        <a-button :icon="h(UploadOutlined)" @click="handleImport">导入</a-button>
       </a-space>
     </a-form-item>
     <a-tabs :style="{ height: '500px' }" @tabClick="handleTabClick" v-model:activeKey="activeKey" tab-position="left">
