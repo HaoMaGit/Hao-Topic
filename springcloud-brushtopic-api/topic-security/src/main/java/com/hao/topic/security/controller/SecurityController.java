@@ -3,6 +3,7 @@ package com.hao.topic.security.controller;
 import com.hao.topic.common.constant.ExceptionConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
@@ -108,5 +109,14 @@ public class SecurityController {
     @RequestMapping("/list")
     public Map<String, Object> list(SysUserListDto sysUserListDto) {
         return sysUserService.userList(sysUserListDto);
+    }
+
+    /**
+     * 添加用户
+     * @param sysUserDto
+     */
+    @PostMapping("/add")
+    void add(@RequestBody SysUserDto sysUserDto){
+        sysUserService.add(sysUserDto);
     }
 }

@@ -27,6 +27,11 @@ public enum ResultCodeEnum {
     MENU_HAS_CHILDREN(99903, "菜单下还有子菜单"),
     DEL_ROLE_ERROR(99904, "删除角色失败"),
     ROLE_NOT_EXIST(99905, "修改角色失败"),
+    PARAM_ACCOUNT_ERROR(99906, "账户不能为空"),
+    PARAM_ROLE_ERROR(99907, "角色不能为空"),
+    PARAM_PASSWORD_ERROR(99908, "密码不能为空"),
+    ROLE_NO_EXIST(99908, "角色不存在"),
+    UPLOAD_FILE_ERROR(99909, "上传文件失败"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

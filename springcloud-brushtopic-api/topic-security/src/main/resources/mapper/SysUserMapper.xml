@@ -19,9 +19,12 @@
         <if test="account != null and account != ''">
             and u.account like concat('%', #{account}, '%')
         </if>
+        <if test="roleName != null and roleName != ''">
+            and r.name = #{roleName}
+        </if>
+        order by u.create_time desc
         <if test="pageNum != null and pageSize != null">
             limit #{pageNum}, #{pageSize}
         </if>
-        order by u.create_time desc
     </select>
 </mapper>

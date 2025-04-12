@@ -1,5 +1,6 @@
 package com.hao.topic.model.dto.system;
 
+import com.hao.topic.model.entity.BaseEntity;
 import com.hao.topic.model.entity.system.SysUser;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import lombok.Data;
  * Date: 2025/4/10 21:49
  */
 @Data
-public class SysUserListDto extends SysUser {
+public class SysUserListDto extends BaseEntity {
     private String account;
+    private String roleName;
 }

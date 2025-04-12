@@ -9,6 +9,8 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
+import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
@@ -19,7 +21,10 @@ import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -124,6 +129,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @return
      */
     public Map<String, Object> userList(SysUserListDto sysUserListDto) {
+        sysUserListDto.setPageNum(sysUserListDto.getPageNum() - 1);
         // 开始分页查询
         List<SysUserListVo> sysUserListVos = sysUserMapper.selectUserListVo(sysUserListDto);
         log.info("查询结果：{}", sysUserListVos);
@@ -131,5 +137,39 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
                 "total", sysUserListVos.size(),
                 "rows", sysUserListVos
         );
+    }
+
+    /**
+     * 添加用户
+     *
+     * @param sysUserDto
+     */
+    public void add(SysUserDto sysUserDto) {
+        // 校验账户不能为空
+        if (StringUtils.isEmpty(sysUserDto.getAccount())) {
+            throw new TopicException(ResultCodeEnum.PARAM_ACCOUNT_ERROR);
+        }
+        // 校验角色是否为空
+        if (StringUtils.isEmpty(sysUserDto.getRoleName())) {
+            throw new TopicException(ResultCodeEnum.PARAM_ROLE_ERROR);
+        }
+        // 密码不能为空
+        if (StringUtils.isEmpty(sysUserDto.getPassword())) {
+            throw new TopicException(ResultCodeEnum.PARAM_PASSWORD_ERROR);
+        }
+        // 开始添加用户
+        SysUser sysUser = new SysUser();
+        BeanUtils.copyProperties(sysUserDto, sysUser);
+        // 密码加密
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        String encode = bCryptPasswordEncoder.encode(sysUser.getPassword());
+        sysUser.setPassword(encode);
+        // 添加用户
+        sysUserMapper.insert(sysUser);
+        // 添加用户角色关联表
+        SysUserRole sysUserRole = new SysUserRole();
+        sysUserRole.setUserId(sysUser.getId());
+        sysUserRole.setRoleId(sysUserDto.getRoleId());
+        sysUserRoleMapper.insert(sysUserRole);
     }
 }

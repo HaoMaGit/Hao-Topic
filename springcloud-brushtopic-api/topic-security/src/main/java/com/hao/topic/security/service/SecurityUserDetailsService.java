@@ -60,10 +60,7 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
         log.info(account);
         // 调用数据库根据用户名获取用户
         SysUser sysUser = sysUserService.findByUserName(account);
-        // TODO 添加用户需要加密处理
-        // BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        // String encode = bCryptPasswordEncoder.encode(sysUser.getPassword());
-        // System.out.println(encode);
+
         // 校验
         if (sysUser == null) {
             // 返回给前端

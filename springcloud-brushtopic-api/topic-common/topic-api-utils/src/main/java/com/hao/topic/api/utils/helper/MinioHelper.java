@@ -1,4 +1,4 @@
-package com.haoma.netdisk.helper;
+package com.hao.topic.api.utils.helper;
 
 
 import com.alibaba.fastjson2.util.DateUtils;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilterInputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.UUID;
@@ -36,12 +37,10 @@ public class MinioHelper {
     /**
      * 上传文件到minio
      *
-     * @param path   路径
-     * @param file   文件
-     * @param suffix 多余路径
+     * @param file 文件
      * @return
      */
-    public String uploadFile(String path, File file, String suffix) {
+    public String uploadFile(MultipartFile file) {
         try {
             // 连接minio客户端
             MinioClient minioClient = minioConfig.buildMinioClient();
@@ -58,7 +57,7 @@ public class MinioHelper {
                         .bucket(minIOConfigProperties.getBucket())
                         .build());
             } else {
-                log.error("桶存在");
+                log.info("桶存在");
             }
 
             // 设置存储路径
@@ -68,22 +67,19 @@ public class MinioHelper {
             String uuid = UUID.randomUUID().toString().replace("-", "");
 
             // 组合路径
-            String fileName = null;
-            if (suffix != null) {
-                fileName = path + "/" + suffix + "/" + date + "/" + uuid;
-            } else {
-                fileName = path + "/" + date + "/" + uuid;
+            String fileName = date + "/" + uuid;
+            try (InputStream inputStream = file.getInputStream()) {
+                // 构建上传参数
+                PutObjectArgs build = PutObjectArgs.builder()
+                        .bucket(minIOConfigProperties.getBucket())
+                        .object(fileName)
+                        .stream(inputStream, file.getSize(), -1)
+                        .build();
+                // 上传
+                minioClient.putObject(build);
+                // 将路径返回
+                return minIOConfigProperties.getReadPath() + "/" + minIOConfigProperties.getBucket() + "/" + fileName;
             }
-            // 构建上传参数
-            PutObjectArgs build = PutObjectArgs.builder()
-                    .bucket(minIOConfigProperties.getBucket())
-                    .object(fileName)
-                    .stream(new FileInputStream(file), file.length(), -1)
-                    .build();
-            // 上传
-            minioClient.putObject(build);
-            // 将路径返回
-            return minIOConfigProperties.getReadPath() + "/" + minIOConfigProperties.getBucket() + "/" + fileName;
         } catch (Exception e) {
             throw new TopicException(ResultCodeEnum.UPLOAD_FILE_ERROR);
         }
