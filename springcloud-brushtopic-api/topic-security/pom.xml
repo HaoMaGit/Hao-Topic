@@ -85,7 +85,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
-
         <!-- 引入系统管理client服务 -->
         <dependency>
             <groupId>com.hao.topic</groupId>
