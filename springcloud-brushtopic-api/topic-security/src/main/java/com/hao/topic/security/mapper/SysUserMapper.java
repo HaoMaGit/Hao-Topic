@@ -17,4 +17,5 @@ import java.util.List;
 public interface SysUserMapper extends BaseMapper<SysUser> {
     List<SysUserListVo> selectUserListVo(SysUserListDto sysUserListDto);
 
+    int countUserList(SysUserListDto sysUserListDto);
 }

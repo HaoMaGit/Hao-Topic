@@ -130,12 +130,14 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @return
      */
     public Map<String, Object> userList(SysUserListDto sysUserListDto) {
-        sysUserListDto.setPageNum(sysUserListDto.getPageNum() - 1);
+        sysUserListDto.setPageNum((sysUserListDto.getPageNum() - 1) * sysUserListDto.getPageSize());
         // 开始分页查询
         List<SysUserListVo> sysUserListVos = sysUserMapper.selectUserListVo(sysUserListDto);
+        // 查询总记录数
+        int total = sysUserMapper.countUserList(sysUserListDto);
         log.info("查询结果：{}", sysUserListVos);
         return Map.of(
-                "total", sysUserListVos.size(),
+                "total", total,
                 "rows", sysUserListVos
         );
     }
@@ -234,7 +236,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         sysRoleLambdaQueryWrapper.eq(SysUserRole::getRoleId, roleId);
         List<SysUserRole> sysUserRoles = sysUserRoleMapper.selectList(sysRoleLambdaQueryWrapper);
         if (!CollectionUtils.isEmpty(sysUserRoles)) {
-           return false;
+            return false;
         }
         return true;
     }
