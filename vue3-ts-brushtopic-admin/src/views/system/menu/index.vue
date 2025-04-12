@@ -218,15 +218,10 @@ const handleDelete = (id: number) => {
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除菜单会导致相关页面丢失，请慎重考虑!'),
     async onOk() {
-      try {
-        await apiDeleteMenu(id)
-        getMenuList()
-        clearFormData()
-        drawer.value = false
-        message.success('删除成功')
-      } catch {
-        drawer.value = false
-      }
+      await apiDeleteMenu(id)
+      getMenuList()
+      clearFormData()
+      message.success('删除成功')
 
     },
     onCancel() {

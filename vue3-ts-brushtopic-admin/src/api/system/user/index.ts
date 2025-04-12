@@ -20,11 +20,28 @@ export const apiGetRoleList = () => {
   });
 };
 
-// 添加角色
-export const apiAddRole = (data: any) => {
+// 添加用户
+export const apiAddUser = (data: any) => {
   return request({
     url: prefix + "add",
     method: "post",
     data
+  });
+};
+
+// 修改用户
+export const apiUpdateUser = (data: any) => {
+  return request({
+    url: prefix + "update",
+    method: "put",
+    data
+  });
+};
+
+// 删除用户与批量删除
+export const apiDeleteUser = (ids: number[]) => {
+  return request({
+    url: prefix + "delete/" + ids,
+    method: "delete",
   });
 };

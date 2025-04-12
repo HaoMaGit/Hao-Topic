@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
-import { apiGetUserList, apiGetRoleList, apiAddRole } from '@/api/system/user/index'
+import { ref, onMounted, h, createVNode } from 'vue'
+import { apiGetUserList, apiGetRoleList, apiAddUser, apiUpdateUser, apiDeleteUser } from '@/api/system/user/index'
 import type { UserQueryType } from '@/api/system/user/type'
 import {
   PlusOutlined,
@@ -8,13 +8,14 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   UploadOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue';
+import { message, Modal } from 'ant-design-vue';
 import type { UploadChangeParam, UploadProps } from 'ant-design-vue';
 import { useUserStore } from '@/stores/modules/user';
 import { addDateRange, clearDateRange } from '@/utils/date';
-
+import Hao from '@/assets/images/H.png'
 const userStore = useUserStore()
 // 获取上传路径
 const { VITE_SERVE } = import.meta.env
@@ -169,7 +170,7 @@ const handleReset = () => {
 }
 
 // 选中数组
-const onSelectedRowKeys = ref([])
+const onSelectedRowKeys = ref<number[]>([])
 // 显示操作
 const operation = ref(false)
 // 选中菜单
@@ -275,6 +276,30 @@ const handleEdit = (record: any) => {
     status: record.status,
   }
 }
+// 删除
+const handleDelete = (id: any) => {
+  Modal.confirm({
+    title: '是否确认删除该用户?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: createVNode('div', { style: 'color:red;' }, '删除用户会导致相关用户功能丢失，请慎重考虑!'),
+    async onOk() {
+      if (id) {
+        onSelectedRowKeys.value.push(id)
+      }
+      console.log(onSelectedRowKeys.value);
+
+      await apiDeleteUser(onSelectedRowKeys.value)
+      getRoleList()
+      getUserList()
+      clearFormData()
+      message.success('删除成功')
+    },
+    onCancel() {
+      console.log('Cancel');
+    },
+  });
+  console.log(id);
+}
 
 // 保存
 const onSave = () => {
@@ -283,9 +308,10 @@ const onSave = () => {
     // 判断是新增还是修改
     if (formData.value.id) {
       mes = '修改用户成功'
+      await apiUpdateUser(formData.value)
     } else {
       mes = '新增用户成功'
-      await apiAddRole(formData.value)
+      await apiAddUser(formData.value)
     }
     getRoleList()
     getUserList()
@@ -340,6 +366,10 @@ const handleChange = (info: UploadChangeParam) => {
   }
 };
 
+// 图片
+const handleErrorImg = (event: any) => {
+  event.target.src = Hao
+};
 
 onMounted(() => {
   getUserList()
@@ -383,7 +413,7 @@ onMounted(() => {
       <a-space>
         <a-button type="primary" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
         <a-button @mouseenter="isDangerHover = true" @mouseleave="isDangerHover = false" :danger="isDangerHover"
-          :icon="h(DeleteOutlined)">删除</a-button>
+          :icon="h(DeleteOutlined)" @click="handleDelete(null)">删除</a-button>
         <a-button :icon="h(DownloadOutlined)">导出</a-button>
         <a-button :icon="h(UploadOutlined)">导入</a-button>
       </a-space>
@@ -402,10 +432,12 @@ onMounted(() => {
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'operation'">
               <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>
-              <a-button type="link" size="small" :icon="h(DeleteOutlined)">删除</a-button>
+              <a-button type="link" size="small" :icon="h(DeleteOutlined)"
+                @click="handleDelete(record.id)">删除</a-button>
             </template>
             <template v-if="column.key === 'avatar'">
-              <a-avatar src="https://www.antdv.com/assets/logo.1ef800a8.svg" />
+              <img class="user-avatar" :src="record.avatar != null ? record.avatar : 'Hao'" @error="handleErrorImg"
+                alt="" srcset="">
             </template>
             <template v-if="column.key === 'status'">
               <span>{{ record.status === 0 ? '正常' : '停用' }}</span>
@@ -485,5 +517,11 @@ onMounted(() => {
   width: 100px;
   height: 100px;
   border-radius: 5%;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
 }
 </style>

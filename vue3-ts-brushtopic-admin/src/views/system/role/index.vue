@@ -202,16 +202,12 @@ const handleDelete = (id: number) => {
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除角色会导致相关用户权限丢失，请慎重考虑!'),
     async onOk() {
-      try {
-        await apiDeleteRole(id)
-        getRoleList()
-        clearFormData()
-        userStore.getUserInfo()
-        drawer.value = false
-        message.success('删除成功')
-      } catch {
-        drawer.value = false
-      }
+      await apiDeleteRole(id)
+      getRoleList()
+      clearFormData()
+      userStore.getUserInfo()
+      message.success('删除成功')
+
     },
     onCancel() {
       console.log('Cancel');

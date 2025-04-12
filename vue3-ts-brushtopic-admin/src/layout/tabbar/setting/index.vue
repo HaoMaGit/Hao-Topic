@@ -112,7 +112,10 @@ const resetTheme = () => {
   message.info("重置配置成功")
 }
 
-
+// 图片
+const handleErrorImg = (event: any) => {
+  event.target.src = Hao
+};
 </script>
 <template>
   <!-- 布局设置抽底 -->
@@ -183,8 +186,8 @@ const resetTheme = () => {
     <!-- 设置 -->
     <a-button @click="viewSetting" :icon="h(SettingOutlined)" shape="circle"></a-button>
     <!-- 头像 -->
-    <img class="user-avatar" :src="userStore.userInfo?.avatar == null ? userStore.userInfo.avatar : Hao" alt=""
-      srcset="">
+    <img class="user-avatar" @error="handleErrorImg"
+      :src="userStore.userInfo?.avatar == null ? userStore.userInfo.avatar : Hao" alt="" srcset="">
     <!-- 下拉菜单：个人中心 退出登录 -->
     <a-dropdown class="dropdown">
       <span>
