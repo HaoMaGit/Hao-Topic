@@ -140,4 +140,14 @@ public class SecurityController {
     void delete(@PathVariable Long[] ids) {
         sysUserService.delete(ids);
     }
+
+    /**
+     * 查询用户角色关系表
+     *
+     * @param roleId
+     */
+    @GetMapping("/getByRoleId/{roleId}")
+    Boolean getByRoleId(@PathVariable Long roleId) {
+        return sysUserService.getByRoleId(roleId);
+    }
 }

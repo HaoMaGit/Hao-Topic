@@ -1,5 +1,8 @@
 package com.hao.topic.system.controller;
 
+import com.hao.topic.client.security.SecurityFeignClient;
+import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.entity.system.SysMenu;
@@ -8,7 +11,9 @@ import com.hao.topic.model.vo.system.SysMenuListVo;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
 import com.hao.topic.system.service.SysRoleService;
+import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +28,11 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/system/role")
-// @PreAuthorize("hasAuthority('admin')")
-@AllArgsConstructor
 public class SysRoleController {
 
-    private final SysRoleService sysRoleService;
+    @Autowired
+    private SysRoleService sysRoleService;
+
 
     /**
      * 获取角色列表

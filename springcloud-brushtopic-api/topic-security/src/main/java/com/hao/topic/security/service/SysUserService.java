@@ -222,4 +222,20 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
             sysUserRoleMapper.delete(sysUserRoleLambdaQueryWrapper);
         }
     }
+
+    /**
+     * 查询用户角色关系表
+     *
+     * @param roleId
+     */
+    public Boolean getByRoleId(Long roleId) {
+        // 查询用户角色关联表
+        LambdaQueryWrapper<SysUserRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleLambdaQueryWrapper.eq(SysUserRole::getRoleId, roleId);
+        List<SysUserRole> sysUserRoles = sysUserRoleMapper.selectList(sysRoleLambdaQueryWrapper);
+        if (!CollectionUtils.isEmpty(sysUserRoles)) {
+           return false;
+        }
+        return true;
+    }
 }

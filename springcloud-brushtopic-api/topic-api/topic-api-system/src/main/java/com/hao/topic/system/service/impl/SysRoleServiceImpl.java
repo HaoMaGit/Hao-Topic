@@ -3,18 +3,22 @@ package com.hao.topic.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysRoleMenu;
+import com.hao.topic.model.entity.system.SysUserRole;
 import com.hao.topic.model.vo.system.SysMenuVo;
+import com.hao.topic.security.mapper.SysUserRoleMapper;
 import com.hao.topic.system.mapper.SysRoleMapper;
 import com.hao.topic.system.mapper.SysRoleMenuMapper;
 import com.hao.topic.system.service.SysMenuService;
 import com.hao.topic.system.service.SysRoleService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -31,6 +35,7 @@ import java.util.Map;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
     private final SysMenuService service;
     private final SysRoleMenuMapper sysRoleMenuMapper;
+    private final SecurityFeignClient securityFeignClient;
 
     /**
      * 获取角色列表
@@ -114,19 +119,24 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     /**
      * 删除角色
      *
-     * @param id
+     * @param roleId
      */
-    public void delete(Long id) {
+    public void delete(Long roleId) {
         // 校验
-        if (id == null) {
+        if (roleId == null) {
             throw new TopicException(ResultCodeEnum.DEL_ROLE_ERROR);
+        }
+        // 远程调用
+        Boolean byRoleId = securityFeignClient.getByRoleId(roleId);
+        if (!byRoleId) {
+            throw new TopicException(ResultCodeEnum.ROLE_USER_ERROR);
         }
         // 删除角色菜单关系表
         LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, id);
+        sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, roleId);
         sysRoleMenuMapper.delete(sysRoleMenuLambdaQueryWrapper);
         // 删除角色
-        baseMapper.deleteById(id);
+        baseMapper.deleteById(roleId);
     }
 
     /**

@@ -32,6 +32,7 @@ public enum ResultCodeEnum {
     PARAM_PASSWORD_ERROR(99908, "密码不能为空"),
     ROLE_NO_EXIST(99908, "角色不存在"),
     UPLOAD_FILE_ERROR(99909, "上传文件失败"),
+    ROLE_USER_ERROR(99910, "该角色下还有用户"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

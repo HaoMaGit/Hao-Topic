@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
@@ -42,6 +44,9 @@ public class LogoutHandler implements ServerLogoutHandler {
      */
     @Override
     public Mono<Void> logout(WebFilterExchange webFilterExchange, Authentication authentication) {
+        // 获取 ServerHttpResponse 对象，用于返回响应
+        ServerHttpResponse response = webFilterExchange.getExchange().getResponse();
+
         // 从请求中获取名为 "token" 的cookie
         HttpCookie cookie = webFilterExchange.getExchange().getRequest().getCookies().getFirst("token");
         try {
@@ -50,12 +55,22 @@ public class LogoutHandler implements ServerLogoutHandler {
                 Map<String, Object> userMap = JWTUtils.getTokenInfo(cookie.getValue());
                 // 从Redis中删除与该用户名关联的令牌
                 redisTemplate.delete((String) userMap.get("username"));
+
+                // 清理浏览器中的 token Cookie
+                ResponseCookie deletedCookie = ResponseCookie.from("token", "")
+                        .path("/") // 确保路径匹配
+                        .httpOnly(true) // 如果原始 Cookie 是 HttpOnly，则这里也需要设置
+                        .secure(true) // 如果原始 Cookie 是 Secure，则这里也需要设置
+                        .maxAge(0) // 设置过期时间为 0，表示立即删除
+                        .build();
+                response.addCookie(deletedCookie);
             }
         } catch (JWTDecodeException e) {
             // 如果JWT令牌解析失败，记录错误日志并返回错误
             log.error("JWT令牌解析失败: {}", e.getMessage());
             return Mono.error(e);
         }
+
         // 返回空的Mono表示处理完成
         return Mono.empty();
     }
