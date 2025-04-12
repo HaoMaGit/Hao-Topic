@@ -11,3 +11,11 @@ export const apiGetUserList = (query: UserQueryType) => {
     params: query
   });
 };
+
+// 查询角色列表
+export const apiGetRoleList = () => {
+  return request({
+    url: prefix + "roleList",
+    method: "get",
+  });
+};
