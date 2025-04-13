@@ -16,8 +16,10 @@ const $router = useRouter()
 defineProps(['menuList'])
 //点击菜单的回调
 const handleClick: MenuProps['onClick'] = menuInfo => {
-  console.log(menuInfo);
-  $router.push(String(menuInfo.key))
+  console.log(menuInfo)
+  $router.push(
+    String(menuInfo.key),
+  )
 };
 // 当前选中的路由
 const selectedKeys = ref([$route.path])
@@ -54,10 +56,29 @@ onMounted(() => {
     });
   });
 });
+
+// 当前展开的菜单项
+const openKeysList = ref<any>([]);
+// 根目录
+const rootSubmenuKeys = ref();
+const onOpenChange = (openKeys: string[]) => {
+  rootSubmenuKeys.value = menuAllList.value.map(item => item.key);
+  // 找到最新被展开的菜单项（即不在当前 state.openKeys 中的 key）
+  const latestOpenKey = openKeys.find(key => openKeysList.value.indexOf(key) === -1);
+  // 判断最新展开的菜单项是否是顶级菜单
+  if (rootSubmenuKeys.value.indexOf(latestOpenKey) === -1) {
+    // 如果不是顶级菜单，则直接更新为 openKeys
+    openKeysList.value = openKeys;
+  } else {
+    // 如果是顶级菜单，则只保留最新展开的菜单项
+    openKeysList.value = latestOpenKey ? [latestOpenKey] : [];
+  }
+};
 </script>
 <template>
-  <a-menu mode="inline" class="custom-menu" :items="menuAllList" v-model:selectedKeys="selectedKeys"
-    @click="handleClick" :inline-collapsed="settingStore.fold" :theme="settingStore.isDark ? 'dark' : 'light'">
+  <a-menu mode="inline" :open-keys="openKeysList" @openChange="onOpenChange" class="custom-menu" :items="menuAllList"
+    v-model:selectedKeys="selectedKeys" @click="handleClick" :inline-collapsed="settingStore.fold"
+    :theme="settingStore.isDark ? 'dark' : 'light'">
   </a-menu>
 </template>
 <style lang="scss" scoped>

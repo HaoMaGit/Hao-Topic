@@ -36,43 +36,71 @@ export const constantRoute = [
   {
     path: '/system',
     redirect: '/system/user',
+    meta: {
+      title: '系统管理',
+    },
     component: () => import('../layout/index.vue'),
     children: [
       {
         path: '/system/user',
         component: () => import('@/views/system/user/index.vue'),
-
+        meta: {
+          title: '用户管理',
+        },
       },
       {
         path: '/system/role',
         component: () => import('@/views/system/role/index.vue'),
+        meta: {
+          title: '菜单管理',
+        },
       },
       {
         path: '/system/menu',
         component: () => import('@/views/system/menu/index.vue'),
+        meta: {
+          title: '角色管理',
+        },
       }
     ]
   },
+  // 题库管理=>题目管理 分类管理 标签管理 专题管理
   {
     path: '/topic',
     redirect: '/topic/topic',
+    meta: {
+      title: '题库管理',
+    },
     component: () => import('../layout/index.vue'),
     children: [
       {
         path: '/topic/topic',
         component: () => import('@/views/topic/topic/index.vue'),
+        meta: {
+          title: '题目管理',
+        },
       },
+
       {
         path: '/topic/category',
         component: () => import('@/views/topic/category/index.vue'),
+        meta: {
+          title: '分类管理',
+        },
       },
       {
         path: '/topic/label',
         component: () => import('@/views/topic/label/index.vue'),
+        meta: {
+          title: '标签管理',
+        },
       },
       {
         path: '/topic/subject',
         component: () => import('@/views/topic/subject/index.vue'),
+        meta: {
+          title: '专题管理',
+        },
       }
     ]
   },
