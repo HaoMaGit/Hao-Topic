@@ -3,7 +3,6 @@ package com.hao.topic.security.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.protobuf.ServiceException;
 import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
@@ -15,8 +14,8 @@ import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
+import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
-import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -306,7 +305,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param updateSupport
      */
     @Transactional
-    public String importExcel(List<SysUserExcelTemplate> excelVoList, Boolean updateSupport) {
+    public String importExcel(List<SysUserExcel> excelVoList, Boolean updateSupport) {
         // 校验
         if (StringUtils.isNull(excelVoList) || excelVoList.size() == 0) {
             throw new TopicException(ResultCodeEnum.IMPORT_EXCEL_ERROR);
@@ -320,7 +319,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 拼接错误消息
         StringBuilder failureMsg = new StringBuilder();
         // 遍历
-        for (SysUserExcelTemplate sysUserExcelTemplate : excelVoList) {
+        for (SysUserExcel sysUserExcelTemplate : excelVoList) {
             try {
                 // 根据名称查询当用户是否存在
                 SysUser sysUser = findByUserName(sysUserExcelTemplate.getAccount());

@@ -14,7 +14,6 @@ import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
-import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.SysRoleVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -192,7 +191,7 @@ public class SysUserController {
     @PostMapping("/import")
     public Result<String> importExcel(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
         try {
-            List<SysUserExcelTemplate> excelVoList = EasyExcel.read(multipartFile.getInputStream())
+            List<SysUserExcel> excelVoList = EasyExcel.read(multipartFile.getInputStream())
                     // 映射数据
                     .head(SysUserExcel.class)
                     // 读取工作表
@@ -211,10 +210,10 @@ public class SysUserController {
             Matcher matcher = pattern.matcher(e.getMessage());
             System.out.println(matcher);
             if (matcher.find()) {
-                throw new TopicException(matcher.group(1));
+                return Result.fail(matcher.group(1), ResultCodeEnum.IMPORT_ERROR);
             } else {
                 // 如果匹配不到，直接抛出原始异常消息
-                throw new TopicException(e.getMessage());
+                return Result.fail(e.getMessage(), ResultCodeEnum.IMPORT_ERROR);
             }
         }
     }
@@ -226,14 +225,14 @@ public class SysUserController {
     @GetMapping("/template")
     public void getExcelTemplate(HttpServletResponse response) {
         // 存储模板数据
-        List<SysUserExcelTemplate> excelVoList = new ArrayList<>();
+        List<SysUserExcel> excelVoList = new ArrayList<>();
         // 组成模板数据
-        SysUserExcelTemplate excelVo = new SysUserExcelTemplate();
+        SysUserExcel excelVo = new SysUserExcel();
         // 存放
         excelVoList.add(excelVo);
         try {
             // 导出
-            ExcelUtil.download(response, excelVoList, SysUserExcelTemplate.class);
+            ExcelUtil.download(response, excelVoList, SysUserExcel.class);
         } catch (IOException e) {
             throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
         }

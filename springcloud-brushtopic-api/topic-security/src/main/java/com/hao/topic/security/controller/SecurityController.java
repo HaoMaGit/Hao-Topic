@@ -6,7 +6,6 @@ import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
-import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
@@ -168,7 +167,7 @@ public class SecurityController {
      * @param updateSupport
      */
     @PostMapping("/import")
-    String importExcel(@RequestBody List<SysUserExcelTemplate> excelVoList, @RequestParam("updateSupport") Boolean updateSupport) {
+    String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport) {
         return sysUserService.importExcel(excelVoList, updateSupport);
     }
 }

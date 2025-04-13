@@ -5,7 +5,6 @@ import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
-import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
@@ -80,5 +79,5 @@ public interface SecurityFeignClient {
      * @param updateSupport
      */
     @PostMapping("/security/user/import")
-    String importExcel(@RequestBody List<SysUserExcelTemplate> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
+    String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
 }

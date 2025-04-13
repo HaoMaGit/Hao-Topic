@@ -57,6 +57,17 @@ public class Result<T> implements Serializable {
     }
 
     /**
+     * 失败带数据的方法
+     *
+     * @param object
+     * @param <T>
+     * @return
+     */
+    public static <T> Result<T> fail(T object, ResultCodeEnum resultCodeEnum) {
+        return build(object, resultCodeEnum);
+    }
+
+    /**
      * 失败不带参数的方法
      *
      * @param <T>

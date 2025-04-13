@@ -23,5 +23,12 @@
             <artifactId>topic-client-security</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- api通用模块 -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-api-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>
