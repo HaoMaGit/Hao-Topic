@@ -1,12 +1,14 @@
 package com.hao.topic.topic;
 
 
+import com.hao.topic.common.config.MyMetaObjectHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 
@@ -18,6 +20,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 @ComponentScan(basePackages = {
         "com.hao.topic.common.security"  // 添加这行，扫描security模块
 })
+@Import(MyMetaObjectHandler.class)  // 直接导入配置类
 public class TopicTopicApplication {
     public static void main(String[] args) {
         SpringApplication.run(TopicTopicApplication.class, args);

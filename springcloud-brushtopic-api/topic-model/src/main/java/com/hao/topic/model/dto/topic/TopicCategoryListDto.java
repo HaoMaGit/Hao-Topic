@@ -1,0 +1,19 @@
+package com.hao.topic.model.dto.topic;
+
+import lombok.Data;
+
+/**
+ * Description:
+ * Author: Hao
+ * Date: 2025/4/13 18:24
+ */
+@Data
+public class TopicCategoryListDto {
+    private String categoryName;
+    private String beginCreateTime;
+    private String endCreateTime;
+    private String beginUpdateTime;
+    private String endUpdateTime;
+    private Integer pageNum;
+    private Integer pageSize;
+}

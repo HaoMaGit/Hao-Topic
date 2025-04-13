@@ -5,15 +5,10 @@ import lombok.Data;
 /**
  * Description:
  * Author: Hao
- * Date: 2025/4/13 18:24
+ * Date: 2025/4/13 20:16
  */
 @Data
 public class TopicCategoryDto {
     private String categoryName;
-    private String beginCreateTime;
-    private String endCreateTime;
-    private String beginUpdateTime;
-    private String endUpdateTime;
-    private Integer pageNum;
-    private Integer pageSize;
+    private Long id;
 }

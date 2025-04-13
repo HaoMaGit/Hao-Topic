@@ -39,6 +39,10 @@ public enum ResultCodeEnum {
     ADD_USER_ERROR(99914, "添加用户失败"),
     IMPORT_EXCEL_ERROR(99915, "导入数据不能为空"),
 
+    CATEGORY_NAME_IS_NULL(99916, "分类名称不能为空"),
+    CATEGORY_UPDATE_IS_NULL(99915, "修改题目分类失败"),
+
+
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
     ADMIN_LOCKED(207, "登录失败请确认身份"),
