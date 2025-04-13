@@ -29,3 +29,11 @@ export const apiUpdateCategory = (data: any) => {
     data
   });
 };
+
+// 删除题目与批量删除
+export const apiDeleteCategory = (ids: number[]) => {
+  return request({
+    url: prefix + "delete/" + ids,
+    method: "delete",
+  });
+};

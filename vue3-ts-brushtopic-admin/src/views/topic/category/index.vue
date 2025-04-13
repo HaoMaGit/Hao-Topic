@@ -9,7 +9,7 @@ import {
   LoadingOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
-import { apiGetCategoryList, apiAddCategory, apiUpdateCategory } from '@/api/topic/category'
+import { apiGetCategoryList, apiAddCategory, apiUpdateCategory, apiDeleteCategory } from '@/api/topic/category'
 import type { TopicCatgoryQueryType } from '@/api/topic/category/type';
 import { addDateRange, clearDateRange } from '@/utils/date';
 import { message, Modal } from 'ant-design-vue';
@@ -156,14 +156,16 @@ const handleEdit = (record: any) => {
 // 删除
 const handleDelete = (record: any) => {
   Modal.confirm({
-    title: '是否确认删除该分类?',
+    title: '是否确认删除该题目分类?',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode('div', { style: 'color:red;' }, '删除分类会导致相关题目分类丢失，请慎重考虑!'),
     async onOk() {
-      if (record.id) {
+      if (record && record.id) {
         onSelectedRowKeys.value.push(record.id)
       }
-      // await apiDeleteUser(onSelectedRowKeys.value)
+      await apiDeleteCategory(onSelectedRowKeys.value)
+      getTopicCategoryList()
+      clearFormData()
       message.success('删除成功')
     },
     onCancel() {
