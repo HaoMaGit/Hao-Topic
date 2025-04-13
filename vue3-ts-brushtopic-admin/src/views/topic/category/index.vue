@@ -9,6 +9,7 @@ import {
   LoadingOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
+import { apiGetCategoryList, apiAddCategory, apiUpdateCategory } from '@/api/topic/category'
 import type { TopicCatgoryQueryType } from '@/api/topic/category/type';
 import { addDateRange, clearDateRange } from '@/utils/date';
 import { message, Modal } from 'ant-design-vue';
@@ -31,7 +32,12 @@ const params = ref<TopicCatgoryQueryType>({
 })
 
 // 获取分类列表
-const getTopicCategoryList = () => {
+const getTopicCategoryList = async () => {
+  tableLoading.value = true
+  const res = await apiGetCategoryList(params.value)
+  total.value = res.data.total
+  tableData.value = res.data.rows
+  tableLoading.value = false
 }
 
 // total
@@ -59,35 +65,35 @@ const columns = [
     dataIndex: 'categoryName',
     key: 'categoryName',
     align: 'center',
-    width: 150,
+    width: 200,
   },
   {
     title: '创建人',
     dataIndex: 'createBy',
     key: 'createBy',
     align: 'center',
-    width: 130,
+    width: 150,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     align: 'center',
-    width: 120,
+    width: 140,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
     align: 'center',
-    width: 180,
+    width: 190,
   },
   {
     title: '修改时间',
     dataIndex: 'updateTime',
     key: 'updateTime',
     align: 'center',
-    width: 180,
+    width: 190,
   },
   {
     title: '操作',
@@ -136,12 +142,16 @@ const onSelectChange = (selectedRowKeys: any) => {
 
 // 新增
 const handleAdd = () => {
-
+  drawer.value = true
+  drawerTitle.value = '新增题目分类'
 }
 // 修改
 const handleEdit = (record: any) => {
-  console.log(record);
-
+  drawer.value = true
+  drawerTitle.value = '修改题目分类'
+  formData.value = {
+    ...record
+  }
 }
 // 删除
 const handleDelete = (record: any) => {
@@ -254,6 +264,65 @@ const handleUploadChange = (info: UploadChangeParam) => {
 }
 
 
+// 标题
+const drawerTitle = ref('新增')
+// 抽屉
+const drawer = ref(false)
+// 抽屉关闭
+const onClose = () => {
+  clearFormData()
+  drawer.value = false
+}
+// 表单实例
+const formRef = ref<any>(null)
+// 表单数据
+const formData = ref({
+  categoryName: '',
+  id: null,
+})
+// 表单规则
+const rules = ref({
+  categoryName: [
+    {
+      required: true,
+      message: '请输入分类名称',
+      trigger: 'blur',
+    },
+  ],
+})
+// 清空
+const clearFormData = () => {
+  formData.value = {
+    categoryName: '',
+    id: null,
+  }
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+  createTimeDateRange.value = []
+  updateTimeDateRange.value = []
+}
+
+// 保存以及修改
+const onSave = () => {
+  formRef.value.validate().then(async () => {
+    let mes = ''
+    // 判断是新增还是修改
+    if (formData.value.id) {
+      mes = '修改题目分类成功'
+      await apiUpdateCategory(formData.value)
+    } else {
+      mes = '新增题目分类成功'
+      await apiAddCategory(formData.value)
+    }
+    drawer.value = false
+    getTopicCategoryList()
+    clearFormData()
+
+    message.success(mes)
+  })
+}
+
 onMounted(() => {
   getTopicCategoryList()
 })
@@ -314,7 +383,21 @@ onMounted(() => {
       </template>
     </a-table>
 
-
+    <!-- 新增和修改 -->
+    <a-drawer :title="drawerTitle" placement="right" v-model:open="drawer" @close="onClose">
+      <a-form ref="formRef" :model="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+        <a-form-item label="分类名称" name="categoryName">
+          <a-input v-model:value="formData.categoryName" placeholder="请输入分类名称" />
+        </a-form-item>
+      </a-form>
+      <!-- 添加底部按钮 -->
+      <template #footer>
+        <a-space class="space-footer-box">
+          <a-button @click="onClose">取消</a-button>
+          <a-button type="primary" @click="onSave">保存</a-button>
+        </a-space>
+      </template>
+    </a-drawer>
 
     <!-- 导入excel -->
     <a-modal @cancel="handleCancel" :footer="null"
@@ -356,5 +439,10 @@ onMounted(() => {
 
 .checkbox {
   margin-top: 10px;
+}
+
+.space-footer-box {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
