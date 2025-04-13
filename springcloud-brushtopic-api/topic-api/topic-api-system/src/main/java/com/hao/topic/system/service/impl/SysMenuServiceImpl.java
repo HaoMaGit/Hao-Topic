@@ -59,6 +59,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         if (CollectionUtils.isEmpty(sysMenus)) {
             throw new TopicException(ResultCodeEnum.NO_MENU_FAIL);
         }
+        // 排序
+        sysMenus.sort(Comparator.comparing(SysMenu::getSorted));
         // 创建返回菜单
         List<SysMenuVo> sysMenuVoList = new ArrayList<>();
         for (SysMenu sysMenu : sysMenus) {
