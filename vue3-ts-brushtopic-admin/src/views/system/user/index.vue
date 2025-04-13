@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, h, createVNode } from 'vue'
-import { apiGetUserList, apiExportUser, apiGetRoleList, apiAddUser, apiUpdateUser, apiDeleteUser } from '@/api/system/user/index'
+import { ref, onMounted, h, reactive, createVNode } from 'vue'
+import { apiGetUserList, apiExportUser, apiGetExportTemplate, apiGetRoleList, apiAddUser, apiUpdateUser, apiDeleteUser } from '@/api/system/user/index'
 import type { UserQueryType } from '@/api/system/user/type'
 import {
   PlusOutlined,
@@ -375,6 +375,7 @@ const handleChange = (info: UploadChangeParam) => {
   if (info.file.status === 'done') {
     formData.value.avatar = info.file.response.data;
     loading.value = false;
+    message.success('上传成功');
   }
   // 上传失败
   if (info.file.status === 'error') {
@@ -408,23 +409,88 @@ const handleExport = async () => {
     response = await apiExportUser(params.value, [0])
     // 下载下来
   }
-  FileSaver.saveAs(response, `易题后台用户数据_${new Date().getTime()}.xlsx`) // 下载文件
+  FileSaver.saveAs(response, `易题系统用户数据_${new Date().getTime()}.xlsx`) // 下载文件
   message.success('导出成功')
   tableLoading.value = false
 }
 
 // 导入数据
 const handleImport = () => {
-  // Modal.confirm({
-  //   title: '是否确认导入用户?',
-  //   icon: createVNode(ExclamationCircleOutlined),
-  //   content: createVNode('div', { style: 'color:red;' }, '导入用户会导致相关用户功能丢失，请慎重考虑!'),
-  //   async onOk() {
-  //     await apiImportUser()
-  //     getRoleList()
-  //     getUserList()
-  //   }
-  // })
+  upload.open = true
+}
+
+// 用户导入参数
+const upload = reactive({
+  // 是否显示弹出层（用户导入）
+  open: false,
+  // 是否更新已经存在的用户数据
+  updateSupport: 0,
+  // 设置上传的请求头部
+  headers,
+  // 上传文件的loading
+  uploadLoading: false,
+  // 上传的地址
+  url: VITE_SERVE + "/api/system/user/import",
+  // 上传的文件
+  uploadFileList: [],
+  // 结果弹窗
+  oepnResult: false,
+  // 结果
+  result: ""
+});
+
+// 下载模板
+const importTemplate = async () => {
+  let response: any = null
+  const res = await apiGetExportTemplate()
+  response = res
+  FileSaver.saveAs(response, `易题系统用户数据模板_${new Date().getTime()}.xlsx`)
+}
+
+// 上传文件前校验
+const handleBeforeUpload = (file: any) => {
+  // 截取最后的.判断类型
+  const type = file.name.split('.').pop()
+  const isExcel = type === 'xls' || type === 'xlsx';
+  if (!isExcel) {
+    message.error('上传excel文件格式错误');
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isLt5M) {
+    message.error('excel文件不能超过2M');
+  }
+  return isExcel && isLt5M;
+}
+
+// 上传成功
+const handleUploadChange = (info: UploadChangeParam) => {
+  // 判断是否上传中
+  if (info.file.status === 'uploading') {
+    upload.uploadLoading = true;
+    return;
+  }
+  // 上传完成
+  if (info.file.status === 'done') {
+    formData.value.avatar = info.file.response.data;
+    upload.uploadLoading = false;
+    upload.oepnResult = true
+    handleCancel()
+    upload.result = info.file.response.message
+    message.success('上传成功');
+  }
+  // 上传失败
+  if (info.file.status === 'error') {
+    upload.uploadLoading = false;
+    upload.oepnResult = true
+    handleCancel()
+    upload.result = info.file.response.message
+    message.error(info.file.response.message);
+  }
+}
+
+const handleCancel = () => {
+  upload.open = false
+  upload.uploadFileList = []
 }
 
 onMounted(() => {
@@ -458,14 +524,14 @@ onMounted(() => {
       </div>
     </a-space>
     <!-- 操作按钮 -->
-    <a-form-item>
+    <a-form-item v-if="!tableLoading">
       <a-space>
         <a-button type="primary" :icon="h(PlusOutlined)" @click="handleAdd">新增</a-button>
         <a-button :disabled="onSelectedRowKeys.length == 0" @mouseenter="isDangerHover = true"
           @mouseleave="isDangerHover = false" :danger="isDangerHover" :icon="h(DeleteOutlined)"
           @click="handleDelete(null)">删除</a-button>
-        <a-button :disabled="tableData.length == 0" :icon="h(DownloadOutlined)" @click="handleExport">导出</a-button>
         <a-button :icon="h(UploadOutlined)" @click="handleImport">导入</a-button>
+        <a-button :disabled="tableData.length == 0" :icon="h(DownloadOutlined)" @click="handleExport">导出</a-button>
       </a-space>
     </a-form-item>
     <a-tabs :style="{ height: '500px' }" @tabClick="handleTabClick" v-model:activeKey="activeKey" tab-position="left">
@@ -538,6 +604,28 @@ onMounted(() => {
         </a-space>
       </template>
     </a-drawer>
+
+    <!-- 导入excel -->
+    <a-modal @cancel="handleCancel" :footer="null"
+      bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
+      v-model:open="upload.open" title="导入用户数据">
+      <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
+        :multiple="true" :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :before-upload="handleBeforeUpload" @change="handleUploadChange">
+        <p class="ant-upload-drag-icon">
+          <loading-outlined v-if="upload.uploadLoading"></loading-outlined>
+          <inbox-outlined v-else></inbox-outlined>
+        </p>
+        <p class="ant-upload-text">将文件拖到此处或点击上传</p>
+      </a-upload-dragger>
+      <a-checkbox class="checkbox" v-model:checked="upload.updateSupport">是否更新已经存在的用户数据</a-checkbox>
+      <p>仅允许导入xls、xlsx格式文件<a-button type="link" @click="importTemplate">下载模板</a-button></p>
+    </a-modal>
+
+    <!-- 导入成功以及失败的弹窗 -->
+    <a-modal :footer="null" v-model:open="upload.oepnResult" title="导入结果">
+      <div v-html="upload.result"></div>
+    </a-modal>
   </div>
 </template>
 
@@ -571,5 +659,9 @@ onMounted(() => {
   width: 38px;
   height: 38px;
   border-radius: 50%;
+}
+
+.checkbox {
+  margin-top: 10px;
 }
 </style>

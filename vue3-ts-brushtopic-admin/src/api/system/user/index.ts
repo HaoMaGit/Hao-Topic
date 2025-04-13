@@ -55,3 +55,13 @@ export const apiExportUser = (query: UserQueryType | null, ids: number[] | null)
     responseType: "blob"
   });
 };
+
+
+// 下载导入模板
+export function apiGetExportTemplate() {
+  return request({
+    url: prefix + '/template',
+    responseType: 'blob' // 二进制文件流
+  })
+}
+
