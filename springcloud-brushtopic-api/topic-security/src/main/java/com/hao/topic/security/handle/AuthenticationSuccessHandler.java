@@ -5,6 +5,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.utils.JWTUtils;
 import com.hao.topic.security.constant.JwtConstant;
 import com.hao.topic.security.properties.AuthProperties;
+import com.hao.topic.security.service.SecurityUserDetails;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,9 +81,12 @@ public class AuthenticationSuccessHandler extends WebFilterChainServerAuthentica
         // 获取用户的权限列表
         List<? extends GrantedAuthority> list = authentication.getAuthorities().stream().toList();
         try {
+            // 获取 SecurityUserDetails 中的用户ID
+            SecurityUserDetails userDetails = (SecurityUserDetails) authentication.getPrincipal();
             // 创建包含用户名和角色的负载
             Map<String, String> load = new HashMap<>();
             load.put("username", authentication.getName());
+            load.put("id", String.valueOf(userDetails.getUserId()));
             load.put("role", list.get(0).getAuthority()); // 这里只添加了一种角色，实际上用户可以有不同的角色类型
 
             String token;

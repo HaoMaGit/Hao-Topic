@@ -17,6 +17,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-
+        <!-- 授权认证服务 -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-client-security</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>

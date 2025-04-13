@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -66,7 +65,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // 添加两种格式的权限，确保能匹配 @PreAuthorize 中的表达式
                     authorities.add(new SimpleGrantedAuthority(role));
-
                     // 创建认证对象并设置到安全上下文
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(username, null, authorities);
