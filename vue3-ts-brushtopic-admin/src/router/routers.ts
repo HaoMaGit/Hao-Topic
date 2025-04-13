@@ -23,8 +23,7 @@ export const constantRoute = [
     component: () => import('../layout/index.vue'),
     name: 'layout',
     meta: {
-      title: '',
-      icon: '',
+      title: '首页',
     },
     redirect: '/home',
     children: [{
@@ -42,6 +41,7 @@ export const constantRoute = [
       {
         path: '/system/user',
         component: () => import('@/views/system/user/index.vue'),
+
       },
       {
         path: '/system/role',

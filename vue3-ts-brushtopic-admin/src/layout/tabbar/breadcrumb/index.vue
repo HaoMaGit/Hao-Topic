@@ -6,6 +6,7 @@ const settingStore = useSettingStore();
 import { useRoute } from 'vue-router';
 // 实例化路由
 const $route = useRoute();
+console.log($route.matched);
 
 // 折叠图标
 const changeIcon = () => {

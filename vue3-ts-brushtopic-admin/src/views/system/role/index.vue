@@ -259,7 +259,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="menu-body">
+  <div class="role-body">
     <a-space class="space-box">
       <div class="query-box">
         <a-space>

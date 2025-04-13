@@ -471,7 +471,6 @@ const handleUploadChange = (info: UploadChangeParam) => {
   }
   // 上传完成
   if (info.file.status === 'done') {
-    formData.value.avatar = info.file.response.data;
     upload.uploadLoading = false;
     upload.oepnResult = true
     handleCancel()
@@ -500,7 +499,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="menu-body">
+  <div class="user-body">
     <a-space class="space-box">
       <div class="query-box">
         <a-space :size="23">
