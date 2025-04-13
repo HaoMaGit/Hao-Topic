@@ -55,4 +55,14 @@ public class TopicCategoryController {
         return Result.success();
     }
 
+    /**
+     * 删除题目分类
+     */
+    @DeleteMapping("/delete/{ids}")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result delete(@PathVariable Long[] ids) {
+        topicCategoryService.delete(ids);
+        return Result.success();
+    }
+
 }

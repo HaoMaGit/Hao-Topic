@@ -9,7 +9,9 @@ import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
+import com.hao.topic.model.entity.topic.TopicCategorySubject;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
+import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.service.TopicCategoryService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import java.util.Map;
 @Slf4j
 public class TopicCategoryServiceImpl implements TopicCategoryService {
     private final TopicCategoryMapper topicCategoryMapper;
+    private final TopicCategorySubjectMapper topicCategorySubjectMapper;
 
     /**
      * 分页查询分类列表
@@ -49,6 +52,14 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             // 根据当前登录用户查询
             topicCategoryLambdaQueryWrapper.like(TopicCategory::getCategoryName, topicCategoryDto.getCategoryName());
         }
+        // 判断创建时间
+        if (!StringUtils.isEmpty(topicCategoryDto.getBeginCreateTime()) && !StringUtils.isEmpty(topicCategoryDto.getEndCreateTime())) {
+            topicCategoryLambdaQueryWrapper.between(TopicCategory::getCreateTime, topicCategoryDto.getBeginCreateTime(), topicCategoryDto.getEndCreateTime());
+        }
+        // 判断修改时间
+        if (!StringUtils.isEmpty(topicCategoryDto.getBeginUpdateTime()) && !StringUtils.isEmpty(topicCategoryDto.getEndUpdateTime())) {
+            topicCategoryLambdaQueryWrapper.between(TopicCategory::getUpdateTime, topicCategoryDto.getBeginUpdateTime(), topicCategoryDto.getEndUpdateTime());
+        }
         topicCategoryLambdaQueryWrapper.orderByDesc(TopicCategory::getCreateTime);
         // 开始查询
         Page<TopicCategory> topicCategoryList = topicCategoryMapper.selectPage(topicCategoryPage, topicCategoryLambdaQueryWrapper);
@@ -64,6 +75,11 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         // 校验分类名称
         if (StringUtils.isEmpty(topicCategoryDto.getCategoryName())) {
             throw new TopicException(ResultCodeEnum.CATEGORY_NAME_IS_NULL);
+        }
+        // 查询
+        TopicCategory topicCategoryDb = topicCategoryMapper.selectById(topicCategoryDto.getId());
+        if (topicCategoryDb != null) {
+            throw new TopicException(ResultCodeEnum.CATEGORY_NAME_EXIST);
         }
         // 获取当前用户登录名称
         String username = SecurityUtils.getCurrentName();
@@ -91,5 +107,28 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         // 开始修改
         topicCategory.setCategoryName(topicCategoryDto.getCategoryName());
         topicCategoryMapper.updateById(topicCategory);
+    }
+
+    /**
+     * 删除题目分类
+     *
+     * @param ids
+     */
+    public void delete(Long[] ids) {
+        // 校验
+        if (ids == null) {
+            throw new TopicException(ResultCodeEnum.CATEGORY_DELETE_IS_NULL);
+        }
+        LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        for (Long id : ids) {
+            // 查询分类与专题关系表
+            topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getCategoryId, id);
+            TopicCategorySubject topicCategorySubject = topicCategorySubjectMapper.selectOne(topicCategorySubjectLambdaQueryWrapper);
+            if (topicCategorySubject != null) {
+                throw new TopicException(ResultCodeEnum.CATEGORY_DELETE_TOPIC_ERROR);
+            }
+            // 删除
+            topicCategoryMapper.deleteById(id);
+        }
     }
 }

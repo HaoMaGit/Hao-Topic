@@ -17,4 +17,6 @@ public interface TopicCategoryService {
 
     void update(TopicCategoryDto topicCategoryDto);
 
+    void delete(Long[] ids);
+
 }
