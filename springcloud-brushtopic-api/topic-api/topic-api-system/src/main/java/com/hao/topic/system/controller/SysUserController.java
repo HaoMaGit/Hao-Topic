@@ -1,6 +1,6 @@
 package com.hao.topic.system.controller;
 
-import com.alibaba.fastjson2.util.DateUtils;
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.api.utils.helper.MinioHelper;
 import com.hao.topic.api.utils.utils.ExcelUtil;
@@ -13,9 +13,10 @@ import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
+import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.SysRoleVo;
 import com.hao.topic.system.mapper.SysRoleMapper;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +26,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Description: 用户控制器
@@ -105,7 +107,12 @@ public class SysUserController {
         if (!result) {
             return Result.fail(ResultCodeEnum.ROLE_NO_EXIST);
         }
-        securityFeignClient.add(sysUserDto);
+        try {
+            securityFeignClient.add(sysUserDto);
+        } catch (Exception e) {
+            throw new TopicException(ResultCodeEnum.ADD_USER_ERROR);
+
+        }
         return Result.success();
     }
 
@@ -167,31 +174,69 @@ public class SysUserController {
      */
     @GetMapping("/export/{ids}")
     public void exportExcel(HttpServletResponse response, SysUserListDto sysUserListDto, @PathVariable Long[] ids) {
-        List<SysUserExcel> sysUserExcels = securityFeignClient.getExcelVo(sysUserListDto, ids);
-        if (CollectionUtils.isEmpty(sysUserExcels)) {
-            throw new TopicException(ResultCodeEnum.EXPORT_USER_ERROR);
+        List<SysUserExcelExport> sysUserExcelExports = securityFeignClient.getExcelVo(sysUserListDto, ids);
+        if (CollectionUtils.isEmpty(sysUserExcelExports)) {
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
         }
         // 导出
         try {
-            ExcelUtil.download(response, sysUserExcels, SysUserExcel.class);
+            ExcelUtil.download(response, sysUserExcelExports, SysUserExcelExport.class);
         } catch (IOException e) {
-            throw new TopicException(ResultCodeEnum.EXPORT_USER_ERROR);
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
         }
     }
 
-    // /**
-    //  * 导入excel
-    //  */
-    // @PostMapping("/import")
-    // public void importExcel(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-    //     securityFeignClient.importExcel(multipartFile);
-    // }
-    //
-    // /**
-    //  * 下载excel模板
-    //  */
-    // @GetMapping("/template")
-    // public void getExcelTemplate(HttpServletResponse response) {
-    //     securityFeignClient.getExcelTemplate(response);
-    // }
+    /**
+     * 导入excel
+     */
+    @PostMapping("/import")
+    public Result<String> importExcel(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
+        try {
+            List<SysUserExcelTemplate> excelVoList = EasyExcel.read(multipartFile.getInputStream())
+                    // 映射数据
+                    .head(SysUserExcel.class)
+                    // 读取工作表
+                    .sheet()
+                    // 读取并同步返回数据
+                    .doReadSync();
+            // 封装数据插入到数据库中
+            String s = securityFeignClient.importExcel(excelVoList, updateSupport);
+            return Result.success(s);
+        } catch (Exception e) {
+            // 打印异常消息
+            System.out.println("Exception message: " + e.getMessage());
+            // 正则表达式匹配 message 字段
+            String regex = "\"message\":\"(.*?)\"";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(e.getMessage());
+            System.out.println(matcher);
+            if (matcher.find()) {
+                throw new TopicException(matcher.group(1));
+            } else {
+                // 如果匹配不到，直接抛出原始异常消息
+                throw new TopicException(e.getMessage());
+            }
+        }
+    }
+
+
+    /**
+     * 下载excel模板
+     */
+    @GetMapping("/template")
+    public void getExcelTemplate(HttpServletResponse response) {
+        // 存储模板数据
+        List<SysUserExcelTemplate> excelVoList = new ArrayList<>();
+        // 组成模板数据
+        SysUserExcelTemplate excelVo = new SysUserExcelTemplate();
+        // 存放
+        excelVoList.add(excelVo);
+        try {
+            // 导出
+            ExcelUtil.download(response, excelVoList, SysUserExcelTemplate.class);
+        } catch (IOException e) {
+            throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
+        }
+
+    }
 }

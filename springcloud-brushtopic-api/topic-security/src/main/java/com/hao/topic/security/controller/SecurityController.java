@@ -1,24 +1,22 @@
 package com.hao.topic.security.controller;
 
 import com.hao.topic.common.constant.ExceptionConstant;
-import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
+import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
-import com.hao.topic.security.security.SecurityRepository;
 import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +26,6 @@ import org.springframework.web.server.handler.DefaultWebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -159,8 +156,19 @@ public class SecurityController {
      * @param ids
      * @return
      */
-    @GetMapping("/export/{ids}")
-    List<SysUserExcel> getExcelVo(SysUserListDto sysUserListDto, @PathVariable Long[] ids) {
+    @RequestMapping("/export/{ids}")
+    List<SysUserExcelExport> getExcelVo(SysUserListDto sysUserListDto, @PathVariable Long[] ids) {
         return sysUserService.getExcelVo(sysUserListDto, ids);
+    }
+
+    /**
+     * 将excel数据插入到数据库中
+     *
+     * @param excelVoList
+     * @param updateSupport
+     */
+    @PostMapping("/import")
+    String importExcel(@RequestBody List<SysUserExcelTemplate> excelVoList, @RequestParam("updateSupport") Boolean updateSupport) {
+        return sysUserService.importExcel(excelVoList, updateSupport);
     }
 }

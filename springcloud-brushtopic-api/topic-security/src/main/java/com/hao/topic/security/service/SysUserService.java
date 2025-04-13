@@ -2,8 +2,8 @@ package com.hao.topic.security.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.protobuf.ServiceException;
 import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
@@ -15,16 +15,17 @@ import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
-import com.hao.topic.model.excel.sytem.SysUserExcel;
+import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
+import com.hao.topic.security.utils.PasswordUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -170,8 +171,12 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         String encode = bCryptPasswordEncoder.encode(sysUser.getPassword());
         sysUser.setPassword(encode);
+        /// 查询这个用户是否存在
+        if (findByUserName(sysUser.getAccount()) != null) {
+            throw new TopicException(ResultCodeEnum.ADD_USER_ERROR);
+        }
         // 添加用户
-        sysUserMapper.insert(sysUser);
+        int insert = sysUserMapper.insert(sysUser);
         // 添加用户角色关联表
         SysUserRole sysUserRole = new SysUserRole();
         sysUserRole.setUserId(sysUser.getId());
@@ -250,16 +255,16 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param ids
      * @return
      */
-    public List<SysUserExcel> getExcelVo(SysUserListDto sysUserListDto, Long[] ids) {
+    public List<SysUserExcelExport> getExcelVo(SysUserListDto sysUserListDto, Long[] ids) {
         if (ids[0] != 0) {
             // 查询用户
             List<SysUser> sysUsers = sysUserMapper.selectBatchIds(Arrays.asList(ids));
             if (!CollectionUtils.isEmpty(sysUsers)) {
                 // 遍历
-                List<SysUserExcel> sysUserExcels = new ArrayList<>();
+                List<SysUserExcelExport> sysUserExcelExports = new ArrayList<>();
                 for (SysUser sysUser : sysUsers) {
-                    SysUserExcel sysUserExcel = new SysUserExcel();
-                    BeanUtils.copyProperties(sysUser, sysUserExcel);
+                    SysUserExcelExport sysUserExcelExport = new SysUserExcelExport();
+                    BeanUtils.copyProperties(sysUser, sysUserExcelExport);
                     // 根据用户id查询用户角色信息
                     LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
                     sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUser.getId());
@@ -267,14 +272,14 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
                     if (sysUserRole != null) {
                         SysRole byId = systemFeignClient.getById(sysUserRole.getRoleId());
                         if (byId != null) {
-                            sysUserExcel.setRoleName(byId.getName());
+                            sysUserExcelExport.setRoleName(byId.getName());
                         }
                     }
-                    sysUserExcels.add(sysUserExcel);
+                    sysUserExcelExports.add(sysUserExcelExport);
                 }
-                // 排序
-                sysUserExcels.sort(Comparator.comparing(SysUserExcel::getId));
-                return sysUserExcels;
+                // 倒序
+                sysUserExcelExports.sort(Comparator.comparing(SysUserExcelExport::getId).reversed());
+                return sysUserExcelExports;
             }
         }
         // 没有选择
@@ -283,14 +288,110 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 封装
         if (!CollectionUtils.isEmpty(sysUserListVos)) {
             // 遍历
-            List<SysUserExcel> sysUserExcels = new ArrayList<>();
+            List<SysUserExcelExport> sysUserExcelExports = new ArrayList<>();
             for (SysUserListVo sysUserListVo : sysUserListVos) {
-                SysUserExcel sysUserExcel = new SysUserExcel();
-                BeanUtils.copyProperties(sysUserListVo, sysUserExcel);
-                sysUserExcels.add(sysUserExcel);
+                SysUserExcelExport sysUserExcelExport = new SysUserExcelExport();
+                BeanUtils.copyProperties(sysUserListVo, sysUserExcelExport);
+                sysUserExcelExports.add(sysUserExcelExport);
             }
-            return sysUserExcels;
+            return sysUserExcelExports;
         }
         return null;
+    }
+
+    /**
+     * 将excel数据插入到数据库
+     *
+     * @param excelVoList
+     * @param updateSupport
+     */
+    @Transactional
+    public String importExcel(List<SysUserExcelTemplate> excelVoList, Boolean updateSupport) {
+        // 校验
+        if (StringUtils.isNull(excelVoList) || excelVoList.size() == 0) {
+            throw new TopicException(ResultCodeEnum.IMPORT_EXCEL_ERROR);
+        }
+        // 计算成功的数量
+        int successNum = 0;
+        // 计算失败的数量
+        int failureNum = 0;
+        // 拼接成功消息
+        StringBuilder successMsg = new StringBuilder();
+        // 拼接错误消息
+        StringBuilder failureMsg = new StringBuilder();
+        // 遍历
+        for (SysUserExcelTemplate sysUserExcelTemplate : excelVoList) {
+            try {
+                // 根据名称查询当用户是否存在
+                SysUser sysUser = findByUserName(sysUserExcelTemplate.getAccount());
+                if (StringUtils.isNull(sysUser)) {
+                    // 不存在插入
+                    // 处理密码
+                    sysUserExcelTemplate.setPassword(PasswordUtils.encodePassword(sysUserExcelTemplate.getPassword()));
+                    // 根据角色名称判断是否存在
+                    SysRole sysRole = sysUserMapper.getByRoleName(sysUserExcelTemplate.getRoleName());
+                    if (StringUtils.isNull(sysRole)) {
+                        // 不存在
+                        failureNum++;
+                        failureMsg.append("<br/>").append(failureNum).append("-用户：").append(sysUserExcelTemplate.getAccount()).append("-角色不存在");
+                    } else {
+                        // 存在
+                        // 添加
+                        SysUser user = new SysUser();
+                        BeanUtils.copyProperties(sysUserExcelTemplate, user);
+                        sysUserMapper.insert(user);
+                        // 插入角色到关系表中
+                        SysUserRole sysUserRole = new SysUserRole();
+                        sysUserRole.setUserId(user.getId());
+                        sysUserRole.setRoleId(sysRole.getId());
+                        sysUserRoleMapper.insert(sysUserRole);
+                        successNum++;
+                        successMsg.append("<br/>").append(successNum).append("-用户：").append(sysUserExcelTemplate.getAccount()).append("-导入成功");
+                    }
+                } else if (updateSupport) {
+                    // 更新
+                    // 处理密码
+                    sysUserExcelTemplate.setPassword(PasswordUtils.encodePassword(sysUserExcelTemplate.getPassword()));
+                    // 根据角色名称判断是否存在
+                    SysRole sysRole = sysUserMapper.getByRoleName(sysUserExcelTemplate.getRoleName());
+                    if (StringUtils.isNull(sysRole)) {
+                        // 不存在
+                        failureNum++;
+                        failureMsg.append("<br/>").append(failureNum).append("-用户：").append(sysUserExcelTemplate.getAccount()).append("-角色不存在");
+                    } else {
+                        // 修改
+                        BeanUtils.copyProperties(sysUserExcelTemplate, sysUser);
+                        sysUserMapper.updateById(sysUser);
+                        // 删除角色关联表
+                        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUser.getId());
+                        sysUserRoleMapper.delete(sysUserRoleLambdaQueryWrapper);
+                        // 插入角色到关系表中
+                        SysUserRole sysUserRole = new SysUserRole();
+                        sysUserRole.setUserId(sysUser.getId());
+                        sysUserRole.setRoleId(sysRole.getId());
+                        sysUserRoleMapper.insert(sysUserRole);
+                        successNum++;
+                        successMsg.append("<br/>").append(successNum).append("-用户：").append(sysUserExcelTemplate.getAccount()).append("-更新成功");
+                    }
+                } else {
+                    // 已存在
+                    failureNum++;
+                    failureMsg.append("<br/>").append(failureNum).append("-用户：").append(sysUser.getAccount()).append("-已存在");
+                }
+            } catch (Exception e) {
+                failureNum++;
+                String msg = "<br/>" + failureNum + "-用户： " + sysUserExcelTemplate.getAccount() + " 导入失败：";
+                failureMsg.append(msg).append(e.getMessage());
+                log.error(msg, e);
+            }
+        }
+        if (failureNum > 0) {
+            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
+            throw new TopicException(failureMsg.toString());
+        } else {
+            successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
+        }
+        return successMsg.toString();
     }
 }

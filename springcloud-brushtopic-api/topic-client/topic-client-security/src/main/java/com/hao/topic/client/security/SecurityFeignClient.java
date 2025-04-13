@@ -4,6 +4,8 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
+import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.excel.sytem.SysUserExcelTemplate;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
@@ -69,5 +71,14 @@ public interface SecurityFeignClient {
      * @return
      */
     @GetMapping("/security/user/export/{ids}")
-    List<SysUserExcel> getExcelVo( SysUserListDto sysUserListDto, @PathVariable Long[] ids);
+    List<SysUserExcelExport> getExcelVo(SysUserListDto sysUserListDto, @PathVariable Long[] ids);
+
+    /**
+     * 将excel数据插入到数据库
+     *
+     * @param excelVoList
+     * @param updateSupport
+     */
+    @PostMapping("/security/user/import")
+    String importExcel(@RequestBody List<SysUserExcelTemplate> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
 }

@@ -12,11 +12,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Description: 用户excel
+ * Description: 导出用户数据
  * Author: Hao
- * Date: 2025/4/12 22:19
+ * Date: 2025/4/13 11:34
  */
-// 数据行高度30
 @ContentRowHeight(30)
 // 表头行高20
 @HeadRowHeight(20)
@@ -25,20 +24,18 @@ import java.time.LocalDateTime;
 // 对齐方式居中
 @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER, verticalAlignment = VerticalAlignmentEnum.CENTER)
 @Data
-public class SysUserExcel {
-
-
+public class SysUserExcelExport {
+    @ExcelProperty(value = "ID")
+    private Long id;
     @ExcelProperty(value = "账户")
     private String account;
 
     @ExcelProperty(value = "邮箱")
     private String email;
 
-    @ExcelProperty(value = "密码")
-    private String password;
-
     @ExcelProperty(value = "角色")
     private String roleName;
+
 
     @ExcelProperty(value = "注册时间")
     private LocalDateTime createTime;

@@ -66,4 +66,11 @@
             and date_format(u.member_time,'%Y%m%d') &lt;= date_format(#{endMemberTime},'%Y%m%d')
         </if>
     </select>
+    <!-- 根据角色名称查询角色 -->
+    <select id="getByRoleName" resultType="com.hao.topic.model.entity.system.SysRole">
+        select *
+        from sys_role
+        where name = #{roleName}
+          and is_deleted = 0
+    </select>
 </mapper>

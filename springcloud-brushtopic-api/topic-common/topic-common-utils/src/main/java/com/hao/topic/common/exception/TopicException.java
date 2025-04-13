@@ -20,4 +20,9 @@ public class TopicException extends RuntimeException {
         super(resultCodeEnum.getMessage());
         this.code = resultCodeEnum.getCode();
     }
+
+    public TopicException(String message) {
+        super(message);
+        this.code = 400;
+    }
 }
