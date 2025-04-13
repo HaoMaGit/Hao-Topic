@@ -53,6 +53,29 @@ export const constantRoute = [
       }
     ]
   },
+  {
+    path: '/topic',
+    redirect: '/topic/topic',
+    component: () => import('../layout/index.vue'),
+    children: [
+      {
+        path: '/topic/topic',
+        component: () => import('@/views/topic/topic/index.vue'),
+      },
+      {
+        path: '/topic/category',
+        component: () => import('@/views/topic/category/index.vue'),
+      },
+      {
+        path: '/topic/label',
+        component: () => import('@/views/topic/label/index.vue'),
+      },
+      {
+        path: '/topic/subject',
+        component: () => import('@/views/topic/subject/index.vue'),
+      }
+    ]
+  },
   // 404页面
   {
     path: '/404',
