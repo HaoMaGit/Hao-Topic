@@ -474,16 +474,20 @@ const handleUploadChange = (info: UploadChangeParam) => {
     upload.uploadLoading = false;
     upload.oepnResult = true
     handleCancel()
-    upload.result = info.file.response.message
-    message.success('上传成功');
+    upload.result = info.file.response.data
+    if (info.file.response.code === 200) {
+      message.success('导入成功');
+    } else {
+      message.error("导入失败");
+    }
   }
   // 上传失败
   if (info.file.status === 'error') {
     upload.uploadLoading = false;
     upload.oepnResult = true
     handleCancel()
-    upload.result = info.file.response.message
-    message.error(info.file.response.message);
+    upload.result = info.file.response.data
+    message.error(info.file.response.data);
   }
 }
 
@@ -609,7 +613,7 @@ onMounted(() => {
       bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
       v-model:open="upload.open" title="导入用户数据">
       <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
-        :multiple="true" :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :multiple="true" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :before-upload="handleBeforeUpload" @change="handleUploadChange">
         <p class="ant-upload-drag-icon">
           <loading-outlined v-if="upload.uploadLoading"></loading-outlined>

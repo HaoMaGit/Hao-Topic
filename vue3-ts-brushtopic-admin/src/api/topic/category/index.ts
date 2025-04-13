@@ -37,3 +37,23 @@ export const apiDeleteCategory = (ids: number[]) => {
     method: "delete",
   });
 };
+
+// 导出题目分类
+export const apiExportCategory = (query: TopicCatgoryQueryType | null, ids: number[] | null) => {
+  return request({
+    url: prefix + "export/" + ids,
+    method: "get",
+    params: query,
+    responseType: "blob"
+  });
+};
+
+
+
+// 下载导入模板
+export function apiGetExportTemplate() {
+  return request({
+    url: prefix + 'template',
+    responseType: 'blob' // 二进制文件流
+  })
+}

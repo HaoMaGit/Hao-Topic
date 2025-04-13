@@ -9,7 +9,7 @@ import {
   LoadingOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
-import { apiGetCategoryList, apiAddCategory, apiUpdateCategory, apiDeleteCategory } from '@/api/topic/category'
+import { apiGetCategoryList, apiAddCategory, apiGetExportTemplate, apiUpdateCategory, apiDeleteCategory, apiExportCategory } from '@/api/topic/category'
 import type { TopicCatgoryQueryType } from '@/api/topic/category/type';
 import { addDateRange, clearDateRange } from '@/utils/date';
 import { message, Modal } from 'ant-design-vue';
@@ -19,8 +19,6 @@ import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
 // 获取上传路径
 const { VITE_SERVE } = import.meta.env
-// 请求头
-const headers = { authorization: userStore.token };
 /**
  * 查询参数
  */
@@ -180,8 +178,20 @@ const handleImport = () => {
 }
 
 // 导出
-const handleExport = () => {
-
+const handleExport = async () => {
+  tableLoading.value = true
+  let response: any = null
+  // 判断是否有数据
+  if (onSelectedRowKeys.value.length > 0) {
+    // 导出excel数据
+    response = await apiExportCategory(params.value, onSelectedRowKeys.value)
+  } else {
+    // 导出excel数据
+    response = await apiExportCategory(params.value, [0])
+  }
+  FileSaver.saveAs(response, `易题系统题目分类数据_${new Date().getTime()}.xlsx`) // 下载文件
+  message.success('导出成功')
+  tableLoading.value = false
 }
 
 // 分页变化处理
@@ -199,7 +209,9 @@ const upload = reactive({
   // 是否更新已经存在的用户数据
   updateSupport: 0,
   // 设置上传的请求头部
-  headers,
+  headers: {
+    authorization: userStore.token
+  },
   // 上传文件的loading
   uploadLoading: false,
   // 上传的地址
@@ -219,9 +231,9 @@ const handleCancel = () => {
 
 // 下载模板
 const importTemplate = async () => {
-  const response: any = null
-  // const res = await apiGetExportTemplate()
-  // response = res
+  let response: any = null
+  const res = await apiGetExportTemplate()
+  response = res
   FileSaver.saveAs(response, `易题系统题目分类数据模板_${new Date().getTime()}.xlsx`)
 }
 
@@ -252,16 +264,20 @@ const handleUploadChange = (info: UploadChangeParam) => {
     upload.uploadLoading = false;
     upload.oepnResult = true
     handleCancel()
-    upload.result = info.file.response.message
-    message.success('上传成功');
+    upload.result = info.file.response.data
+    if (info.file.response.code === 200) {
+      message.success('导入成功');
+    } else {
+      message.error("导入失败");
+    }
   }
   // 上传失败
   if (info.file.status === 'error') {
     upload.uploadLoading = false;
     upload.oepnResult = true
     handleCancel()
-    upload.result = info.file.response.message
-    message.error(info.file.response.message);
+    upload.result = info.file.response.data
+    message.error(info.file.response.data);
   }
 }
 
@@ -406,7 +422,7 @@ onMounted(() => {
       bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
       v-model:open="upload.open" title="导入题目分类数据">
       <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
-        :multiple="true" :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :multiple="true" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :before-upload="handleBeforeUpload" @change="handleUploadChange">
         <p class="ant-upload-drag-icon">
           <loading-outlined v-if="upload.uploadLoading"></loading-outlined>
