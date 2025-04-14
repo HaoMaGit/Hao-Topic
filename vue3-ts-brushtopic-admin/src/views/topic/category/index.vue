@@ -26,6 +26,7 @@ const params = ref<TopicCatgoryQueryType>({
   pageNum: 1,
   pageSize: 5,
   categoryName: '',
+  createBy: '',
   params: {}
 })
 
@@ -120,6 +121,7 @@ const handleReset = () => {
     pageNum: 1,
     pageSize: 5,
     categoryName: '',
+    createBy: '',
     params: null
   }
   createTimeDateRange.value = []
@@ -341,6 +343,14 @@ const onSave = () => {
   })
 }
 
+// 状态映射对象
+const statusMap: any = {
+  0: '正常',
+  1: '停用',
+  2: '待审核',
+  3: '审核失败',
+}
+
 onMounted(() => {
   getTopicCategoryList()
 })
@@ -353,6 +363,9 @@ onMounted(() => {
           <!-- 查询条件 -->
           <a-form-item label="分类名称">
             <a-input placeholder="请输入分类名称" v-model:value="params.categoryName"></a-input>
+          </a-form-item>
+          <a-form-item label="创建人">
+            <a-input placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
           </a-form-item>
           <a-form-item label="创建时间">
             <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
@@ -396,7 +409,7 @@ onMounted(() => {
           <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record)">删除</a-button>
         </template>
         <template v-if="column.key === 'status'">
-          <span>{{ record.status === 0 ? '正常' : '停用' }}</span>
+          <span>{{ statusMap[record.status] }}</span>
         </template>
       </template>
     </a-table>

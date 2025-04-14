@@ -1,7 +1,7 @@
 import type { PageType } from "@/api/common";
 
-export interface TopicCatgoryQueryType extends PageType {
-  categoryName: string;
+export interface SubjectCatgoryQueryType extends PageType {
+  subjectName: string;
   createBy: string;
   params: any;
 }
