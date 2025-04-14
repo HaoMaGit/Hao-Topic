@@ -66,14 +66,14 @@ const columns = [
     dataIndex: 'subjectName',
     key: 'subjectName',
     align: 'center',
-    width: 100,
+    width: 190,
   },
   {
     title: '专题概述',
     dataIndex: 'subjectDesc',
     key: 'subjectDesc',
     align: 'center',
-    width: 150,
+    width: 190,
   },
   {
     title: '图像',
@@ -104,24 +104,33 @@ const columns = [
     width: 120,
   },
   {
+    title: '创建人',
+    dataIndex: 'createBy',
+    key: 'createBy',
+    align: 'center',
+    width: 150,
+  },
+  {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
     align: 'center',
-    width: 160,
+    width: 200,
   },
   {
     title: '修改时间',
     dataIndex: 'updateTime',
     key: 'updateTime',
     align: 'center',
-    width: 160,
+    width: 200,
   },
   {
     title: '操作',
     dataIndex: 'operation',
     key: 'operation',
     align: 'center',
+    fixed: 'right', // 固定在右侧
+    width: 200
   }
 ]
 // 搜索
@@ -315,6 +324,7 @@ const drawer = ref(false)
 const onClose = () => {
   clearFormData()
   drawer.value = false
+  loading.value = false
 }
 // 表单实例
 const formRef = ref<any>(null)
@@ -490,7 +500,8 @@ onMounted(() => {
       total: total,
       showTotal: (total: any) => `共 ${total} 条`,
       showSizeChanger: true,
-    }" @change="handleTableChange" :loading="tableLoading" :dataSource="tableData" :columns="columns" rowKey="id"
+    }" :scroll="{ x: 1300, y: 1000 }" @change="handleTableChange" :loading="tableLoading" :dataSource="tableData"
+      :columns="columns" rowKey="id"
       :row-selection="{ selectedRowKeys: onSelectedRowKeys, onChange: onSelectChange, fixed: true }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
@@ -502,6 +513,20 @@ onMounted(() => {
         </template>
         <template v-if="column.key === 'imageUrl'">
           <a-image :width="48" :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
+        </template>
+        <template v-if="column.key === 'subjectDesc'">
+          <a-tooltip>
+            <template #title>{{ record.subjectDesc }}</template>
+            <!-- 超出部分显示为 tooltip截取20个字符 -->
+            {{ record.subjectDesc.slice(0, 20) }}
+          </a-tooltip>
+        </template>
+        <template v-if="column.key === 'subjectName'">
+          <a-tooltip>
+            <template #title>{{ record.subjectName }}</template>
+            <!-- 超出部分显示为 tooltip截取20个字符 -->
+            {{ record.subjectName.slice(0, 20) }}
+          </a-tooltip>
         </template>
       </template>
     </a-table>
