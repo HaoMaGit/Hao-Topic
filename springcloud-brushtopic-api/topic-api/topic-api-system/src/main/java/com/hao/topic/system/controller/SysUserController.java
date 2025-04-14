@@ -91,7 +91,7 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('admin')")
     public Result upload(@RequestParam("avatar") MultipartFile file) {
         // 上传文件
-        String url = minioHelper.uploadFile(file);
+        String url = minioHelper.uploadFile(file, "avatar");
         return Result.success(url);
     }
 

@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
         "com.hao.topic.common.security"  // 添加这行，扫描security模块
 })
 @Import(MyMetaObjectHandler.class)  // 直接导入配置类
+@ComponentScan("com.hao.topic.api.utils")
 public class TopicTopicApplication {
     public static void main(String[] args) {
         SpringApplication.run(TopicTopicApplication.class, args);

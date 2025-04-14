@@ -45,6 +45,8 @@ public enum ResultCodeEnum {
     CATEGORY_DELETE_IS_NULL(99918, "删除题目分类失败"),
     CATEGORY_DELETE_TOPIC_ERROR(99919, "该题目分类下有关联专题"),
 
+    SUBJECT_NAME_EXIST(99920, "题目专题已存在"),
+
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
     ADMIN_LOCKED(207, "登录失败请确认身份"),

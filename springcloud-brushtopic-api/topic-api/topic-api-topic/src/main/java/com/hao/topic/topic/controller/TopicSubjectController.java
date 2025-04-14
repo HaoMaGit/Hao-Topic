@@ -1,9 +1,19 @@
 package com.hao.topic.topic.controller;
 
+import com.hao.topic.api.utils.helper.MinioHelper;
+import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.topic.TopicCategoryDto;
+import com.hao.topic.model.dto.topic.TopicCategoryListDto;
+import com.hao.topic.model.dto.topic.TopicSubjectDto;
+import com.hao.topic.model.dto.topic.TopicSubjectListDto;
+import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.topic.service.TopicSubjectService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 /**
  * Description: 题目专题控制器
@@ -16,5 +26,44 @@ import org.springframework.web.bind.annotation.RestController;
 public class TopicSubjectController {
 
     private final TopicSubjectService topicSubjectService;
+
+    private final MinioHelper minioHelper;
+
+    /**
+     * 获取题目专题列表
+     *
+     * @param topicSubjectListDto
+     * @return
+     */
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result<Map<String, Object>> list(TopicSubjectListDto topicSubjectListDto) {
+        Map<String, Object> map = topicSubjectService.subjectList(topicSubjectListDto);
+        return Result.success(map);
+    }
+
+    /**
+     * 添加题目专题
+     */
+    @PostMapping("/add")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result add(@RequestBody TopicSubjectDto topicCategoryDto) {
+        topicSubjectService.add(topicCategoryDto);
+        return Result.success();
+    }
+
+    /**
+     * 文件上传
+     *
+     * @param file
+     * @return
+     */
+    @PostMapping("/img")
+    @PreAuthorize("hasAuthority('admin')  || hasAuthority('member')")
+    public Result upload(@RequestParam("avatar") MultipartFile file) {
+        // 上传文件
+        String url = minioHelper.uploadFile(file, "subject");
+        return Result.success(url);
+    }
 
 }

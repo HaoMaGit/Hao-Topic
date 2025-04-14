@@ -40,7 +40,7 @@ public class MinioHelper {
      * @param file 文件
      * @return
      */
-    public String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file, String path) {
         try {
             // 连接minio客户端
             MinioClient minioClient = minioConfig.buildMinioClient();
@@ -67,7 +67,7 @@ public class MinioHelper {
             String uuid = UUID.randomUUID().toString().replace("-", "");
 
             // 组合路径
-            String fileName = date + "/" + uuid;
+            String fileName = path + "/" + date + "/" + uuid;
             try (InputStream inputStream = file.getInputStream()) {
                 // 构建上传参数
                 PutObjectArgs build = PutObjectArgs.builder()

@@ -102,8 +102,10 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         if (StringUtils.isEmpty(topicCategoryDto.getCategoryName())) {
             throw new TopicException(ResultCodeEnum.CATEGORY_NAME_IS_NULL);
         }
+        LambdaQueryWrapper<TopicCategory> topicCategoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicCategoryLambdaQueryWrapper.eq(TopicCategory::getCategoryName, topicCategoryDto.getCategoryName());
         // 查询
-        TopicCategory topicCategoryDb = topicCategoryMapper.selectById(topicCategoryDto.getId());
+        TopicCategory topicCategoryDb = topicCategoryMapper.selectOne(topicCategoryLambdaQueryWrapper);
         if (topicCategoryDb != null) {
             throw new TopicException(ResultCodeEnum.CATEGORY_NAME_EXIST);
         }
