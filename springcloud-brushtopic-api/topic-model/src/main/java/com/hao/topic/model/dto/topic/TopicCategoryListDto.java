@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class TopicCategoryListDto {
     private String categoryName;
+    private String createBy;
     private String beginCreateTime;
     private String endCreateTime;
     private String beginUpdateTime;

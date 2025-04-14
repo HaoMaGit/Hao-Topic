@@ -10,12 +10,11 @@ import lombok.NoArgsConstructor;
  */
 @AllArgsConstructor
 @NoArgsConstructor
-public enum CategoryStatusEnums {
+public enum StatusEnums {
     NORMAL(0, "正常"),
     STOP(1, "停用"),
     AUDITING(2, "待审核"),
-    AUDIT_FAIL(3, "审核失败"),
-    AUDIT_SUCCESS(4, "审核成功");
+    AUDIT_FAIL(3, "审核失败");
 
     private Integer code;
     private String message;
@@ -30,9 +29,9 @@ public enum CategoryStatusEnums {
 
     // 根据code查询message
     public static String getMessageByCode(Integer code) {
-        for (CategoryStatusEnums categoryStatusEnums : CategoryStatusEnums.values()) {
-            if (categoryStatusEnums.getCode().equals(code)) {
-                return categoryStatusEnums.getMessage();
+        for (StatusEnums statusEnums : StatusEnums.values()) {
+            if (statusEnums.getCode().equals(code)) {
+                return statusEnums.getMessage();
             }
         }
         return null;

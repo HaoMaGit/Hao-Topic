@@ -9,16 +9,11 @@ import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
-import com.hao.topic.model.entity.system.SysRole;
-import com.hao.topic.model.entity.system.SysUser;
-import com.hao.topic.model.entity.system.SysUserRole;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicCategorySubject;
-import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
-import com.hao.topic.security.utils.PasswordUtils;
-import com.hao.topic.topic.enums.CategoryStatusEnums;
+import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.service.TopicCategoryService;
@@ -64,6 +59,16 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         // 判断是否为Hao
         if (currentId != 1L) {
             // 根据当前登录用户查询
+            topicCategoryLambdaQueryWrapper.like(TopicCategory::getCreateBy, username);
+        } else {
+            // 是超管
+            // 判断是否查询创建人
+            if (!StringUtils.isEmpty(topicCategoryDto.getCreateBy())) {
+                topicCategoryLambdaQueryWrapper.like(TopicCategory::getCreateBy, topicCategoryDto.getCreateBy());
+            }
+        }
+        // 判断分类名称
+        if (!StringUtils.isEmpty(topicCategoryDto.getCategoryName())) {
             topicCategoryLambdaQueryWrapper.like(TopicCategory::getCategoryName, topicCategoryDto.getCategoryName());
         }
         // 判断创建时间
@@ -172,7 +177,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                 TopicCategoryExcelExport topicCategoryExcelExport = new TopicCategoryExcelExport();
                 BeanUtils.copyProperties(topicCategory, topicCategoryExcelExport);
                 // 状态特殊处理
-                topicCategoryExcelExport.setStatus(CategoryStatusEnums.getMessageByCode(topicCategory.getStatus()));
+                topicCategoryExcelExport.setStatus(StatusEnums.getMessageByCode(topicCategory.getStatus()));
                 return topicCategoryExcelExport;
             }).collect(Collectors.toList());
         } else {
@@ -186,7 +191,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                 TopicCategoryExcelExport topicCategoryExcelExport = new TopicCategoryExcelExport();
                 BeanUtils.copyProperties(topicCategory, topicCategoryExcelExport);
                 // 状态特殊处理
-                topicCategoryExcelExport.setStatus(CategoryStatusEnums.getMessageByCode(topicCategory.getStatus()));
+                topicCategoryExcelExport.setStatus(StatusEnums.getMessageByCode(topicCategory.getStatus()));
                 return topicCategoryExcelExport;
             }).collect(Collectors.toList());
         }
