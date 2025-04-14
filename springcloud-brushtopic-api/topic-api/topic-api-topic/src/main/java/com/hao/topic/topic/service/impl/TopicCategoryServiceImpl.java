@@ -75,12 +75,8 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         if (!StringUtils.isEmpty(topicCategoryDto.getBeginCreateTime()) && !StringUtils.isEmpty(topicCategoryDto.getEndCreateTime())) {
             topicCategoryLambdaQueryWrapper.between(TopicCategory::getCreateTime, topicCategoryDto.getBeginCreateTime(), topicCategoryDto.getEndCreateTime());
         }
-        // 判断修改时间
-        if (!StringUtils.isEmpty(topicCategoryDto.getBeginUpdateTime()) && !StringUtils.isEmpty(topicCategoryDto.getEndUpdateTime())) {
-            topicCategoryLambdaQueryWrapper.between(TopicCategory::getUpdateTime, topicCategoryDto.getBeginUpdateTime(), topicCategoryDto.getEndUpdateTime());
-        }
         topicCategoryLambdaQueryWrapper.orderByDesc(TopicCategory::getCreateTime);
-        if (topicCategoryDto.getPageNum() == null && topicCategoryDto.getPageSize() == null) {
+        if (topicCategoryDto.getPageNum() == null || topicCategoryDto.getPageSize() == null) {
             List<TopicCategory> categories = topicCategoryMapper.selectList(topicCategoryLambdaQueryWrapper);
             return Map.of("total", categories.size(), "rows", categories);
         } else {
@@ -134,6 +130,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         }
         // 开始修改
         topicCategory.setCategoryName(topicCategoryDto.getCategoryName());
+        topicCategory.setStatus(StatusEnums.AUDITING.getCode());
         topicCategoryMapper.updateById(topicCategory);
     }
 

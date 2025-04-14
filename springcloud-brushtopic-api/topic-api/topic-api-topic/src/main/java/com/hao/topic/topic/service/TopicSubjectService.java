@@ -16,4 +16,7 @@ public interface TopicSubjectService {
     void add(TopicSubjectDto topicCategoryDto);
 
 
+    void update(TopicSubjectDto topicSubjectDto);
+
+    void delete(Long[] ids);
 }

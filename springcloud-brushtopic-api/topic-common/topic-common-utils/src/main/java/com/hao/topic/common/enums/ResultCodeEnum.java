@@ -46,6 +46,10 @@ public enum ResultCodeEnum {
     CATEGORY_DELETE_TOPIC_ERROR(99919, "该题目分类下有关联专题"),
 
     SUBJECT_NAME_EXIST(99920, "题目专题已存在"),
+    SUBJECT_UPDATE_IS_NULL(99921, "修改题目专题失败"),
+    SUBJECT_DELETE_IS_NULL(99922, "删除题目专题失败"),
+    SUBJECT_DELETE_TOPIC_ERROR(99922, "该题目专题下有关联题目"),
+    SUBJECT_SELECT_ERROR(99923, "题目专题分类选择失败"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

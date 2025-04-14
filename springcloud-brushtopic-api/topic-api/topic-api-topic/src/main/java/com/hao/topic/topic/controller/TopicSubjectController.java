@@ -66,4 +66,25 @@ public class TopicSubjectController {
         return Result.success(url);
     }
 
+
+    /**
+     * 修改题目专题
+     */
+    @PutMapping("/update")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result update(@RequestBody TopicSubjectDto topicSubjectDto) {
+        topicSubjectService.update(topicSubjectDto);
+        return Result.success();
+    }
+
+    /**
+     * 删除题目专题
+     */
+    @DeleteMapping("/delete/{ids}")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result delete(@PathVariable Long[] ids) {
+        topicSubjectService.delete(ids);
+        return Result.success();
+    }
+
 }

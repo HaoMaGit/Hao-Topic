@@ -14,8 +14,7 @@ public class TopicSubjectListDto {
     private String createBy;
     private String beginCreateTime;
     private String endCreateTime;
-    private String beginUpdateTime;
-    private String endUpdateTime;
+    private String categoryName;
     private Integer pageNum;
     private Integer pageSize;
 }
