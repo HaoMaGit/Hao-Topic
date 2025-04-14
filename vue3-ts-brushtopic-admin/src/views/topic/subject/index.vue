@@ -10,6 +10,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons-vue'
 import { apiGetSubjectList, apiAddSubject, apiGetExportTemplate, apiUpdateSubject, apiDeleteSubject, apiExportSubject } from '@/api/topic/subject'
+import { apiGetCategoryList } from '@/api/topic/category'
 import type { SubjectCatgoryQueryType } from '@/api/topic/subject/type';
 import { addDateRange, clearDateRange } from '@/utils/date';
 import { message, Modal } from 'ant-design-vue';
@@ -29,6 +30,7 @@ const params = ref<SubjectCatgoryQueryType>({
   pageSize: 5,
   subjectName: '',
   createBy: '',
+  categoryName: null,
   params: {}
 })
 
@@ -40,12 +42,26 @@ const getTopicSubjectList = async () => {
   tableData.value = res.data.rows
   tableLoading.value = false
 }
+const categoryList = ref<Category[]>([])
+interface Category {
+  categoryName: string
+}
+// 获取分类列表
+const getCategoryList = async () => {
+  const res = await apiGetCategoryList(null)
+  categoryList.value = res.data.rows.map((item: Category) => {
+    return {
+      label: item.categoryName,
+      value: item.categoryName,
+    }
+  })
+  console.log(categoryList.value);
+}
 
 // 数量
 const total = ref(0);
 // 时间
 const createTimeDateRange = ref([]);
-const updateTimeDateRange = ref([]);
 // 表格loading
 const tableLoading = ref(false)
 // 表格数据
@@ -66,14 +82,21 @@ const columns = [
     dataIndex: 'subjectName',
     key: 'subjectName',
     align: 'center',
-    width: 190,
+    width: 180,
   },
   {
     title: '专题概述',
     dataIndex: 'subjectDesc',
     key: 'subjectDesc',
     align: 'center',
-    width: 190,
+    width: 180,
+  },
+  {
+    title: '分类',
+    dataIndex: 'categoryName',
+    key: 'categoryName',
+    align: 'center',
+    width: 120,
   },
   {
     title: '图像',
@@ -140,11 +163,6 @@ const handleQuery = () => {
   } else {
     params.value = clearDateRange(params.value, 'CreateTime')
   }
-  if (updateTimeDateRange.value && updateTimeDateRange.value.length > 0) {
-    params.value = addDateRange(params.value, updateTimeDateRange.value, 'UpdateTime')
-  } else {
-    params.value = clearDateRange(params.value, 'UpdateTime')
-  }
   getTopicSubjectList()
 }
 // 重置
@@ -154,10 +172,10 @@ const handleReset = () => {
     pageSize: 5,
     subjectName: '',
     createBy: '',
-    params: null
+    params: null,
+    categoryName: null,
   }
   createTimeDateRange.value = []
-  updateTimeDateRange.value = []
   total.value = 0
   getTopicSubjectList()
 }
@@ -334,6 +352,7 @@ const formData = ref({
   id: null,
   subjectDesc: '',
   imageUrl: '',
+  categoryName: ''
 })
 // 表单规则
 const rules = ref({
@@ -359,6 +378,13 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
+  categoryName: [
+    {
+      required: true,
+      message: '请选择所属分类',
+      trigger: 'blur',
+    },
+  ]
 })
 // 清空
 const clearFormData = () => {
@@ -367,12 +393,12 @@ const clearFormData = () => {
     id: null,
     subjectDesc: '',
     imageUrl: '',
+    categoryName: ''
   }
   if (formRef.value) {
     formRef.value.resetFields()
   }
   createTimeDateRange.value = []
-  updateTimeDateRange.value = []
 }
 
 // 保存以及修改
@@ -450,8 +476,10 @@ const handleChange = (info: UploadChangeParam) => {
 };
 
 
+
 onMounted(() => {
   getTopicSubjectList()
+  getCategoryList()
 })
 </script>
 <template>
@@ -466,11 +494,14 @@ onMounted(() => {
           <a-form-item label="创建人">
             <a-input class="input" placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
           </a-form-item>
+          <!-- 分类名称 -->
+          <a-form-item label="所属分类">
+            <a-select placeholder="请选择分类" class="input" v-model:value="params.categoryName" show-search
+              :options="categoryList">
+            </a-select>
+          </a-form-item>
           <a-form-item label="创建时间">
             <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
-          </a-form-item>
-          <a-form-item label="修改时间">
-            <a-range-picker class="range-picker" v-model:value="updateTimeDateRange" />
           </a-form-item>
           <a-form-item>
             <a-space>
@@ -551,6 +582,10 @@ onMounted(() => {
               <plus-outlined v-else></plus-outlined>
             </div>
           </a-upload>
+        </a-form-item>
+        <a-form-item label="所属分类" name="categoryName">
+          <a-select placeholder="请选择分类" v-model:value="formData.categoryName" show-search :options="categoryList">
+          </a-select>
         </a-form-item>
       </a-form>
       <!-- 添加底部按钮 -->

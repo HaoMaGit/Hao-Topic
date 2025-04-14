@@ -43,7 +43,6 @@ const getTopicCategoryList = async () => {
 const total = ref(0);
 // 时间
 const createTimeDateRange = ref([]);
-const updateTimeDateRange = ref([]);
 // 表格loading
 const tableLoading = ref(false)
 // 表格数据
@@ -108,11 +107,6 @@ const handleQuery = () => {
   } else {
     params.value = clearDateRange(params.value, 'CreateTime')
   }
-  if (updateTimeDateRange.value && updateTimeDateRange.value.length > 0) {
-    params.value = addDateRange(params.value, updateTimeDateRange.value, 'UpdateTime')
-  } else {
-    params.value = clearDateRange(params.value, 'UpdateTime')
-  }
   getTopicCategoryList()
 }
 // 重置
@@ -125,7 +119,6 @@ const handleReset = () => {
     params: null
   }
   createTimeDateRange.value = []
-  updateTimeDateRange.value = []
   total.value = 0
   getTopicCategoryList()
 }
@@ -320,7 +313,6 @@ const clearFormData = () => {
     formRef.value.resetFields()
   }
   createTimeDateRange.value = []
-  updateTimeDateRange.value = []
 }
 
 // 保存以及修改
@@ -369,9 +361,6 @@ onMounted(() => {
           </a-form-item>
           <a-form-item label="创建时间">
             <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
-          </a-form-item>
-          <a-form-item label="修改时间">
-            <a-range-picker class="range-picker" v-model:value="updateTimeDateRange" />
           </a-form-item>
           <a-form-item>
             <a-space>

@@ -4,7 +4,7 @@ import type { TopicCatgoryQueryType } from "./type";
 const prefix = "/topic/category/";
 
 // 查询题目分类列表
-export const apiGetCategoryList = (query: TopicCatgoryQueryType) => {
+export const apiGetCategoryList = (query: TopicCatgoryQueryType | null) => {
   return request({
     url: prefix + "list",
     method: "get",
