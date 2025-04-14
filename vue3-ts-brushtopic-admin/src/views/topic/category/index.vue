@@ -362,10 +362,10 @@ onMounted(() => {
         <a-space :size="23">
           <!-- 查询条件 -->
           <a-form-item label="分类名称">
-            <a-input placeholder="请输入分类名称" v-model:value="params.categoryName"></a-input>
+            <a-input class="input" placeholder="请输入分类名称" v-model:value="params.categoryName"></a-input>
           </a-form-item>
           <a-form-item label="创建人">
-            <a-input placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
+            <a-input class="input" placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
           </a-form-item>
           <a-form-item label="创建时间">
             <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
@@ -475,5 +475,9 @@ onMounted(() => {
 .space-footer-box {
   display: flex;
   justify-content: flex-end;
+}
+
+.input {
+  width: 130px;
 }
 </style>

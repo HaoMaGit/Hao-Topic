@@ -15,7 +15,6 @@ import { message, Modal } from 'ant-design-vue';
 import type { UploadChangeParam, UploadProps } from 'ant-design-vue';
 import { useUserStore } from '@/stores/modules/user';
 import { addDateRange, clearDateRange } from '@/utils/date';
-import Hao from '@/assets/images/H.png'
 import FileSaver from 'file-saver'
 
 const userStore = useUserStore()
@@ -384,10 +383,7 @@ const handleChange = (info: UploadChangeParam) => {
   }
 };
 
-// 图片
-const handleErrorImg = (event: any) => {
-  event.target.src = Hao
-};
+
 
 // 分页变化处理
 const handleTableChange = (pagination: any) => {
@@ -553,8 +549,8 @@ onMounted(() => {
               <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record)">删除</a-button>
             </template>
             <template v-if="column.key === 'avatar'">
-              <img class="user-avatar" :src="record.avatar != null ? record.avatar : 'Hao'" @error="handleErrorImg"
-                alt="" srcset="">
+              <a-image :width="48"
+                :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
             </template>
             <template v-if="column.key === 'status'">
               <span>{{ record.status === 0 ? '正常' : '停用' }}</span>
@@ -573,7 +569,7 @@ onMounted(() => {
         <a-form-item label="账户" name="account">
           <a-input placeholder="请输入账户名称" v-model:value="formData.account"></a-input>
         </a-form-item>
-        <a-form-item label="头像" name=avatar>
+        <a-form-item label="头像" name="avatar">
           <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
             class="avatar-uploader" :show-upload-list="false" :headers="headers" :action="uploadUrl"
             :before-upload="beforeUpload" @change="handleChange">

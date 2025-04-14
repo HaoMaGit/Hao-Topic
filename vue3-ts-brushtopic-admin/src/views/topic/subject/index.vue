@@ -19,6 +19,8 @@ import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
 // 获取上传路径
 const { VITE_SERVE } = import.meta.env
+// 图相上传路径
+const uploadUrl = VITE_SERVE + '/api/topic/subject/img'
 /**
  * 查询参数
  */
@@ -64,7 +66,7 @@ const columns = [
     dataIndex: 'subjectName',
     key: 'subjectName',
     align: 'center',
-    width: 200,
+    width: 100,
   },
   {
     title: '专题概述',
@@ -78,42 +80,42 @@ const columns = [
     dataIndex: 'imageUrl',
     key: 'imageUrl',
     align: 'center',
-    width: 140,
+    width: 80,
   },
   {
     title: '收录数量',
     dataIndex: 'topicCount',
     key: 'topicCount',
     align: 'center',
-    width: 140,
+    width: 120,
   },
   {
     title: '浏览数量',
     dataIndex: 'viewCount',
     key: 'viewCount',
     align: 'center',
-    width: 140,
+    width: 120,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     align: 'center',
-    width: 140,
+    width: 120,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
     align: 'center',
-    width: 190,
+    width: 160,
   },
   {
     title: '修改时间',
     dataIndex: 'updateTime',
     key: 'updateTime',
     align: 'center',
-    width: 190,
+    width: 160,
   },
   {
     title: '操作',
@@ -318,15 +320,32 @@ const onClose = () => {
 const formRef = ref<any>(null)
 // 表单数据
 const formData = ref({
-  categoryName: '',
+  subjectName: '',
   id: null,
+  subjectDesc: '',
+  imageUrl: '',
 })
 // 表单规则
 const rules = ref({
-  categoryName: [
+  subjectName: [
     {
       required: true,
       message: '请输入专题名称',
+      trigger: 'blur',
+    },
+
+  ],
+  imageUrl: [
+    {
+      required: true,
+      message: '请输入图片地址',
+      trigger: 'blur',
+    },
+  ],
+  subjectDesc: [
+    {
+      required: true,
+      message: '请输入专题描述',
       trigger: 'blur',
     },
   ],
@@ -334,8 +353,10 @@ const rules = ref({
 // 清空
 const clearFormData = () => {
   formData.value = {
-    categoryName: '',
+    subjectName: '',
     id: null,
+    subjectDesc: '',
+    imageUrl: '',
   }
   if (formRef.value) {
     formRef.value.resetFields()
@@ -372,6 +393,53 @@ const statusMap: any = {
   3: '审核失败',
 }
 
+// 文件列表
+const fileList = ref([]);
+// 图片loading
+const loading = ref<boolean>(false);
+
+/**
+ * 文件校验
+ * @param file 
+ */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const beforeUpload = (file: UploadProps['fileList'][number]) => {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+  if (!isJpgOrPng) {
+    message.error('图片格式错误');
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    message.error('图片大小不能超过2M');
+  }
+  return isJpgOrPng && isLt2M;
+};
+
+/**
+ * 图片上传
+ * @param info 
+ */
+const handleChange = (info: UploadChangeParam) => {
+  // 判断是否上传中
+  if (info.file.status === 'uploading') {
+    loading.value = true;
+    return;
+  }
+  // 上传完成
+  if (info.file.status === 'done') {
+    formData.value.imageUrl = info.file.response.data;
+    loading.value = false;
+    message.success('上传成功');
+  }
+  // 上传失败
+  if (info.file.status === 'error') {
+    loading.value = false;
+    message.error('上传失败');
+  }
+};
+
+
 onMounted(() => {
   getTopicSubjectList()
 })
@@ -383,10 +451,10 @@ onMounted(() => {
         <a-space :size="23">
           <!-- 查询条件 -->
           <a-form-item label="专题名称">
-            <a-input placeholder="请输入专题名称" v-model:value="params.subjectName"></a-input>
+            <a-input class="input" placeholder="请输入专题名称" v-model:value="params.subjectName"></a-input>
           </a-form-item>
           <a-form-item label="创建人">
-            <a-input placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
+            <a-input class="input" placeholder="请输入创建人" v-model:value="params.createBy"></a-input>
           </a-form-item>
           <a-form-item label="创建时间">
             <a-range-picker class="range-picker" v-model:value="createTimeDateRange" />
@@ -432,14 +500,32 @@ onMounted(() => {
         <template v-if="column.key === 'status'">
           <span>{{ statusMap[record.status] }}</span>
         </template>
+        <template v-if="column.key === 'imageUrl'">
+          <a-image :width="48" :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
+        </template>
       </template>
     </a-table>
 
     <!-- 新增和修改 -->
     <a-drawer :title="drawerTitle" placement="right" v-model:open="drawer" @close="onClose">
       <a-form ref="formRef" :model="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="专题名称" name="categoryName">
-          <a-input v-model:value="formData.categoryName" placeholder="请输入专题名称" />
+        <a-form-item label="专题名称" name="subjectName">
+          <a-input v-model:value="formData.subjectName" placeholder="请输入专题名称" />
+        </a-form-item>
+        <a-form-item label="专题描述" name="subjectDesc">
+          <a-textarea :auto-size="{ minRows: 2, maxRows: 5 }" v-model:value="formData.subjectDesc"
+            placeholder="请输入专题描述" />
+        </a-form-item>
+        <a-form-item label="图像" name="imageUrl">
+          <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
+            class="avatar-uploader" :show-upload-list="false" :headers="upload.headers" :action="uploadUrl"
+            :before-upload="beforeUpload" @change="handleChange">
+            <img v-if="formData.imageUrl" :src="formData.imageUrl" alt="avatar" class="avatar" />
+            <div v-else>
+              <loading-outlined v-if="loading"></loading-outlined>
+              <plus-outlined v-else></plus-outlined>
+            </div>
+          </a-upload>
         </a-form-item>
       </a-form>
       <!-- 添加底部按钮 -->
@@ -496,5 +582,15 @@ onMounted(() => {
 .space-footer-box {
   display: flex;
   justify-content: flex-end;
+}
+
+.input {
+  width: 130px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 5%;
 }
 </style>
