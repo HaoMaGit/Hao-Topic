@@ -66,6 +66,14 @@ const columns = [
     width: 200,
   },
   {
+    title: '专题数量',
+    dataIndex: 'subjectCount',
+    key: 'subjectCount',
+    align: 'center',
+    width: 120,
+    sorter: (a: any, b: any) => a.subjectCount - b.subjectCount,
+  },
+  {
     title: '创建人',
     dataIndex: 'createBy',
     key: 'createBy',
