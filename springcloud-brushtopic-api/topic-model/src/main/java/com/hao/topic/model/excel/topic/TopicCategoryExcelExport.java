@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 // 对齐方式居中
 @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER, verticalAlignment = VerticalAlignmentEnum.CENTER)
 @Data
-public class TopicCategoryExcelExport  {
+public class TopicCategoryExcelExport {
     @ExcelProperty(value = "ID")
     private Long id;
 
@@ -36,6 +36,9 @@ public class TopicCategoryExcelExport  {
 
     @ExcelProperty(value = "状态")
     private String status;
+
+    @ExcelProperty(value = "专题数量")
+    private Long subjectCount;
 
     @ExcelProperty(value = "创建时间")
     private LocalDateTime createTime;

@@ -148,8 +148,8 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
             // 查询分类与专题关系表
             topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getCategoryId, id);
-            TopicCategorySubject topicCategorySubject = topicCategorySubjectMapper.selectOne(topicCategorySubjectLambdaQueryWrapper);
-            if (topicCategorySubject != null) {
+            List<TopicCategorySubject> topicCategorySubjects = topicCategorySubjectMapper.selectList(topicCategorySubjectLambdaQueryWrapper);
+            if (!CollectionUtils.isEmpty(topicCategorySubjects)) {
                 throw new TopicException(ResultCodeEnum.CATEGORY_DELETE_TOPIC_ERROR);
             }
             // 删除

@@ -165,6 +165,10 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         topicCategorySubject.setCategoryId(topicCategoryDb.getId());
         topicCategorySubject.setSubjectId(topicSubject.getId());
         topicCategorySubjectMapper.insert(topicCategorySubject);
+
+        topicCategoryDb.setSubjectCount(topicCategoryDb.getSubjectCount() + 1);
+        // 更新分类专题数量
+        topicCategoryMapper.updateById(topicCategoryDb);
     }
 
 
@@ -222,6 +226,20 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
             if (topicSubjectTopic != null) {
                 throw new TopicException(ResultCodeEnum.SUBJECT_DELETE_TOPIC_ERROR);
             }
+            // 查询分类与专题关系表
+            LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getSubjectId, id);
+            TopicCategorySubject topicCategorySubject = topicCategorySubjectMapper.selectOne(topicCategorySubjectLambdaQueryWrapper);
+            if (topicCategorySubject != null) {
+                TopicCategory topicCategory = topicCategoryMapper.selectById(topicCategorySubject.getCategoryId());
+                if (topicCategory != null) {
+                    topicCategory.setSubjectCount(topicCategory.getSubjectCount() - 1);
+                    // 更新分类专题数量
+                    topicCategoryMapper.updateById(topicCategory);
+                }
+            }
+            // 删除分类与专题关系表
+            topicCategorySubjectMapper.delete(topicCategorySubjectLambdaQueryWrapper);
             // 删除
             topicSubjectMapper.deleteById(id);
         }
@@ -346,6 +364,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
                     if (topicCategorySubjectMapper != null) {
                         topicCategorySubjectMapper.insert(topicCategorySubject);
                     }
+                    topicCategory.setSubjectCount(topicCategory.getSubjectCount() + 1);
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目专题：").append(topicSubjectDb.getSubjectName()).append("-导入成功");
                 } else if (updateSupport) {

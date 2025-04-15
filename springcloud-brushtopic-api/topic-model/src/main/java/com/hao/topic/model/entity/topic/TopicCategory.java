@@ -13,4 +13,5 @@ public class TopicCategory extends BaseEntity {
     private String categoryName;
     private Integer status;
     private String createBy;
+    private Long subjectCount;
 }
