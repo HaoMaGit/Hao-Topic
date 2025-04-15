@@ -14,7 +14,7 @@ public class TopicSubject extends BaseEntity {
     private String subjectName;
     private String subjectDesc;
     private String imageUrl;
-    private Integer topicCount;
+    private Long topicCount;
     private String createBy;
     private Long viewCount;
     private Integer status;

@@ -1,5 +1,6 @@
 package com.hao.topic.topic.service.impl;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.common.enums.ResultCodeEnum;
@@ -10,19 +11,24 @@ import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.TopicLabel;
-import com.hao.topic.model.entity.topic.TopicLabel;
+import com.hao.topic.model.excel.topic.TopicLabelExcel;
+import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicLabelMapper;
 import com.hao.topic.topic.mapper.TopicLabelTopicMapper;
-import com.hao.topic.topic.mapper.TopicSubjectTopicMapper;
 import com.hao.topic.topic.service.TopicLabelService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Description:
@@ -146,5 +152,115 @@ public class TopicLabelServiceImpl implements TopicLabelService {
             // 删除
             topicLabelMapper.deleteById(id);
         }
+    }
+
+    /**
+     * 导出excel
+     *
+     * @param topicLabelDto
+     * @param ids
+     * @return
+     */
+    public List<TopicLabelExcelExport> getExcelVo(TopicLabelListDto topicLabelDto, Long[] ids) {
+        // 是否有id
+        if (ids[0] != 0) {
+            // 根据id查询
+            List<TopicLabel> topicLabels = topicLabelMapper.selectBatchIds(Arrays.asList(ids));
+            if (CollectionUtils.isEmpty(topicLabels)) {
+                throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+            }
+            return topicLabels.stream().map(TopicLabel -> {
+                TopicLabelExcelExport TopicLabelExcelExport = new TopicLabelExcelExport();
+                BeanUtils.copyProperties(TopicLabel, TopicLabelExcelExport);
+                // 状态特殊处理
+                TopicLabelExcelExport.setStatus(StatusEnums.getMessageByCode(TopicLabel.getStatus()));
+                return TopicLabelExcelExport;
+            }).collect(Collectors.toList());
+        } else {
+            Map<String, Object> map = labelList(topicLabelDto);
+            if (map.get("rows") == null) {
+                throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+            }
+            List<TopicLabel> topicLabels = (List<TopicLabel>) map.get("rows");
+            // 封装返回数据
+            return topicLabels.stream().map(TopicLabel -> {
+                TopicLabelExcelExport TopicLabelExcelExport = new TopicLabelExcelExport();
+                BeanUtils.copyProperties(TopicLabel, TopicLabelExcelExport);
+                // 状态特殊处理
+                TopicLabelExcelExport.setStatus(StatusEnums.getMessageByCode(TopicLabel.getStatus()));
+                return TopicLabelExcelExport;
+            }).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * 导入excel
+     *
+     * @param multipartFile
+     * @param updateSupport
+     * @return
+     */
+    public String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException {
+        // 获取当前用户登录名称
+        String username = SecurityUtils.getCurrentName();
+        // 读取数据
+        List<TopicLabelExcel> excelVoList = EasyExcel.read(multipartFile.getInputStream())
+                // 映射数据
+                .head(TopicLabelExcel.class)
+                // 读取工作表
+                .sheet()
+                // 读取并同步返回数据
+                .doReadSync();
+        // 校验
+        if (CollectionUtils.isEmpty(excelVoList)) {
+            throw new TopicException(ResultCodeEnum.IMPORT_ERROR);
+        }
+        // 计算成功的数量
+        int successNum = 0;
+        // 计算失败的数量
+        int failureNum = 0;
+        // 拼接成功消息
+        StringBuilder successMsg = new StringBuilder();
+        // 拼接错误消息
+        StringBuilder failureMsg = new StringBuilder();
+        // 遍历
+        for (TopicLabelExcel topicLabelExcel : excelVoList) {
+            try {
+                LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicLabelLambdaQueryWrapper.eq(TopicLabel::getLabelName, topicLabelExcel.getLabelName());
+                TopicLabel topicLabel = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+                if (StringUtils.isNull(topicLabel)) {
+                    // 不存在插入
+                    TopicLabel topicLabelDb = new TopicLabel();
+                    BeanUtils.copyProperties(topicLabelExcel, topicLabelDb);
+                    topicLabelDb.setCreateBy(username);
+                    topicLabelMapper.insert(topicLabelDb);
+                    successNum++;
+                    successMsg.append("<br/>").append(successNum).append("-题目标签：").append(topicLabelDb.getLabelName()).append("-导入成功");
+                } else if (updateSupport) {
+                    // 更新
+                    BeanUtils.copyProperties(topicLabelExcel, topicLabel);
+                    topicLabelMapper.updateById(topicLabel);
+                    successNum++;
+                    successMsg.append("<br/>").append(successNum).append("-题目标签：").append(topicLabel.getLabelName()).append("-更新成功");
+                } else {
+                    // 已存在
+                    failureNum++;
+                    failureMsg.append("<br/>").append(failureNum).append("-题目标签：").append(topicLabel.getLabelName()).append("-已存在");
+                }
+            } catch (Exception e) {
+                failureNum++;
+                String msg = "<br/>" + failureNum + "-题目标签： " + topicLabelExcel.getLabelName() + " 导入失败：";
+                failureMsg.append(msg).append(e.getMessage());
+                log.error(msg, e);
+            }
+        }
+        if (failureNum > 0) {
+            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
+            throw new TopicException(failureMsg.toString());
+        } else {
+            successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
+        }
+        return successMsg.toString();
     }
 }

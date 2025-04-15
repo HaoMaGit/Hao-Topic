@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Description:
  * Author: Hao
- * Date: 2025/4/14 10:41
+ * Date: 2025/4/15 22:07
  */
 @ContentRowHeight(30)
 // 表头行高20
@@ -24,26 +24,26 @@ import java.time.LocalDateTime;
 // 对齐方式居中
 @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER, verticalAlignment = VerticalAlignmentEnum.CENTER)
 @Data
-public class TopicSubjectExcelExport {
+public class TopicLabelExcelExport {
 
     @ExcelProperty(value = "ID")
     private Long id;
-    @ExcelProperty(value = "题目专题名称")
-    private String subjectName;
-    @ExcelProperty(value = "题目专题描述")
-    private String subjectDesc;
-    @ExcelProperty(value = "题目专题分类")
-    private String categoryName;
-    @ExcelProperty(value = "收录数量")
-    private Long topicCount;
+
+    @ExcelProperty(value = "题目标签名称")
+    private String labelName;
+
     @ExcelProperty(value = "创建人")
     private String createBy;
-    @ExcelProperty(value = "浏览量")
-    private Long viewCount;
+
     @ExcelProperty(value = "状态")
     private String status;
+
+    @ExcelProperty(value = "题目数量")
+    private Long useCount;
+
     @ExcelProperty(value = "创建时间")
     private LocalDateTime createTime;
+
     @ExcelProperty(value = "修改时间")
     private LocalDateTime updateTime;
 }

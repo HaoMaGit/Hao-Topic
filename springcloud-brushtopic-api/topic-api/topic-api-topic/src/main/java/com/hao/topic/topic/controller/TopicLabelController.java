@@ -9,8 +9,8 @@ import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
-import com.hao.topic.model.excel.topic.TopicSubjectExcel;
-import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import com.hao.topic.model.excel.topic.TopicLabelExcel;
+import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.topic.service.TopicLabelService;
 import com.hao.topic.topic.service.TopicSubjectService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -81,60 +81,61 @@ public class TopicLabelController {
         topicLabelService.delete(ids);
         return Result.success();
     }
-    //
-    // /**
-    //  * 导出excel
-    //  *
-    //  * @param response
-    //  */
-    // @GetMapping("/export/{ids}")
-    // @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
-    // public void exportExcel(HttpServletResponse response, TopicSubjectListDto topicSubjectListDto, @PathVariable(required = false) Long[] ids) {
-    //     List<TopicSubjectExcelExport> topicSubjectExcelExports = topicSubjectService.getExcelVo(topicSubjectListDto, ids);
-    //     if (CollectionUtils.isEmpty(topicSubjectExcelExports)) {
-    //         throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
-    //     }
-    //     // 导出
-    //     try {
-    //         ExcelUtil.download(response, topicSubjectExcelExports, TopicSubjectExcelExport.class);
-    //     } catch (IOException e) {
-    //         throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
-    //     }
-    // }
-    //
-    // /**
-    //  * 导入excel
-    //  */
-    // @PostMapping("/import")
-    // @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
-    // public Result<String> importExcel(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
-    //     try {
-    //         // 导入数据
-    //         String s = topicSubjectService.importExcel(multipartFile, updateSupport);
-    //         return Result.success(s);
-    //     } catch (Exception e) {
-    //         return Result.fail(e.getMessage(), ResultCodeEnum.IMPORT_ERROR);
-    //     }
-    // }
-    //
-    // /**
-    //  * 下载excel模板
-    //  */
-    // @GetMapping("/template")
-    // @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
-    // public void getExcelTemplate(HttpServletResponse response) {
-    //     // 存储模板数据
-    //     List<TopicSubjectExcel> excelVoList = new ArrayList<>();
-    //     // 组成模板数据
-    //     TopicSubjectExcel excelVo = new TopicSubjectExcel();
-    //     // 存放
-    //     excelVoList.add(excelVo);
-    //     try {
-    //         // 导出
-    //         ExcelUtil.download(response, excelVoList, TopicSubjectExcel.class);
-    //     } catch (IOException e) {
-    //         throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
-    //     }
-    //
-    // }
+
+    /**
+     * 导出excel
+     *
+     * @param response
+     */
+    @GetMapping("/export/{ids}")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public void exportExcel(HttpServletResponse response, TopicLabelListDto topicLabelListDto, @PathVariable(required = false) Long[] ids) {
+        List<TopicLabelExcelExport> topicLabelExcelExport = topicLabelService.getExcelVo(topicLabelListDto, ids);
+        if (CollectionUtils.isEmpty(topicLabelExcelExport)) {
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+        }
+        // 导出
+        try {
+            ExcelUtil.download(response, topicLabelExcelExport, TopicLabelExcelExport.class);
+        } catch (IOException e) {
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+        }
+    }
+
+    /**
+     * 导入excel
+     */
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result<String> importExcel(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
+        try {
+            // 导入数据
+            String s = topicLabelService.importExcel(multipartFile, updateSupport);
+            return Result.success(s);
+        } catch (Exception e) {
+            return Result.fail(e.getMessage(), ResultCodeEnum.IMPORT_ERROR);
+        }
+    }
+
+
+    /**
+     * 下载excel模板
+     */
+    @GetMapping("/template")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public void getExcelTemplate(HttpServletResponse response) {
+        // 存储模板数据
+        List<TopicLabelExcel> excelVoList = new ArrayList<>();
+        // 组成模板数据
+        TopicLabelExcel excelVo = new TopicLabelExcel();
+        // 存放
+        excelVoList.add(excelVo);
+        try {
+            // 导出
+            ExcelUtil.download(response, excelVoList, TopicLabelExcel.class);
+        } catch (IOException e) {
+            throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
+        }
+
+    }
 }
