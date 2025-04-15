@@ -407,6 +407,8 @@ const handleExport = async () => {
   }
   FileSaver.saveAs(response, `易题系统用户数据_${new Date().getTime()}.xlsx`) // 下载文件
   message.success('导出成功')
+  onSelectedRowKeys.value = []
+
   tableLoading.value = false
 }
 
@@ -473,6 +475,7 @@ const handleUploadChange = (info: UploadChangeParam) => {
     upload.result = info.file.response.data
     if (info.file.response.code === 200) {
       message.success('导入成功');
+      getUserList()
     } else {
       message.error("导入失败");
     }

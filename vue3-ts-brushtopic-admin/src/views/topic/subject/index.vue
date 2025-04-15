@@ -243,6 +243,7 @@ const handleExport = async () => {
   }
   FileSaver.saveAs(response, `易题系统题目专题数据_${new Date().getTime()}.xlsx`) // 下载文件
   message.success('导出成功')
+  onSelectedRowKeys.value = []
   tableLoading.value = false
 }
 
@@ -267,7 +268,7 @@ const upload = reactive({
   // 上传文件的loading
   uploadLoading: false,
   // 上传的地址
-  url: VITE_SERVE + "/api/topic/category/import",
+  url: VITE_SERVE + "/api/topic/subject/import",
   // 上传的文件
   uploadFileList: [],
   // 结果弹窗
@@ -279,6 +280,7 @@ const upload = reactive({
 const handleCancel = () => {
   upload.open = false
   upload.uploadFileList = []
+
 }
 
 // 下载模板
@@ -319,6 +321,7 @@ const handleUploadChange = (info: UploadChangeParam) => {
     upload.result = info.file.response.data
     if (info.file.response.code === 200) {
       message.success('导入成功');
+      getTopicSubjectList()
     } else {
       message.error("导入失败");
     }
