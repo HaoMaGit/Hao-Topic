@@ -111,6 +111,8 @@ const columns = [
     key: 'topicCount',
     align: 'center',
     width: 120,
+    sorter: (a: any, b: any) => a.topicCount - b.topicCount,
+
   },
   {
     title: '浏览数量',
@@ -118,6 +120,7 @@ const columns = [
     key: 'viewCount',
     align: 'center',
     width: 120,
+    sorter: (a: any, b: any) => a.viewCount - b.viewCount,
   },
   {
     title: '状态',
@@ -208,7 +211,7 @@ const handleDelete = (record: any) => {
   Modal.confirm({
     title: '是否确认删除该题目专题?',
     icon: createVNode(ExclamationCircleOutlined),
-    content: createVNode('div', { style: 'color:red;' }, '删除专题会导致相关题目专题丢失，请慎重考虑!'),
+    content: createVNode('div', { style: 'color:red;' }, '删除标签会导致相关题目标签丢失，请慎重考虑!'),
     async onOk() {
       if (record && record.id) {
         onSelectedRowKeys.value.push(record.id)
