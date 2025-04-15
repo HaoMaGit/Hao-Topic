@@ -32,6 +32,8 @@ public class TopicSubjectExcelExport {
     private String subjectName;
     @ExcelProperty(value = "题目专题描述")
     private String subjectDesc;
+    @ExcelProperty(value = "题目专题分类")
+    private String categoryName;
     @ExcelProperty(value = "收录数量")
     private Integer topicCount;
     @ExcelProperty(value = "创建人")

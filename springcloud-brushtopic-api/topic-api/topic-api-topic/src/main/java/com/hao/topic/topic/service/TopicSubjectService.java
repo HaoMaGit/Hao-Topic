@@ -2,7 +2,11 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
+import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,4 +23,8 @@ public interface TopicSubjectService {
     void update(TopicSubjectDto topicSubjectDto);
 
     void delete(Long[] ids);
+
+    List<TopicSubjectExcelExport> getExcelVo(TopicSubjectListDto topicSubjectListDto, Long[] ids);
+
+    String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
 }
