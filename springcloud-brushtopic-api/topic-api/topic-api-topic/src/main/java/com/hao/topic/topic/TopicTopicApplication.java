@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -17,8 +18,9 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@ComponentScan(basePackages = {
-        "com.hao.topic.common.security"  // 添加这行，扫描security模块
+@ComponentScans({
+        @ComponentScan("com.hao.topic.common.security")
+        , @ComponentScan("com.hao.topic.common.handler"),
 })
 @Import(MyMetaObjectHandler.class)  // 直接导入配置类
 @ComponentScan("com.hao.topic.api.utils")

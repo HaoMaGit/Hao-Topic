@@ -51,6 +51,13 @@ public enum ResultCodeEnum {
     SUBJECT_DELETE_TOPIC_ERROR(99922, "该题目专题下有关联题目"),
     SUBJECT_SELECT_ERROR(99923, "题目专题分类选择失败"),
 
+
+    LABEL_NAME_IS_NULL(99924, "题目标签名称不能为空"),
+    LABEL_NAME_EXIST(99925, "题目标签名称已存在"),
+    LABEL_DELETE_IS_NULL(99926, "删除题目标签失败"),
+    LABEL_DELETE_TOPIC_ERROR(99927, "该题目标签下有关联题目"),
+
+
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
     ADMIN_LOCKED(207, "登录失败请确认身份"),
