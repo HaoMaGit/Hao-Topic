@@ -17,6 +17,7 @@ import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
@@ -403,5 +404,31 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 查询所有的专题名称和id
+     *
+     * @return
+     */
+    public List<TopicSubjectVo> list() {
+        // 获取当前用户登录名称
+        String username = SecurityUtils.getCurrentName();
+        // 获取当前用户登录id
+        Long currentId = SecurityUtils.getCurrentId();
+        log.info("当前用户登录名称和id：{},{}", username, currentId);
+        // 设置分页条件
+        LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 判断是否为Hao
+        if (currentId != 1L) {
+
+        } else {
+            topicSubjectLambdaQueryWrapper.eq(TopicSubject::getCreateBy, username);
+        }
+        return topicSubjectMapper.selectList(topicSubjectLambdaQueryWrapper).stream().map(topicSubject -> {
+            TopicSubjectVo topicSubjectVo = new TopicSubjectVo();
+            BeanUtils.copyProperties(topicSubject, topicSubjectVo);
+            return topicSubjectVo;
+        }).collect(Collectors.toList());
     }
 }

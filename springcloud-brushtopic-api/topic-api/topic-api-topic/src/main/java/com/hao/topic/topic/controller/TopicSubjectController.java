@@ -14,6 +14,7 @@ import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.service.TopicSubjectService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -153,6 +154,17 @@ public class TopicSubjectController {
             throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
         }
 
+    }
+
+    /**
+     * 查询所有的专题名称以及id
+     *
+     * @return
+     */
+    @GetMapping("/getSubject")
+    public Result<List<TopicSubjectVo>> getSubject() {
+        List<TopicSubjectVo> list = topicSubjectService.list();
+        return Result.success(list);
     }
 
 

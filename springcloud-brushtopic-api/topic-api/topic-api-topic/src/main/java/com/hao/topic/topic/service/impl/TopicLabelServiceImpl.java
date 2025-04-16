@@ -13,6 +13,8 @@ import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.excel.topic.TopicLabelExcel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
+import com.hao.topic.model.vo.topic.TopicLabelVo;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicLabelMapper;
 import com.hao.topic.topic.mapper.TopicLabelTopicMapper;
@@ -262,5 +264,32 @@ public class TopicLabelServiceImpl implements TopicLabelService {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 查询所有的标签名称和id
+     *
+     * @return
+     */
+    @Override
+    public List<TopicLabelVo> list() {
+        // 获取当前用户登录名称
+        String username = SecurityUtils.getCurrentName();
+        // 获取当前用户登录id
+        Long currentId = SecurityUtils.getCurrentId();
+        log.info("当前用户登录名称和id：{},{}", username, currentId);
+        // 设置分页条件
+        LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 判断是否为Hao
+        if (currentId != 1L) {
+
+        } else {
+            topicLabelLambdaQueryWrapper.eq(TopicLabel::getCreateBy, username);
+        }
+        return topicLabelMapper.selectList(topicLabelLambdaQueryWrapper).stream().map(topicLabel -> {
+            TopicLabelVo topicLabelVo = new TopicLabelVo();
+            BeanUtils.copyProperties(topicLabel, topicLabelVo);
+            return topicLabelVo;
+        }).collect(Collectors.toList());
     }
 }

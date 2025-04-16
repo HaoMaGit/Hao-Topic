@@ -3,6 +3,7 @@ package com.hao.topic.topic.service;
 import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
+import com.hao.topic.model.vo.topic.TopicLabelVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -26,5 +27,8 @@ public interface TopicLabelService {
     List<TopicLabelExcelExport> getExcelVo(TopicLabelListDto topicLabelDto, Long[] ids);
 
     String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
+
+    List<TopicLabelVo> list();
+
 
 }

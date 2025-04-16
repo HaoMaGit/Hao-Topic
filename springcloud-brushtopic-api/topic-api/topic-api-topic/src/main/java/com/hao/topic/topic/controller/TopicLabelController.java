@@ -11,6 +11,8 @@ import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
 import com.hao.topic.model.excel.topic.TopicLabelExcel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
+import com.hao.topic.model.vo.topic.TopicLabelVo;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.service.TopicLabelService;
 import com.hao.topic.topic.service.TopicSubjectService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -137,5 +139,17 @@ public class TopicLabelController {
             throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
         }
 
+    }
+
+
+    /**
+     * 查询所有的标签名称以及id
+     *
+     * @return
+     */
+    @GetMapping("/getLabel")
+    public Result<List<TopicLabelVo>> getSubject() {
+        List<TopicLabelVo> list = topicLabelService.list();
+        return Result.success(list);
     }
 }
