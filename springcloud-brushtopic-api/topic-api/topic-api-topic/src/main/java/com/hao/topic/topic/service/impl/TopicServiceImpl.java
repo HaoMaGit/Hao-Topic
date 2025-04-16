@@ -92,7 +92,7 @@ public class TopicServiceImpl implements TopicService {
                 if (topicSubjectTopic != null) {
                     TopicSubject topicSubject = topicSubjectMapper.selectById(topicSubjectTopic.getSubjectId());
                     if (topicSubject != null) {
-                        topicVo.setTopicName(topicSubject.getSubjectName());
+                        topicVo.setSubject(topicSubject.getSubjectName());
                     }
                 }
                 List<String> stringList = new ArrayList<>();
@@ -122,14 +122,13 @@ public class TopicServiceImpl implements TopicService {
                 TopicVo topicVo = new TopicVo();
                 BeanUtils.copyProperties(topic, topicVo);
                 // 根据专题id查询专题
-                // 根据专题id查询专题
                 LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getTopicId, topic.getId());
                 TopicSubjectTopic topicSubjectTopic = topicSubjectTopicMapper.selectOne(topicSubjectTopicLambdaQueryWrapper);
                 if (topicSubjectTopic != null) {
                     TopicSubject topicSubject = topicSubjectMapper.selectById(topicSubjectTopic.getSubjectId());
                     if (topicSubject != null) {
-                        topicVo.setTopicName(topicSubject.getSubjectName());
+                        topicVo.setSubject(topicSubject.getSubjectName());
                     }
                 }
                 List<String> stringList = new ArrayList<>();
@@ -148,7 +147,7 @@ public class TopicServiceImpl implements TopicService {
                 topicVo.setLabels(stringList);
                 return topicVo;
             }).toList();
-            return Map.of("total", topicListPage.getTotal(), "rows", topicListPage.getRecords());
+            return Map.of("total", topicListPage.getTotal(), "rows", list);
         }
     }
 

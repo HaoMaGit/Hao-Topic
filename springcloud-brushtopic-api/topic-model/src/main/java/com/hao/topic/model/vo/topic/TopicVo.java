@@ -1,5 +1,6 @@
 package com.hao.topic.model.vo.topic;
 
+import com.hao.topic.model.entity.BaseEntity;
 import lombok.Data;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  * Date: 2025/4/16 21:37
  */
 @Data
-public class TopicVo {
+public class TopicVo extends BaseEntity {
 
     private String topicName;
     private String answer;
