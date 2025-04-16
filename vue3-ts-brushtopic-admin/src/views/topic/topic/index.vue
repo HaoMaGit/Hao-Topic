@@ -85,8 +85,8 @@ const columns = [
 
   {
     title: '是否每日',
-    dataIndex: 'isEveryDay',
-    key: 'isEveryDay',
+    dataIndex: 'isEveryday',
+    key: 'isEveryday',
     align: 'center',
     width: 120,
   },
@@ -102,7 +102,7 @@ const columns = [
     dataIndex: 'subject',
     key: 'subject',
     align: 'center',
-    width: 120,
+    width: 140,
   },
   {
     title: '标签',
@@ -534,21 +534,30 @@ onMounted(() => {
         <template v-if="column.key === 'status'">
           <span>{{ statusMap[record.status] }}</span>
         </template>
-        <template v-if="column.key === 'imageUrl'">
-          <a-image :width="48" :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
+        <template v-if="column.key === 'isEveryday'">
+          <span>{{ record.isEveryday === 1 ? '是' : '否' }}</span>
         </template>
-        <template v-if="column.key === 'TopicDesc'">
+        <template v-if="column.key === 'isMember'">
+          <span>{{ record.isMember === 1 ? '是' : '否' }}</span>
+        </template>
+        <template v-if="column.key === 'subject'">
+          <a-button type="link">{{ record.subject }}</a-button>
+        </template>
+        <template v-if="column.key === 'labels'">
+          <a-tag color="processing" v-for="(item, index) in record.labels" :key="index">{{ item }}</a-tag>
+        </template>
+        <template v-if="column.key === 'answer'">
           <a-tooltip>
-            <template #title>{{ record.TopicDesc }}</template>
+            <template #title>{{ record.answer }}</template>
             <!-- 超出部分显示为 tooltip截取20个字符 -->
-            {{ record.TopicDesc.slice(0, 20) }}
+            {{ record.answer.slice(0, 20) }}
           </a-tooltip>
         </template>
-        <template v-if="column.key === 'TopicName'">
+        <template v-if="column.key === 'aiAnswer'">
           <a-tooltip>
-            <template #title>{{ record.TopicName }}</template>
+            <template #title>{{ record?.aiAnswer }}</template>
             <!-- 超出部分显示为 tooltip截取20个字符 -->
-            {{ record.TopicName.slice(0, 20) }}
+            {{ record.aiAnswer != null ? record?.aiAnswer.slice(0, 20) : '' }}
           </a-tooltip>
         </template>
       </template>
