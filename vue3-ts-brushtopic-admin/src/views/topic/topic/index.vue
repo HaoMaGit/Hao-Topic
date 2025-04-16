@@ -361,7 +361,7 @@ const formData = ref({
   isEveryDay: 0,
   isMember: 0,
   subjectId: null,
-  labelIds: null,
+  labelIds: [],
   id: null,
 })
 // 表单规则
@@ -405,7 +405,7 @@ const clearFormData = () => {
     isEveryDay: 0,
     isMember: 0,
     subjectId: null,
-    labelIds: null,
+    labelIds: [],
     id: null,
   }
   if (formRef.value) {
@@ -469,10 +469,7 @@ const getLabelNameAndId = async () => {
   }
 }
 
-// 选中了tag
-const handleChange = (value: string) => {
-  console.log(`selected ${value}`);
-};
+
 
 onMounted(() => {
   getTopicTopicList()
@@ -578,7 +575,7 @@ onMounted(() => {
         </a-form-item>
         <a-form-item label="题目标签" name="labelIds">
           <a-select v-model:value="formData.labelIds" mode="tags" style="width: 100%" placeholder="请选择标签"
-            :options="labelNameAndId" @change="handleChange"></a-select>
+            :options="labelNameAndId"></a-select>
         </a-form-item>
         <a-form-item label="题目排序" name="sorted">
           <a-input-number style="width: 100%;" v-model:value="formData.sorted" :min="0" placeholder="题目排序" />
