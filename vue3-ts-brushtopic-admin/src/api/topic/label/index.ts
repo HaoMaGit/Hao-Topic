@@ -57,3 +57,11 @@ export function apiGetExportTemplate() {
     responseType: 'blob' // 二进制文件流
   })
 }
+
+// 查询所有的标签名称以及id
+export function apiGetLabelName() {
+  return request({
+    url: prefix + 'getLabel',
+    method: 'get'
+  })
+}
