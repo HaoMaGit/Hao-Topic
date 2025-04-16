@@ -58,6 +58,10 @@ public enum ResultCodeEnum {
     LABEL_DELETE_TOPIC_ERROR(99927, "该题目标签下有关联题目"),
 
 
+    TOPIC_NAME_EXIST(99928, "题目名称已存在"),
+    SUBJECT_NOT_EXIST(99929, "题目专题不存在"),
+    LABEL_NOT_EXIST(99930, "题目标签不存在"),
+
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
     ADMIN_LOCKED(207, "登录失败请确认身份"),
