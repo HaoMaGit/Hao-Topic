@@ -207,6 +207,12 @@ const handleEdit = (record: any) => {
   formData.value = {
     ...record
   }
+  // 根据subjectName获取subjectId
+  formData.value.subjectId = subjectNameAndId.value.find((item: any) => item.label === record.subject).value
+  // 根据labelName获取labelId集合
+  formData.value.labelIds = labelNameAndId.value.filter((item: any) => record.labels.includes(item.label)).map((item: any) => item.value)
+
+
 }
 // 删除
 const handleDelete = (record: any) => {
@@ -358,7 +364,7 @@ const formData = ref({
   topicName: '',
   answer: '',
   sorted: 0,
-  isEveryDay: 0,
+  isEveryday: 0,
   isMember: 0,
   subjectId: null,
   labelIds: [],
@@ -402,7 +408,7 @@ const clearFormData = () => {
     topicName: '',
     answer: '',
     sorted: 0,
-    isEveryDay: 0,
+    isEveryday: 0,
     isMember: 0,
     subjectId: null,
     labelIds: [],
@@ -581,7 +587,7 @@ onMounted(() => {
           <a-input-number style="width: 100%;" v-model:value="formData.sorted" :min="0" placeholder="题目排序" />
         </a-form-item>
         <a-form-item label="是否每日" name="status">
-          <a-switch v-model:checked="formData.isEveryDay" :checkedValue="1" :unCheckedValue="0" checked-children="是"
+          <a-switch v-model:checked="formData.isEveryday" :checkedValue="1" :unCheckedValue="0" checked-children="是"
             un-checked-children="否" />
         </a-form-item>
         <a-form-item label="是否会员" name="status">
