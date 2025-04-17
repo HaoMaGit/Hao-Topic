@@ -47,4 +47,14 @@ public class TopicController {
     }
 
 
+    /**
+     * 修改题目
+     */
+    @PutMapping("/update")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result update(@RequestBody TopicDto topicDto) {
+        topicService.update(topicDto);
+        return Result.success();
+    }
+
 }

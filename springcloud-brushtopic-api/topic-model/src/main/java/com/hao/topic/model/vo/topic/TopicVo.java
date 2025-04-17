@@ -18,7 +18,7 @@ public class TopicVo extends BaseEntity {
     private String aiAnswer;
     private String createBy;
     private Integer sorted;
-    private Integer isEveryDay;
+    private Integer isEveryday;
     private Integer status;
     private Integer isMember;
     private Long viewCount;

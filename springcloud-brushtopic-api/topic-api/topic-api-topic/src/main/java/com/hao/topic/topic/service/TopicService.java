@@ -17,4 +17,6 @@ public interface TopicService {
 
     void add(TopicDto topicDto);
 
+    void update(TopicDto topicDto);
+
 }

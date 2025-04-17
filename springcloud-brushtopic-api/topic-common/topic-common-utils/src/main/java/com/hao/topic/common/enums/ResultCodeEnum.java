@@ -61,6 +61,8 @@ public enum ResultCodeEnum {
     TOPIC_NAME_EXIST(99928, "题目名称已存在"),
     SUBJECT_NOT_EXIST(99929, "题目专题不存在"),
     LABEL_NOT_EXIST(99930, "题目标签不存在"),
+    TOPIC_UPDATE_IS_NULL(99931, "修改题目失败"),
+    TOPIC_DELETE_IS_NULL(99932, "删除题目失败"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

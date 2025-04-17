@@ -1,5 +1,6 @@
 package com.hao.topic.model.entity.topic;
 
+import com.hao.topic.model.entity.BaseEntity;
 import lombok.Data;
 
 /**
@@ -8,7 +9,7 @@ import lombok.Data;
  * Date: 2025/4/15 21:08
  */
 @Data
-public class TopicLabelTopic {
+public class TopicLabelTopic extends BaseEntity {
     private Long topicId;
     private Long labelId;
 }

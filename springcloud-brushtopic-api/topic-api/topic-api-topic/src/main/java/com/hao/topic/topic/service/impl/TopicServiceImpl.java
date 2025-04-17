@@ -12,6 +12,7 @@ import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.vo.topic.TopicVo;
+import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -198,6 +199,96 @@ public class TopicServiceImpl implements TopicService {
         // 更新专题数量
         topicSubject.setTopicCount(topicSubject.getTopicCount() + 1);
         topicSubjectMapper.updateById(topicSubject);
+        for (TopicLabel topicLabel : topicLabels) {
+            // 插入到题目标签关系表中
+            TopicLabelTopic topicLabelTopic = new TopicLabelTopic();
+            topicLabelTopic.setTopicId(topic.getId());
+            topicLabelTopic.setLabelId(topicLabel.getId());
+            topicLabelTopicMapper.insert(topicLabelTopic);
+
+            // 更新标签被使用次数
+            topicLabel.setUseCount(topicLabel.getUseCount() + 1);
+            topicLabelMapper.updateById(topicLabel);
+        }
+    }
+
+    /**
+     * 修改题目
+     *
+     * @param topicDto
+     */
+    @Transactional
+    public void update(TopicDto topicDto) {
+        // 根据id查询
+        Topic oldTopic = topicMapper.selectById(topicDto.getId());
+        if (oldTopic == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_UPDATE_IS_NULL);
+        }
+        // 查询专题
+        TopicSubject topicSubject = topicSubjectMapper.selectById(topicDto.getSubjectId());
+        // 判断
+        if (topicSubject == null) {
+            throw new TopicException(ResultCodeEnum.SUBJECT_NOT_EXIST);
+        }
+        // 查询标签
+        List<TopicLabel> topicLabels = topicLabelMapper.selectBatchIds(topicDto.getLabelIds());
+        if (CollectionUtils.isEmpty(topicLabels)) {
+            throw new TopicException(ResultCodeEnum.LABEL_NOT_EXIST);
+        }
+        // 修改题目
+        Topic topic = new Topic();
+        BeanUtils.copyProperties(topicDto, topic);
+
+
+        // TODO 生成AI题目
+        // TODO 异步发送信息给AI审核
+        topic.setStatus(StatusEnums.AUDITING.getCode());
+        // 开始更新
+        topicMapper.updateById(topic);
+
+        // 查询专题题目关系表
+        LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getTopicId, oldTopic.getId());
+        TopicSubjectTopic topicSubjectTopicDb = topicSubjectTopicMapper.selectOne(topicSubjectTopicLambdaQueryWrapper);
+        if (topicSubjectTopicDb != null) {
+            // 查询专题
+            TopicSubject topicSubjectDb = topicSubjectMapper.selectById(topicSubjectTopicDb.getSubjectId());
+            if (topicSubjectDb != null) {
+                // 更新专题数量
+                topicSubjectDb.setTopicCount(topicSubjectDb.getTopicCount() - 1);
+                topicSubjectMapper.updateById(topicSubjectDb);
+            }
+            // 删除
+            topicSubjectTopicMapper.deleteById(topicSubjectTopicDb);
+        }
+
+        // 插入到专题题目关系表中
+        TopicSubjectTopic topicSubjectTopic = new TopicSubjectTopic();
+        topicSubjectTopic.setTopicId(topic.getId());
+        topicSubjectTopic.setSubjectId(topicDto.getSubjectId());
+        topicSubjectTopicMapper.insert(topicSubjectTopic);
+        // 更新次数
+        topicSubject.setTopicCount(topicSubject.getTopicCount() + 1);
+        topicSubjectMapper.updateById(topicSubject);
+
+        // 查询标签题目关系表
+        LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, oldTopic.getId());
+        List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+        if (!CollectionUtils.isEmpty(topicLabelTopics)) {
+            for (TopicLabelTopic topicLabelTopic : topicLabelTopics) {
+                // 查询标签
+                TopicLabel topicLabelDb = topicLabelMapper.selectById(topicLabelTopic.getLabelId());
+                if (topicLabelDb != null) {
+                    // 更新标签被使用次数
+                    topicLabelDb.setUseCount(topicLabelDb.getUseCount() - 1);
+                    topicLabelMapper.updateById(topicLabelDb);
+                }
+                // 删除
+                topicLabelTopicMapper.deleteById(topicLabelTopic);
+            }
+        }
+
         for (TopicLabel topicLabel : topicLabels) {
             // 插入到题目标签关系表中
             TopicLabelTopic topicLabelTopic = new TopicLabelTopic();

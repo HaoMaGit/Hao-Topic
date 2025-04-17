@@ -12,12 +12,13 @@ import java.util.List;
  */
 @Data
 public class TopicDto {
+    private Long id;
     @NotBlank(message = "题目名称不能为空")
     private String topicName;
     @NotBlank(message = "题目答案不能为空")
     private String answer;
     private Integer sorted;
-    private Integer isEveryDay;
+    private Integer isEveryday;
     private Integer isMember;
     @NotBlank(message = "题目关联专题不能为空")
     private Long subjectId;
