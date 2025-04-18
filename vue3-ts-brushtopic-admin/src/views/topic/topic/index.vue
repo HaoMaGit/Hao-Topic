@@ -279,7 +279,7 @@ const upload = reactive({
   // 上传文件的loading
   uploadLoading: false,
   // 上传的地址
-  url: VITE_SERVE + "/api/topic/topic/import",
+  url: VITE_SERVE + "/api/topic/topic/memberImport",
   // 上传的文件
   uploadFileList: [],
   // 结果弹窗
@@ -547,7 +547,8 @@ onMounted(() => {
           <a-button type="link">{{ record.subject }}</a-button>
         </template>
         <template v-if="column.key === 'labels'">
-          <a-tag color="processing" v-for="(item, index) in record.labels" :key="index">{{ item }}</a-tag>
+          <a-tag color="processing" style="margin-top: 6px;" v-for="(item, index) in record.labels" :key="index">{{
+            item }}</a-tag>
         </template>
         <template v-if="column.key === 'answer'">
           <a-tooltip>

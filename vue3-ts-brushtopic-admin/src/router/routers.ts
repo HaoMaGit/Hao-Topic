@@ -104,6 +104,21 @@ export const constantRoute = [
       }
     ]
   },
+  // 模型管理：ai管理 大模型
+  {
+    path: '/ai',
+    component: () => import('@/layout/index.vue'),
+    redirect: '/ai/aimodel',
+    children: [{
+      path: '/ai/aimodel',
+      component: () => import('@/views/ai/aimodel/index.vue'),
+    },
+    {
+      path: '/ai/model',
+      component: () => import('@/views/ai/model/index.vue'),
+    }
+    ]
+  },
   // 404页面
   {
     path: '/404',
