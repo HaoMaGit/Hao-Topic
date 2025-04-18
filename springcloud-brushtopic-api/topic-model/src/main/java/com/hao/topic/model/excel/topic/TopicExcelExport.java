@@ -36,8 +36,10 @@ public class TopicExcelExport {
     private Integer sorted;
     @ExcelProperty(value = "题目状态")
     private String status;
+    @ColumnWidth(50)
     @ExcelProperty(value = "每日推荐 0不是 1是")
     private Integer isEveryday;
+    @ColumnWidth(50)
     @ExcelProperty(value = "会员专享 0不是 1是")
     private Integer isMember;
     @ColumnWidth(30)

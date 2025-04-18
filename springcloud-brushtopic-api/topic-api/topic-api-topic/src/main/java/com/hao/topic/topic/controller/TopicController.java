@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class TopicController {
     }
 
     /**
-     * 添加题目分类
+     * 添加题目
      */
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
@@ -95,6 +96,37 @@ public class TopicController {
             ExcelUtil.download(response, topicExcelExports, TopicExcelExport.class);
         } catch (IOException e) {
             throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+        }
+    }
+
+
+    /**
+     * 导入excel会员
+     */
+    @PostMapping("/memberImport")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public Result<String> memberImport(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
+        try {
+            // 导入数据
+            String s = topicService.memberImport(multipartFile, updateSupport);
+            return Result.success(s);
+        } catch (Exception e) {
+            return Result.fail(e.getMessage(), ResultCodeEnum.IMPORT_ERROR);
+        }
+    }
+
+    /**
+     * 导入excel管理员
+     */
+    @PostMapping("/adminImport")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result<String> adminImport(@RequestParam("file") MultipartFile multipartFile, @RequestParam("updateSupport") Boolean updateSupport) {
+        try {
+            // 导入数据
+            String s = topicService.adminImport(multipartFile, updateSupport);
+            return Result.success(s);
+        } catch (Exception e) {
+            return Result.fail(e.getMessage(), ResultCodeEnum.IMPORT_ERROR);
         }
     }
 

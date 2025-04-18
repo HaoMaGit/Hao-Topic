@@ -64,6 +64,8 @@ public enum ResultCodeEnum {
     TOPIC_UPDATE_IS_NULL(99931, "修改题目失败"),
     TOPIC_DELETE_IS_NULL(99932, "删除题目失败"),
     TOPIC_EVERYDAY_ERROR(99933, "每日推荐题目只能存在9个"),
+    TOPIC_SUBJECT_IS_NULL(99934, "题目专题不能为空"),
+    TOPIC_LABEL_IS_NULL(99935, "题目标签不能为空"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),

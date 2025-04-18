@@ -1,6 +1,7 @@
 package com.hao.topic.topic.service.impl;
 
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.common.enums.ResultCodeEnum;
@@ -11,8 +12,10 @@ import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
+import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicExcelExport;
+import com.hao.topic.model.excel.topic.TopicMemberExcel;
 import com.hao.topic.model.vo.topic.TopicVo;
 import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.*;
@@ -27,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -449,4 +453,242 @@ public class TopicServiceImpl implements TopicService {
             }).collect(Collectors.toList());
         }
     }
+
+    /**
+     * 会员导入
+     *
+     * @param multipartFile
+     * @param updateSupport
+     * @return
+     */
+    public String memberImport(MultipartFile multipartFile, Boolean updateSupport) throws IOException {
+        // 获取当前用户登录名称
+        String username = SecurityUtils.getCurrentName();
+        // 读取数据
+        List<TopicMemberExcel> excelVoList = EasyExcel.read(multipartFile.getInputStream())
+                // 映射数据
+                .head(TopicMemberExcel.class)
+                // 读取工作表
+                .sheet()
+                // 读取并同步返回数据
+                .doReadSync();
+        // 校验
+        if (CollectionUtils.isEmpty(excelVoList)) {
+            throw new TopicException(ResultCodeEnum.IMPORT_ERROR);
+        }
+        // 计算成功的数量
+        int successNum = 0;
+        // 计算失败的数量
+        int failureNum = 0;
+        // 拼接成功消息
+        StringBuilder successMsg = new StringBuilder();
+        // 拼接错误消息
+        StringBuilder failureMsg = new StringBuilder();
+        // 遍历
+        for (TopicMemberExcel topicMemberExcel : excelVoList) {
+            try {
+
+                // 查询这个题目是否存在
+                LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicLambdaQueryWrapper.eq(Topic::getTopicName, topicMemberExcel.getTopicName());
+                Topic topic = topicMapper.selectOne(topicLambdaQueryWrapper);
+                if (StringUtils.isNull(topic)) {
+                    // 不存在插入
+                    Topic topicDb = new Topic();
+                    BeanUtils.copyProperties(topicMemberExcel, topicDb);
+                    topicDb.setCreateBy(username);
+                    topicMapper.insert(topicDb);
+                    // TODO 生成AI答案
+                    // TODO 异步发送信息给AI审核
+                    if (topicMemberExcel.getSubjectName() == null) {
+                        throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
+                    }
+                    if (topicMemberExcel.getLabelName() == null) {
+                        throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                    }
+                    // 查询专题
+                    LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    topicSubjectLambdaQueryWrapper.eq(TopicSubject::getSubjectName, topicMemberExcel.getSubjectName());
+                    TopicSubject topicSubjectDb = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                    if (StringUtils.isNull(topicSubjectDb)) {
+                        throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
+                    }
+                    topicSubjectDb.setTopicCount(topicSubjectDb.getTopicCount() + 1);
+                    topicSubjectMapper.updateById(topicSubjectDb);
+                    // 添加到题目关联专题表中
+                    TopicSubjectTopic topicSubject = new TopicSubjectTopic();
+                    topicSubject.setTopicId(topicDb.getId());
+                    topicSubject.setSubjectId(topicSubjectDb.getId());
+                    topicSubjectTopicMapper.insert(topicSubject);
+
+                    // 将标签分割 标签1:标签2:标签3
+                    String[] labelNames = topicMemberExcel.getLabelName().split(":");
+                    // 校验labelNames是否存在相同的标签
+                    for (int i = 0; i < labelNames.length; i++) {
+                        for (int j = i + 1; j < labelNames.length; j++) {
+                            if (labelNames[i].equals(labelNames[j])) {
+                                throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                            }
+                        }
+                    }
+                    for (String labelName : labelNames) {
+                        if (StringUtils.isNull(labelName)) {
+                            throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                        }
+                        // 根据标签名称查询标签
+                        LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                        topicLabelLambdaQueryWrapper.eq(TopicLabel::getLabelName, labelName);
+                        TopicLabel topicLabelDb = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+                        if (topicLabelDb == null) {
+                            throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                        }
+                        // 有标签修改
+                        topicLabelDb.setUseCount(topicLabelDb.getUseCount() + 1);
+                        topicLabelMapper.updateById(topicLabelDb);
+
+                        // 添加到题目标签关系表中
+                        TopicLabelTopic topicLabelTopic = new TopicLabelTopic();
+                        topicLabelTopic.setTopicId(topicDb.getId());
+                        topicLabelTopic.setLabelId(topicLabelDb.getId());
+                        topicLabelTopicMapper.insert(topicLabelTopic);
+                    }
+                    successNum++;
+                    successMsg.append("<br/>").append(successNum).append("-题目：").append(topicDb.getTopicName()).append("-导入成功");
+
+                } else if (updateSupport) {
+                    if (topicMemberExcel.getSubjectName() == null) {
+                        throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
+                    }
+                    if (topicMemberExcel.getLabelName() == null) {
+                        throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                    }
+                    // 将标签分割 标签1:标签2:标签3
+                    String[] labelNames = topicMemberExcel.getLabelName().split(":");
+                    // 校验labelNames是否存在相同的标签
+                    for (int i = 0; i < labelNames.length; i++) {
+                        for (int j = i + 1; j < labelNames.length; j++) {
+                            if (labelNames[i].equals(labelNames[j])) {
+                                throw new TopicException(ResultCodeEnum.TOPIC_LABEL_IS_NULL);
+                            }
+                        }
+                    }
+                    // 查询专题题目关系表
+                    LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getTopicId, topic.getId());
+                    TopicSubjectTopic topicSubjectTopic = topicSubjectTopicMapper.selectOne(topicSubjectTopicLambdaQueryWrapper);
+                    if (topicSubjectTopic != null) {
+                        // 查询专题
+                        TopicSubject topicSubject = topicSubjectMapper.selectById(topicSubjectTopic.getSubjectId());
+                        if (topicSubject != null) {
+                            // 判断数据库的专题和当前要修改的专题是否一致
+                            if (!topicSubject.getSubjectName().equals(topicMemberExcel.getSubjectName())) {
+                                // 不一致更新当前专题被使用次数-1
+                                topicSubject.setTopicCount(topicSubject.getTopicCount() - 1);
+                                topicSubjectMapper.updateById(topicSubject);
+                                // 然后查询当前要添加的专题
+                                LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getSubjectName, topicMemberExcel.getSubjectName());
+                                TopicSubject topicSubjectDb = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                                if (topicSubjectDb != null) {
+                                    topicSubjectDb.setTopicCount(topicSubjectDb.getTopicCount() + 1);
+                                    topicSubjectMapper.updateById(topicSubjectDb);
+                                    // 添加到题目关联专题表中
+                                    TopicSubjectTopic topicSubjectTopicDb = new TopicSubjectTopic();
+                                    topicSubjectTopicDb.setSubjectId(topicSubjectDb.getId());
+                                    topicSubjectTopicDb.setTopicId(topic.getId());
+                                    topicSubjectTopicMapper.insert(topicSubjectTopicDb);
+                                }
+                                // 删除以前的题目专题关联关系
+                                topicSubjectTopicMapper.deleteById(topicSubjectTopic);
+                            }
+                        }
+                    }
+
+                    // 查询标签题目关系表
+                    LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, topic.getId());
+                    List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+                    // 校验一下
+                    if (CollectionUtils.isNotEmpty(topicLabelTopics)) {
+                        // 获取所有的标签id
+                        List<Long> labelIds = topicLabelTopics.stream()
+                                .map(TopicLabelTopic::getLabelId)
+                                .toList();
+                        // 查询标签
+                        List<TopicLabel> topicLabels = topicLabelMapper.selectBatchIds(labelIds);
+                        // 更新所有标签次数-1
+                        topicLabels.forEach(topicLabel -> {
+                            topicLabel.setUseCount(topicLabel.getUseCount() - 1);
+                            topicLabelMapper.updateById(topicLabel);
+                        });
+                        // 先删除题目关系表
+                        topicLabelTopicMapper.delete(topicLabelTopicLambdaQueryWrapper);
+
+
+                        // 校验要修改的标签名称是否与以前的名称是否一样
+                        for (String labelName : labelNames) {
+                            // 然后查询当前要添加的标签
+                            LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                            topicLabelLambdaQueryWrapper.eq(TopicLabel::getLabelName, labelName);
+                            TopicLabel topicLabelDb = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+                            if (topicLabelDb != null) {
+                                topicLabelDb.setUseCount(topicLabelDb.getUseCount() + 1);
+                                topicLabelMapper.updateById(topicLabelDb);
+                                // 添加到题目关联标签表中
+                                TopicLabelTopic topicLabelTopicDb = new TopicLabelTopic();
+                                topicLabelTopicDb.setLabelId(topicLabelDb.getId());
+                                topicLabelTopicDb.setTopicId(topic.getId());
+                                topicLabelTopicMapper.insert(topicLabelTopicDb);
+                            }
+                        }
+                    }
+                    // 更新
+                    BeanUtils.copyProperties(topicMemberExcel, topic);
+                    // 把状态修改为待审核
+                    topic.setStatus(StatusEnums.AUDITING.getCode());
+                    // 判断当前题目名称是否与导入的名称一样
+                    if (!topic.getTopicName().equals(topicMemberExcel.getTopicName())) {
+                        // 不一样将当前AI答案滞空
+                        topic.setAiAnswer("");
+                        // TODO 生成AI答案
+                        // TODO 异步发送信息给AI审核
+                    }
+                    topicMapper.updateById(topic);
+
+                    successNum++;
+                    successMsg.append("<br/>").append(successNum).append("-题目：").append(topic.getTopicName()).append("-更新成功");
+
+
+                } else {
+                    // 已存在
+                    failureNum++;
+                    failureMsg.append("<br/>").append(failureNum).append("-题目：").append(topic.getTopicName()).append("-已存在");
+                }
+            } catch (Exception e) {
+                failureNum++;
+                String msg = "<br/>" + failureNum + "-题目： " + topicMemberExcel.getTopicName() + " 导入失败：";
+                failureMsg.append(msg).append(e.getMessage());
+                log.error(msg, e);
+            }
+        }
+        if (failureNum > 0) {
+            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
+            throw new TopicException(failureMsg.toString());
+        } else {
+            successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
+        }
+        return successMsg.toString();
+    }
+
+    /**
+     * 管理员导入
+     *
+     * @param multipartFile
+     * @param updateSupport
+     * @return
+     */
+    public String adminImport(MultipartFile multipartFile, Boolean updateSupport) {
+        return "";
+    }
+
 }
