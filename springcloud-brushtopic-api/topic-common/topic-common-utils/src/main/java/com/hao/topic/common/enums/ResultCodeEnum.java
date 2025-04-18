@@ -63,6 +63,7 @@ public enum ResultCodeEnum {
     LABEL_NOT_EXIST(99930, "题目标签不存在"),
     TOPIC_UPDATE_IS_NULL(99931, "修改题目失败"),
     TOPIC_DELETE_IS_NULL(99932, "删除题目失败"),
+    TOPIC_EVERYDAY_ERROR(99933, "每日推荐题目只能存在9个"),
 
     SERVICE_ERROR(2012, "服务异常"),
     DATA_ERROR(204, "数据异常"),
@@ -74,25 +75,6 @@ public enum ResultCodeEnum {
     AI_COUNT_ERROR(1003, "使用次数不足请联系我们或晋升为我们的会员"),
     MENU_ERROR(1004, "没有权限访问"),
 
-    LABEL_ERROR(1005, "查询题目标签失败"),
-    LABEL_DEL_ERROR(1006, "题目标签删除失败"),
-    LABEL_DEL_TOPIC_ERROR(1007, "该标签被题目关联"),
-    LABEL_EXPORT_ERROR(1008, "标签导出失败"),
-    LABEL_SAVE_ERROR(1009, "新增标签失败"),
-    LABEL_UPDATE_ERROR(1010, "修改标签失败"),
-    LABEL_AUDIT_ERROR(1011, "审核标签失败"),
-
-    CATEGORY_ERROR(1012, "查询题目分类失败"),
-    CATEGORY_DEL_ERROR(1013, "题目标签删除失败"),
-    CATEGORY_DEL_SUBJECT_ERROR(1014, "该分类下有关联删除失败"),
-    CATEGORY_EXPORT_ERROR(1015, "分类导出失败"),
-    CATEGORY_UPDATE_ERROR(1016, "修改分类失败"),
-
-    SUBJECT_ERROR(1017, "查询题目专题失败"),
-    SUBJECT_DEL_ERROR(1013, "题目专题删除失败"),
-    TOPIC_DEL_SUBJECT_ERROR(1014, "该专题下有关联删除失败"),
-    SUBJECT_EXPORT_ERROR(1015, "分类导出失败"),
-    SUBJECT_UPDATE_ERROR(1016, "修改专题失败"),
 
     AI_EXPORT_ERROR(1017, "导出失败"),
 
@@ -100,13 +82,6 @@ public enum ResultCodeEnum {
     USER_DATA_ERROR(1005, "暂时没有用户数据"),
     USER_ERROR(1006, "账号异常请联系管理员处理"),
 
-    TOPIC_ERROR(1017, "查询题目失败"),
-    TOPIC_EXPORT_ERROR(1018, "导出失败"),
-    ADMIN_LOGIN_ERROR(1019, "用户名或密码错误"),
-    TOPIC_UPDATE_ERROR(1020, "修改题目失败"),
-    // SUBJECT_DEL_ERROR(1013, "题目专题删除失败"),
-    // TOPIC_DEL_SUBJECT_ERROR(1014, "该专题下有关联删除失败"),
-    // SUBJECT_EXPORT_ERROR(1015, "分类导出失败"),
     // SUBJECT_UPDATE_ERROR(1016, "修改专题失败"),
 
     REQUEST_TIMEOUT(1002, "请求超时"),

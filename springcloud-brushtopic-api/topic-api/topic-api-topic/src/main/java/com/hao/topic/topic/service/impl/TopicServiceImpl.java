@@ -185,6 +185,15 @@ public class TopicServiceImpl implements TopicService {
         BeanUtils.copyProperties(topicDto, topic);
         // 设置创建人
         topic.setCreateBy(username);
+        // 每日题目只能有9题
+        if (topic.getIsEveryday() == 1) {
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper1.eq(Topic::getIsEveryday, 1);
+            List<Topic> topics = topicMapper.selectList(topicLambdaQueryWrapper1);
+            if (CollectionUtils.isNotEmpty(topics) && topics.size() >= 9) {
+                throw new TopicException(ResultCodeEnum.TOPIC_EVERYDAY_ERROR);
+            }
+        }
         // TODO 生成AI题目
         // TODO 异步发送信息给AI审核
         // 开始插入
@@ -239,7 +248,15 @@ public class TopicServiceImpl implements TopicService {
         Topic topic = new Topic();
         BeanUtils.copyProperties(topicDto, topic);
 
-
+        // 每日题目只能有9题
+        if (topic.getIsEveryday() == 1) {
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper1.eq(Topic::getIsEveryday, 1);
+            List<Topic> topics = topicMapper.selectList(topicLambdaQueryWrapper1);
+            if (CollectionUtils.isNotEmpty(topics) && topics.size() >= 9) {
+                throw new TopicException(ResultCodeEnum.TOPIC_EVERYDAY_ERROR);
+            }
+        }
         // TODO 生成AI题目
         // TODO 异步发送信息给AI审核
         topic.setStatus(StatusEnums.AUDITING.getCode());
