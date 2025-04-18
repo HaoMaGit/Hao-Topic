@@ -5,33 +5,28 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.hao.topic</groupId>
-        <artifactId>topic</artifactId>
+        <artifactId>topic-api</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>topic-api</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>topic-api-topic</module>
-        <module>topic-api-system</module>
-        <module>topic-api-ai</module>
-    </modules>
+    <artifactId>topic-api-ai</artifactId>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <dependencies>
-        <!-- mvc -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- 授权服务 -->
+        <!-- 授权认证服务 -->
         <dependency>
             <groupId>com.hao.topic</groupId>
-            <artifactId>topic-common-security</artifactId>
+            <artifactId>topic-client-security</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- api工具类 -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-api-utils</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
