@@ -25,10 +25,6 @@ import java.time.LocalDateTime;
 @ContentStyle(horizontalAlignment = HorizontalAlignmentEnum.CENTER, verticalAlignment = VerticalAlignmentEnum.CENTER)
 @Data
 public class TopicCategoryExcel {
-
     @ExcelProperty(value = "题目分类名称")
     private String categoryName;
-
-
-
 }

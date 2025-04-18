@@ -19,4 +19,5 @@ public interface TopicService {
 
     void update(TopicDto topicDto);
 
+    void delete(Long[] ids);
 }
