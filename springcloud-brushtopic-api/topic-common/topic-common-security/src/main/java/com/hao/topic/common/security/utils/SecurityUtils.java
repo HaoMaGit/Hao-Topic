@@ -49,4 +49,22 @@ public class SecurityUtils {
         }
         throw new TopicException(ResultCodeEnum.LOGIN_ERROR);
     }
+
+    /**
+     * 获取当前登录用户角色
+     */
+    public static String getCurrentRole() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            String token = attributes.getRequest().getHeader("Authorization");
+            if (token != null) {
+                Map<String, Object> tokenInfo = JWTUtils.getTokenInfo(token);
+                String role = (String) tokenInfo.get("role");
+                if (role != null) {
+                    return role;
+                }
+            }
+        }
+        throw new TopicException(ResultCodeEnum.LOGIN_ERROR);
+    }
 }

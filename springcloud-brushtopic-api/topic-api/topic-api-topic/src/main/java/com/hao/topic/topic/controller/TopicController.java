@@ -4,11 +4,14 @@ import com.hao.topic.api.utils.utils.ExcelUtil;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
+import com.hao.topic.model.excel.topic.TopicExcel;
+import com.hao.topic.model.excel.topic.TopicMemberExcel;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -81,18 +84,35 @@ public class TopicController {
     @GetMapping("/template")
     @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
     public void getExcelTemplate(HttpServletResponse response) {
-        // 存储模板数据
-        List<TopicCategoryExcel> excelVoList = new ArrayList<>();
-        // 组成模板数据
-        TopicCategoryExcel excelVo = new TopicCategoryExcel();
-        // 存放
-        excelVoList.add(excelVo);
-        try {
-            // 导出
-            ExcelUtil.download(response, excelVoList, TopicCategoryExcel.class);
-        } catch (IOException e) {
-            throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
+        // 获取当前用户身份
+        String role = SecurityUtils.getCurrentRole();
+        if (role.equals("admin")) {
+            List<TopicExcel> topicExcels = new ArrayList<>();
+            // 组成模板数据
+            TopicExcel topicExcel = new TopicExcel();
+            // 存放
+            topicExcels.add(topicExcel);
+            try {
+                // 导出
+                ExcelUtil.download(response, topicExcels, TopicExcel.class);
+            } catch (IOException e) {
+                throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
+            }
+        } else {
+            // 存储模板数据
+            List<TopicMemberExcel> excelVoList = new ArrayList<>();
+            // 组成模板数据
+            TopicMemberExcel excelVo = new TopicMemberExcel();
+            // 存放
+            excelVoList.add(excelVo);
+            try {
+                // 导出
+                ExcelUtil.download(response, excelVoList, TopicMemberExcel.class);
+            } catch (IOException e) {
+                throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
+            }
         }
+
 
     }
 }
