@@ -2,8 +2,10 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.excel.topic.TopicExcelExport;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,4 +22,6 @@ public interface TopicService {
     void update(TopicDto topicDto);
 
     void delete(Long[] ids);
+
+    List<TopicExcelExport> getExcelVo(TopicListDto topicListDto, Long[] ids);
 }

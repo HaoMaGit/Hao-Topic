@@ -11,6 +11,8 @@ import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
+import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
+import com.hao.topic.model.excel.topic.TopicExcelExport;
 import com.hao.topic.model.vo.topic.TopicVo;
 import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.*;
@@ -28,9 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Description:
@@ -372,6 +376,77 @@ public class TopicServiceImpl implements TopicService {
             }
             // 删除题目标签关系表
             topicLabelTopicMapper.delete(topicLabelTopicLambdaQueryWrapper);
+        }
+    }
+
+    /**
+     * 获取导出数据
+     *
+     * @param topicListDto
+     * @param ids
+     * @return
+     */
+    public List<TopicExcelExport> getExcelVo(TopicListDto topicListDto, Long[] ids) {
+        // 是否有id
+        if (ids[0] != 0) {
+            // 根据id查询
+            List<Topic> topics = topicMapper.selectBatchIds(Arrays.asList(ids));
+            if (CollectionUtils.isEmpty(topics)) {
+                throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+            }
+            return topics.stream().map(topic -> {
+                TopicExcelExport topicExcelExport = new TopicExcelExport();
+                BeanUtils.copyProperties(topic, topicExcelExport);
+                // 状态特殊处理
+                topicExcelExport.setStatus(StatusEnums.getMessageByCode(topic.getStatus()));
+                // 处理专题
+                // 查询专题题目关系表
+                LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getTopicId, topic.getId());
+                TopicSubjectTopic topicSubjectTopic = topicSubjectTopicMapper.selectOne(topicSubjectTopicLambdaQueryWrapper);
+                if (topicSubjectTopic != null) {
+                    // 查询专题
+                    TopicSubject topicSubjectDb = topicSubjectMapper.selectById(topicSubjectTopic.getSubjectId());
+                    if (topicSubjectDb != null) {
+                        topicExcelExport.setSubjectName(topicSubjectDb.getSubjectName());
+                    }
+                }
+                // 处理标签
+                // 查询标签题目关系表
+                LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, topic.getId());
+                List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+                StringBuilder labelNames = new StringBuilder();
+                if (!CollectionUtils.isEmpty(topicLabelTopics)) {
+                    for (TopicLabelTopic topicLabelTopic : topicLabelTopics) {
+                        // 查询标签
+                        TopicLabel topicLabelDb = topicLabelMapper.selectById(topicLabelTopic.getLabelId());
+                        if (topicLabelDb != null) {
+                            labelNames.append(topicLabelDb.getLabelName());
+                            // 拼接最后一个不要拼接
+                            if (topicLabelTopics.size() != topicLabelTopics.indexOf(topicLabelTopic) + 1) {
+                                labelNames.append(":");
+                            }
+                        }
+                    }
+                }
+                topicExcelExport.setLabelName(labelNames.toString());
+                return topicExcelExport;
+            }).collect(Collectors.toList());
+        } else {
+            Map<String, Object> map = topicList(topicListDto);
+            if (map.get("rows") == null) {
+                throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+            }
+            List<Topic> topics = (List<Topic>) map.get("rows");
+            // 封装返回数据
+            return topics.stream().map(topic -> {
+                TopicExcelExport topicExcelExport = new TopicExcelExport();
+                BeanUtils.copyProperties(topic, topicExcelExport);
+                // 状态特殊处理
+                topicExcelExport.setStatus(StatusEnums.getMessageByCode(topic.getStatus()));
+                return topicExcelExport;
+            }).collect(Collectors.toList());
         }
     }
 }

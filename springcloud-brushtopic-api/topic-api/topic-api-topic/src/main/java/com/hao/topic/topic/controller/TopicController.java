@@ -9,12 +9,11 @@ import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
-import com.hao.topic.model.excel.topic.TopicCategoryExcel;
-import com.hao.topic.model.excel.topic.TopicExcel;
-import com.hao.topic.model.excel.topic.TopicMemberExcel;
+import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,6 +77,27 @@ public class TopicController {
         return Result.success();
     }
 
+
+    /**
+     * 导出excel
+     *
+     * @param response
+     */
+    @GetMapping("/export/{ids}")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
+    public void exportExcel(HttpServletResponse response, TopicListDto topicListDto, @PathVariable(required = false) Long[] ids) {
+        List<TopicExcelExport> topicExcelExports = topicService.getExcelVo(topicListDto, ids);
+        if (CollectionUtils.isEmpty(topicExcelExports)) {
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+        }
+        // 导出
+        try {
+            ExcelUtil.download(response, topicExcelExports, TopicExcelExport.class);
+        } catch (IOException e) {
+            throw new TopicException(ResultCodeEnum.EXPORT_ERROR);
+        }
+    }
+
     /**
      * 下载excel模板
      */
@@ -112,7 +132,5 @@ public class TopicController {
                 throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
             }
         }
-
-
     }
 }
