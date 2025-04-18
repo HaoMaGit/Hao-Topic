@@ -2,6 +2,7 @@ package com.hao.topic.security.controller;
 
 import com.hao.topic.common.constant.ExceptionConstant;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
@@ -12,6 +13,7 @@ import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -169,5 +171,16 @@ public class SecurityController {
     @PostMapping("/import")
     String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport) {
         return sysUserService.importExcel(excelVoList, updateSupport);
+    }
+
+    /**
+     * 查询用户列表
+     *
+     * @param aiUserDto
+     * @return
+     */
+    @RequestMapping("/manageList")
+    Map<String, Object> manageList(AiUserDto aiUserDto) {
+        return sysUserService.manageList(aiUserDto);
     }
 }

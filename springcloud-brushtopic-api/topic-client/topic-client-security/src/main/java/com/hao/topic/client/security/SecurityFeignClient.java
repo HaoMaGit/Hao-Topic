@@ -1,6 +1,7 @@
 package com.hao.topic.client.security;
 
 import com.hao.topic.common.auth.TokenInterceptor;
+import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
@@ -80,4 +81,8 @@ public interface SecurityFeignClient {
      */
     @PostMapping("/security/user/import")
     String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
+
+
+    @GetMapping("/security/user/manageList")
+    Map<String, Object> manageList(@SpringQueryMap AiUserDto aiUserDto);
 }

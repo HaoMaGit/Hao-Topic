@@ -23,11 +23,5 @@
             <artifactId>topic-client-security</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- api工具类 -->
-        <dependency>
-            <groupId>com.hao.topic</groupId>
-            <artifactId>topic-api-utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 </project>

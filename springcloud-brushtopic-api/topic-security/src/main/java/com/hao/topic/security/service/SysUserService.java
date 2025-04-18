@@ -9,6 +9,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
 import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
@@ -16,6 +17,7 @@ import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.entity.system.SysUserRole;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.vo.ai.AiUserVo;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -392,5 +394,26 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 查询用户列表
+     *
+     * @param aiUserDto
+     * @return
+     */
+    public Map<String, Object> manageList(AiUserDto aiUserDto) {
+        if (aiUserDto.getPageNum() != null) {
+            aiUserDto.setPageNum((aiUserDto.getPageNum() - 1) * aiUserDto.getPageSize());
+        }
+        // 开始分页查询
+        List<AiUserVo> aiUserVos = sysUserMapper.selectAiUserListVo(aiUserDto);
+        // 查询总记录数
+        int total = sysUserMapper.countAiUserList(aiUserDto);
+        log.info("查询结果：{}", aiUserVos);
+        return Map.of(
+                "total", total,
+                "rows", aiUserVos
+        );
     }
 }

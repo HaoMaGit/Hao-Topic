@@ -10,8 +10,6 @@ import lombok.Data;
 @Data
 public class AiUserDto {
     private String account;
-    private String beginRecentlyUsedTime;
-    private String endRecentlyUsedTime;
     private Integer pageNum;
     private Integer pageSize;
 }

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
  */
 @Data
 public class AiUserVo {
+    private Long id;
     // 账户
     private String account;
     // 邮箱
@@ -23,6 +24,5 @@ public class AiUserVo {
     // 最近使用时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime recentlyUsedTime;
-    // 限制状态
-    private Integer status;
+
 }
