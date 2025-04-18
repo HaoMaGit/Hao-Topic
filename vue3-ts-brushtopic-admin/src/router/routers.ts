@@ -108,10 +108,10 @@ export const constantRoute = [
   {
     path: '/ai',
     component: () => import('@/layout/index.vue'),
-    redirect: '/ai/aimodel',
+    redirect: '/ai/manage',
     children: [{
-      path: '/ai/aimodel',
-      component: () => import('@/views/ai/aimodel/index.vue'),
+      path: '/ai/manage',
+      component: () => import('@/views/ai/manage/index.vue'),
     },
     {
       path: '/ai/model',
