@@ -586,11 +586,11 @@ onMounted(() => {
         <a-form-item label="题目排序" name="sorted">
           <a-input-number style="width: 100%;" v-model:value="formData.sorted" :min="0" placeholder="题目排序" />
         </a-form-item>
-        <a-form-item label="是否每日" name="status">
+        <a-form-item v-if="userStore.userInfo.identity === 2" label="是否每日" name="status">
           <a-switch v-model:checked="formData.isEveryday" :checkedValue="1" :unCheckedValue="0" checked-children="是"
             un-checked-children="否" />
         </a-form-item>
-        <a-form-item label="是否会员" name="status">
+        <a-form-item v-if="userStore.userInfo.identity === 2" label="是否会员" name="status">
           <a-switch v-model:checked="formData.isMember" :checkedValue="1" :unCheckedValue="0" checked-children="是"
             un-checked-children="否" />
         </a-form-item>
