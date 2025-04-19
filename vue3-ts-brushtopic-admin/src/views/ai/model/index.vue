@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, h, onMounted, onBeforeUnmount, nextTick, reactive } from 'vue'
+import { ref, h, watch, onMounted, onBeforeUnmount, nextTick, reactive } from 'vue'
 import {
   SearchOutlined,
   PlusOutlined,
   SendOutlined,
   RobotOutlined,
   ApiOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+
 } from '@ant-design/icons-vue';
 import { useUserStore } from '@/stores/modules/user';
 import { MdPreview } from 'md-editor-v3'
@@ -194,7 +195,7 @@ const aiMode = reactive([
     label: '系统模式',
     value: 'system',
     icon: RobotOutlined,
-    desc: 'AI从系统题库中提取题目逐题提问并实时校验答案正确性'
+    desc: 'AI从系统题库中提取题目逐题提问并根据系统答案校验正确性'
   }, {
     label: '模型模式',
     value: 'model',
@@ -215,7 +216,25 @@ const promptInput = ref()
 const prompt = ref('')
 // 提示词 
 // 请输入题目答案，AI将自动判断并反馈给您
-const placeholder = ref('请选择模式开启刷题')
+// 系统模式需要输入题目分类，将会为你生成题目
+const placeholder = ref('请输入系统中的正确的题目分类，AI将自动生成题目')
+// 初始化提示词
+const initPlaceholder = () => {
+  // 判断是否有内容
+  if (messageList.value.length > 2) {
+    placeholder.value = '请输入题目答案，AI将自动判断并反馈给您'
+  }
+  if (aiModeValue.value === 'system') {
+    placeholder.value = '请输入题目分类，AI将自动生成题目'
+    return
+  } else if (aiModeValue.value === 'model' || aiModeValue.value === 'mix') {
+    placeholder.value = '请输入给AI你想刷的类型，AI将自动生成题目'
+    return
+  }
+}
+watch(() => aiModeValue.value, () => {
+  initPlaceholder()
+})
 // 发送
 const sendPrompt = () => {
   if (prompt.value) {
@@ -234,7 +253,7 @@ const messageList = ref([
   {
     id: aiId.value,
     prompt: "我是" + userStore.userInfo.account,
-    content: '你好，我是HaoAi 1.0，你的面试题AI助手！选择模式后输入"开启刷题"将会生成题目！',
+    content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
     isHistory: false
   },
   // {
@@ -254,8 +273,32 @@ const messageList = ref([
   //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
   // }
 ])
+// 是否正在朗读
+const isSpeaking = ref(false);
+// 朗读文字
+const readAloud = (content: string) => {
+  const utterance = new SpeechSynthesisUtterance(content);
+  utterance.lang = 'zh-CN'; // 设置语言为中文
+  utterance.rate = 1.4; // 稍微放慢语速
+  utterance.pitch = 2.5; // 提高音调，让声音更自然
+  utterance.volume = 1; // 音量最大
 
+  // 开始朗读
+  window.speechSynthesis.speak(utterance);
 
+  // 更新状态
+  isSpeaking.value = true;
+
+  // 监听朗读结束事件
+  utterance.onend = () => {
+    isSpeaking.value = false;
+  };
+}
+// 取消朗读
+const cancelReadAloud = () => {
+  window.speechSynthesis.cancel();
+  isSpeaking.value = false;
+}
 </script>
 <template>
   <div class="model-body">
@@ -315,20 +358,23 @@ const messageList = ref([
         <ul class="infinite-list-reply" ref="contentRef">
           <!-- 有数据的时候显示 -->
           <template v-if="aiId >= 0">
-            <div v-for="(i, index) in messageList" class="box" :key="index">
+            <div v-for="(item, index) in messageList" class="box" :key="index">
               <!-- 用户输入的内容 -->
               <div class="prompt-box">
                 <div class="user-message">
                   <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
-                    <MdPreview v-model="i.prompt" class="prompt-preview">
+                    <MdPreview v-model="item.prompt" class="prompt-preview">
                     </MdPreview>
                   </div>
                   <a-avatar class="avatar"
                     :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'" />
                 </div>
                 <div class="message-actions">
-                  <a-tooltip title="朗读" placement="bottom">
-                    <SoundOutlined class="action-icon" />
+                  <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
+                    <SoundOutlined class="action-icon" @click="readAloud(item.content)" />
+                  </a-tooltip>
+                  <a-tooltip title="暂停" placement="bottom" v-else>
+                    <PauseOutlined class="action-icon" @click="cancelReadAloud" />
                   </a-tooltip>
                   <a-tooltip title="复制" placement="bottom">
                     <CopyOutlined class="action-icon" />
@@ -341,13 +387,16 @@ const messageList = ref([
                 <a-avatar class="avatar"
                   :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'"></a-avatar>
                 <div class="message-wrapper">
-                  <MdPreview v-model="i.content" class="md-preview" style="max-height: 100%;"></MdPreview>
+                  <MdPreview v-model="item.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                   <div class="message-actions" v-if="aiId !== 0">
                     <a-tooltip title="重新生成" placement="bottom">
                       <SyncOutlined class="action-icon" />
                     </a-tooltip>
-                    <a-tooltip title="朗读" placement="bottom">
-                      <SoundOutlined class="action-icon" />
+                    <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
+                      <SoundOutlined class="action-icon" @click="readAloud(item.content)" />
+                    </a-tooltip>
+                    <a-tooltip title="暂停" placement="bottom" v-else>
+                      <PauseOutlined class="action-icon" @click="cancelReadAloud" />
                     </a-tooltip>
                     <a-tooltip title="复制" placement="bottom">
                       <CopyOutlined class="action-icon" />
