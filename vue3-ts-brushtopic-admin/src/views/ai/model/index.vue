@@ -153,6 +153,9 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 onMounted(() => {
+  if (promptInput.value) {
+    promptInput.value?.focus();
+  }
   document.addEventListener('click', handleClickOutside);
 });
 
@@ -203,7 +206,8 @@ const aiMode = reactive([
 ])
 // 当前选中的模式
 const aiModeValue = ref('system')
-
+// 发送表单
+const promptInput = ref()
 // 发送的内容
 const prompt = ref('')
 // 发送
@@ -265,8 +269,11 @@ const sendPrompt = () => {
     </div>
     <!-- 右侧输入大模型 -->
     <div class="model-print">
+      <!-- 标题 -->
+      <h2 class="title">HaoAi<i class="version">1.0</i></h2>
+      <!-- 输入框 -->
       <div class="search-box">
-        <a-textarea type="textarea" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
+        <a-textarea type="textarea" ref="promptInput" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
           placeholder="给 HaoAi 发送消息" />
         <div class="action-icons">
           <div class="left-icons">
@@ -310,6 +317,15 @@ const sendPrompt = () => {
   .model-print {
     margin-left: 3px;
     flex: 1;
+
+    .title {
+      font-weight: bold;
+
+      .version {
+        color: #8f91a8;
+        margin-left: 3px;
+      }
+    }
 
     .search-box {
       position: relative;
