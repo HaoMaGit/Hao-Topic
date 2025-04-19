@@ -31,15 +31,14 @@ public class TopicExcel {
     @ExcelProperty(value = "题目排序")
     private Integer sorted;
     @ExcelProperty(value = "每日推荐 0不是 1是")
-    @ColumnWidth(50)
+    @ColumnWidth(40)
     private Integer isEveryday;
     @ExcelProperty(value = "会员专享 0不是 1是")
-    @ColumnWidth(50)
+    @ColumnWidth(40)
     private Integer isMember;
-    @ColumnWidth(30)
     @ExcelProperty(value = "题目专题")
     private String subjectName;
-    @ColumnWidth(30)
+    @ColumnWidth(50)
     @ExcelProperty(value = "题目标签格式(label1:label2:label3等等")
     private String labelName;
 }

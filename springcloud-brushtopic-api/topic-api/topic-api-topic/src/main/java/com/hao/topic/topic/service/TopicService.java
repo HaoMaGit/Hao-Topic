@@ -30,5 +30,5 @@ public interface TopicService {
 
     String memberImport(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
 
-    String adminImport(MultipartFile multipartFile, Boolean updateSupport);
+    String adminImport(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
 }
