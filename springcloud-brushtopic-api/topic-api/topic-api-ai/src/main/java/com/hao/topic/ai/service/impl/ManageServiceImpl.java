@@ -47,4 +47,12 @@ public class ManageServiceImpl implements ManageService {
                 "rows", aiUserPageDb.getRecords()
         );
     }
+
+    /**
+     * 修改用户ai
+     * @param aiUser
+     */
+    public void update(AiUser aiUser) {
+        aiUserMapper.updateById(aiUser);
+    }
 }

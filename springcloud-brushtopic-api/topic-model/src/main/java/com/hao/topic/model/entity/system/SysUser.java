@@ -16,10 +16,8 @@ public class SysUser extends BaseEntity {
     private String account;
     private String avatar;
     private String password;
-    private Long aiCount;
     private String email;
     private Integer status;
-    private Long count;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime memberTime;
 }

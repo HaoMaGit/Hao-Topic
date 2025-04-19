@@ -1,13 +1,15 @@
 package com.hao.topic.ai.controller;
 
 import com.hao.topic.ai.service.ManageService;
+import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.ai.AiUserDto;
+import com.hao.topic.model.dto.system.SysRoleDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
+import com.hao.topic.model.entity.ai.AiUser;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -34,4 +36,16 @@ public class ManageController {
     public Map<String, Object> list(AiUserDto aiUserDto) {
         return manageService.list(aiUserDto);
     }
+
+
+    /**
+     * 修改用户AI
+     */
+    @PutMapping("/update")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result update(@RequestBody AiUser aiUser) {
+        manageService.update(aiUser);
+        return Result.success();
+    }
+
 }
