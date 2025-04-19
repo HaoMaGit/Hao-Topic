@@ -4,6 +4,9 @@ import {
   SearchOutlined,
   PlusOutlined
 } from '@ant-design/icons-vue';
+import { useSettingStore } from '@/stores/modules/setting.ts'
+// 引入系统设置
+const settingStore = useSettingStore()
 
 // 搜索输入框
 const inputSearch = ref()
@@ -177,7 +180,7 @@ const handleEditBlur = () => {
 <template>
   <div class="model-body">
     <!-- 左侧历史记录 -->
-    <div class="model-history">
+    <div class="model-history" v-if="!settingStore.fold">
       <!-- 新建对话和搜索 -->
       <div class="btn-search">
         <template v-if="!isSearch">
@@ -247,6 +250,7 @@ const handleEditBlur = () => {
     }
   }
 }
+
 
 // 无限滚动历史记录样式
 .infinite-list {
