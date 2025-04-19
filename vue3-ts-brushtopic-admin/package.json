@@ -18,6 +18,8 @@
     "axios": "^1.8.4",
     "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
+    "highlight.js": "^11.11.1",
+    "md-editor-v3": "^5.5.0",
     "nprogress": "^0.2.0",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",

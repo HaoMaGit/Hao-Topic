@@ -8,7 +8,10 @@ import {
   ApiOutlined,
   AppstoreOutlined
 } from '@ant-design/icons-vue';
-
+import { useUserStore } from '@/stores/modules/user';
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
+const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
 // 引入系统设置
 const settingStore = useSettingStore()
@@ -202,7 +205,7 @@ const aiMode = reactive([
     value: 'mix',
     icon: AppstoreOutlined,
     desc: 'AI随机混合系统题库和AI自定义题目增加多样性'
-  }
+  },
 ])
 // 当前选中的模式
 const aiModeValue = ref('system')
@@ -217,6 +220,27 @@ const sendPrompt = () => {
     // prompt.value = ''
   }
 }
+
+// 内容
+const messageList = ref([
+  {
+    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。'
+  },
+  {
+    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  },
+  {
+    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  },
+  {
+    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  }
+])
+
 </script>
 <template>
   <div class="model-body">
@@ -271,23 +295,72 @@ const sendPrompt = () => {
     <div class="model-print">
       <!-- 标题 -->
       <h2 class="title">HaoAi<i class="version">1.0</i></h2>
-      <!-- 输入框 -->
-      <div class="search-box">
-        <a-textarea type="textarea" ref="promptInput" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
-          placeholder="给 HaoAi 发送消息" />
-        <div class="action-icons">
-          <div class="left-icons">
-            <a-radio-group v-model:value="aiModeValue" button-style="solid">
-              <a-tooltip v-for="(tag, index) in aiMode" :key="index" :title="tag.desc" placement="top">
-                <a-radio-button :value="tag.value">
-                  <component :is="tag.icon" class="mode-icon" />
-                  {{ tag.label }}
-                </a-radio-button>
-              </a-tooltip>
-            </a-radio-group>
+      <!-- 回复区域 -->
+      <div class="reply-box">
+        <ul class="infinite-list-reply" ref="contentRef">
+          <!-- 有数据的时候显示 -->
+          <!-- <template v-if="id >= 0"> -->
+          <div v-for="(i, index) in messageList" class="box" :key="index">
+            <!-- 用户输入的内容 -->
+            <div class="prompt-box">
+              <div class="user-message">
+                <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
+                  <MdPreview v-model="i.prompt" class="prompt-preview">
+                  </MdPreview>
+                </div>
+                <a-avatar class="avatar"
+                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'" />
+              </div>
+              <div class="message-actions">
+                <a-tooltip title="朗读" placement="bottom">
+                  <SoundOutlined class="action-icon" />
+                </a-tooltip>
+                <a-tooltip title="复制" placement="bottom">
+                  <CopyOutlined class="action-icon" />
+                </a-tooltip>
+              </div>
+            </div>
+            <!-- AI返回的内容 -->
+            <div class="content-avatar">
+              <!-- 需要带一个头像 -->
+              <a-avatar class="avatar"
+                :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'"></a-avatar>
+              <div class="message-wrapper">
+                <MdPreview v-model="i.content" class="md-preview" style="max-height: 100%;"></MdPreview>
+                <div class="message-actions">
+                  <a-tooltip title="重新生成" placement="bottom">
+                    <SyncOutlined class="action-icon" />
+                  </a-tooltip>
+                  <a-tooltip title="朗读" placement="bottom">
+                    <SoundOutlined class="action-icon" />
+                  </a-tooltip>
+                  <a-tooltip title="复制" placement="bottom">
+                    <CopyOutlined class="action-icon" />
+                  </a-tooltip>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="right-icons">
-            <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" />
+          <!-- </template> -->
+        </ul>
+        <!-- 输入框 -->
+        <div class="search-box">
+          <a-textarea type="textarea" ref="promptInput" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
+            placeholder="给 HaoAi 发送消息" />
+          <div class="action-icons">
+            <div class="left-icons">
+              <a-radio-group v-model:value="aiModeValue" button-style="solid">
+                <a-tooltip v-for="(tag, index) in aiMode" :key="index" :title="tag.desc" placement="top">
+                  <a-radio-button :value="tag.value">
+                    <component :is="tag.icon" class="mode-icon" />
+                    {{ tag.label }}
+                  </a-radio-button>
+                </a-tooltip>
+              </a-radio-group>
+            </div>
+            <div class="right-icons">
+              <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" />
+            </div>
           </div>
         </div>
       </div>
@@ -498,5 +571,125 @@ const sendPrompt = () => {
       text-overflow: ellipsis;
     }
   }
+}
+
+.reply-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+
+  .infinite-list-reply {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+
+
+    .prompt-box {
+      display: flex;
+      flex-direction: column;
+
+      .message-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-right: 40px;
+        opacity: 0;
+        transition: opacity 0.3s;
+
+        .action-icon {
+          margin-top: 5px;
+          font-size: 16px;
+          color: #666;
+          cursor: pointer;
+
+          &:hover {
+            color: #1677ff;
+          }
+
+        }
+
+
+      }
+
+      &:hover {
+        .message-actions {
+          opacity: 1;
+        }
+      }
+
+      .user-message {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        gap: 2px;
+
+        .message-content {
+          max-width: calc(100% - 100px);
+
+
+          .prompt-preview {
+            background-color: #eff6ff;
+            border-radius: 10px;
+            padding: 8px 12px;
+
+            :deep(.md-preview-wrapper) {
+              background: transparent;
+              padding: 0;
+              margin: 0;
+            }
+          }
+
+          .prompt {
+            margin: 10px 0 5px 0 !important;
+          }
+
+          .first-prompt {
+            margin-top: 0 !important;
+          }
+        }
+      }
+    }
+
+    .content-avatar {
+      font-size: 16px !important;
+      display: flex;
+      margin-top: 20px;
+      margin-bottom: 10px;
+
+      .avatar {
+        margin-right: 5px;
+      }
+
+      .message-wrapper {
+        flex: 1;
+
+        .message-actions {
+          display: flex;
+          gap: 16px;
+          padding: 8px 0;
+          opacity: 0;
+          transition: opacity 0.3s;
+
+          .action-icon {
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+
+            &:hover {
+              color: #1677ff;
+            }
+          }
+        }
+
+        &:hover {
+          .message-actions {
+            opacity: 1;
+          }
+        }
+      }
+    }
+  }
+
 }
 </style>
