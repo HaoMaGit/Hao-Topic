@@ -12,3 +12,12 @@ export const apiGetManageList = (query: ManageQueryType) => {
     params: query
   });
 };
+
+// 修改Ai用户
+export const apiUpdateAiUser = (data: any) => {
+  return request({
+    url: prefix + "update",
+    method: "put",
+    data
+  });
+};
