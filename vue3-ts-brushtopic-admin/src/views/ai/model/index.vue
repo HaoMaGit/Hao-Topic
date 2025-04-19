@@ -213,6 +213,9 @@ const aiModeValue = ref('system')
 const promptInput = ref()
 // 发送的内容
 const prompt = ref('')
+// 提示词 
+// 请输入题目答案，AI将自动判断并反馈给您
+const placeholder = ref('请选择模式开启刷题')
 // 发送
 const sendPrompt = () => {
   if (prompt.value) {
@@ -221,25 +224,37 @@ const sendPrompt = () => {
   }
 }
 
+
+// ai标识
+const aiId = ref(0)
+// 记录一下当前使用的id
+// const currentRecordId = ref(null)
 // 内容
 const messageList = ref([
   {
-    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。'
+    id: aiId.value,
+    prompt: "我是" + userStore.userInfo.account,
+    content: '你好，我是HaoAi 1.0，你的面试题AI助手！选择模式后输入"开启刷题"将会生成题目！',
+    isHistory: false
   },
-  {
-    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  },
-  {
-    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  },
-  {
-    prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-    content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  }
+  // {
+  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。'
+  // },
+  // {
+  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  // },
+  // {
+  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  // },
+  // {
+  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
+  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
+  // }
 ])
+
 
 </script>
 <template>
@@ -257,7 +272,7 @@ const messageList = ref([
         </template>
         <!-- 搜索输入框 -->
         <a-input v-if="isSearch" @search="onSearch" allowClear v-model:value="searchValue" ref="inputSearch"
-          placeholder="搜索历史记录">
+          placeholder="搜索历史刷题记录">
           <template #prefix>
             <SearchOutlined />
           </template>
@@ -299,38 +314,19 @@ const messageList = ref([
       <div class="reply-box">
         <ul class="infinite-list-reply" ref="contentRef">
           <!-- 有数据的时候显示 -->
-          <!-- <template v-if="id >= 0"> -->
-          <div v-for="(i, index) in messageList" class="box" :key="index">
-            <!-- 用户输入的内容 -->
-            <div class="prompt-box">
-              <div class="user-message">
-                <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
-                  <MdPreview v-model="i.prompt" class="prompt-preview">
-                  </MdPreview>
+          <template v-if="aiId >= 0">
+            <div v-for="(i, index) in messageList" class="box" :key="index">
+              <!-- 用户输入的内容 -->
+              <div class="prompt-box">
+                <div class="user-message">
+                  <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
+                    <MdPreview v-model="i.prompt" class="prompt-preview">
+                    </MdPreview>
+                  </div>
+                  <a-avatar class="avatar"
+                    :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'" />
                 </div>
-                <a-avatar class="avatar"
-                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'" />
-              </div>
-              <div class="message-actions">
-                <a-tooltip title="朗读" placement="bottom">
-                  <SoundOutlined class="action-icon" />
-                </a-tooltip>
-                <a-tooltip title="复制" placement="bottom">
-                  <CopyOutlined class="action-icon" />
-                </a-tooltip>
-              </div>
-            </div>
-            <!-- AI返回的内容 -->
-            <div class="content-avatar">
-              <!-- 需要带一个头像 -->
-              <a-avatar class="avatar"
-                :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'"></a-avatar>
-              <div class="message-wrapper">
-                <MdPreview v-model="i.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                 <div class="message-actions">
-                  <a-tooltip title="重新生成" placement="bottom">
-                    <SyncOutlined class="action-icon" />
-                  </a-tooltip>
                   <a-tooltip title="朗读" placement="bottom">
                     <SoundOutlined class="action-icon" />
                   </a-tooltip>
@@ -339,14 +335,33 @@ const messageList = ref([
                   </a-tooltip>
                 </div>
               </div>
+              <!-- AI返回的内容 -->
+              <div class="content-avatar">
+                <!-- 需要带一个头像 -->
+                <a-avatar class="avatar"
+                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'"></a-avatar>
+                <div class="message-wrapper">
+                  <MdPreview v-model="i.content" class="md-preview" style="max-height: 100%;"></MdPreview>
+                  <div class="message-actions" v-if="aiId !== 0">
+                    <a-tooltip title="重新生成" placement="bottom">
+                      <SyncOutlined class="action-icon" />
+                    </a-tooltip>
+                    <a-tooltip title="朗读" placement="bottom">
+                      <SoundOutlined class="action-icon" />
+                    </a-tooltip>
+                    <a-tooltip title="复制" placement="bottom">
+                      <CopyOutlined class="action-icon" />
+                    </a-tooltip>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <!-- </template> -->
+          </template>
         </ul>
         <!-- 输入框 -->
         <div class="search-box">
           <a-textarea type="textarea" ref="promptInput" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
-            placeholder="给 HaoAi 发送消息" />
+            :placeholder="placeholder" />
           <div class="action-icons">
             <div class="left-icons">
               <a-radio-group v-model:value="aiModeValue" button-style="solid">
@@ -404,7 +419,7 @@ const messageList = ref([
       position: relative;
       background: #f9f9f9;
       border-radius: 8px;
-      padding: 10px;
+      padding: 5px;
 
       .left-icons {
         :deep(.ant-radio-group) {
@@ -506,7 +521,8 @@ const messageList = ref([
 
 // 无限滚动历史记录样式
 .infinite-list {
-  height: 580px;
+  height: calc(100vh - 185px);
+
 
   .date {
     color: #666666;
@@ -577,7 +593,7 @@ const messageList = ref([
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 165px);
 
   .infinite-list-reply {
     flex: 1;
