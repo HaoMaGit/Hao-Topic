@@ -279,7 +279,7 @@ const upload = reactive({
   // 上传文件的loading
   uploadLoading: false,
   // 上传的地址
-  url: VITE_SERVE + "/api/topic/topic/memberImport",
+  url: VITE_SERVE + (userStore.userInfo.identity === 2 ? "/api/topic/topic/memberImport" : "/api/topic/topic/adminImport"),
   // 上传的文件
   uploadFileList: [],
   // 结果弹窗
