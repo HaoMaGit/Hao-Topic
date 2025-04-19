@@ -20,9 +20,7 @@ import org.springframework.context.annotation.Import;
         @ComponentScan("com.hao.topic.common.security")
         , @ComponentScan("com.hao.topic.common.handler"),
 })
-@ComponentScan("com.hao.topic.api.utils")
 @Import(MyMetaObjectHandler.class)  // 直接导入配置类
-@EnableFeignClients(basePackages = {"com.hao.topic.client.security"})
 public class TopicAiApplication {
 
     public static void main(String[] args) {

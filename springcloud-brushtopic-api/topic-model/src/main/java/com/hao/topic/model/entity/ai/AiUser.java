@@ -1,22 +1,22 @@
-package com.hao.topic.model.vo.ai;
+package com.hao.topic.model.entity.ai;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.hao.topic.model.entity.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 /**
- * Description: 用户使用次数管理
+ * Description: Ai用户表
  * Author: Hao
- * Date: 2025/4/18 22:26
+ * Date: 2025/4/19 11:34
  */
 @Data
-public class AiUserVo {
-    private Long id;
+public class AiUser extends BaseEntity {
     // 账户
     private String account;
-    // 邮箱
-    private String email;
+    // 用户id
+    private Long userId;
     // ai使用次数
     private Long aiCount;
     // ai总次数
@@ -24,5 +24,6 @@ public class AiUserVo {
     // 最近使用时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime recentlyUsedTime;
-
+    // 状态
+    private Integer status;
 }

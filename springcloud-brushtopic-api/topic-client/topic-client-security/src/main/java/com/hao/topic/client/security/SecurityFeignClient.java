@@ -83,6 +83,5 @@ public interface SecurityFeignClient {
     String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
 
 
-    @GetMapping("/security/user/manageList")
-    Map<String, Object> manageList(@SpringQueryMap AiUserDto aiUserDto);
+
 }

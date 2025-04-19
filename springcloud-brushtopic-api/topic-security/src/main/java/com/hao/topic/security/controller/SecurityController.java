@@ -173,14 +173,4 @@ public class SecurityController {
         return sysUserService.importExcel(excelVoList, updateSupport);
     }
 
-    /**
-     * 查询用户列表
-     *
-     * @param aiUserDto
-     * @return
-     */
-    @RequestMapping("/manageList")
-    Map<String, Object> manageList(AiUserDto aiUserDto) {
-        return sysUserService.manageList(aiUserDto);
-    }
 }

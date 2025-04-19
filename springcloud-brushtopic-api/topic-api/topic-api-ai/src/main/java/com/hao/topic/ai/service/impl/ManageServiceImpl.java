@@ -1,19 +1,16 @@
 package com.hao.topic.ai.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.service.ManageService;
 import com.hao.topic.client.security.SecurityFeignClient;
+import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.ai.AiUserDto;
-import com.hao.topic.model.dto.system.SysUserListDto;
-import com.hao.topic.model.vo.ai.AiUserVo;
-import com.hao.topic.model.vo.system.SysUserListVo;
+import com.hao.topic.model.entity.ai.AiUser;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +22,7 @@ import java.util.Map;
 @Service
 @AllArgsConstructor
 public class ManageServiceImpl implements ManageService {
-    private final SecurityFeignClient securityFeignClient;
+    private AiUserMapper aiUserMapper;
 
     /**
      * 查询用户ai列表
@@ -34,9 +31,20 @@ public class ManageServiceImpl implements ManageService {
      * @return
      */
     public Map<String, Object> list(AiUserDto aiUserDto) {
-        // 调用远程服务获取用户列表
-        Map<String, Object> list = securityFeignClient.manageList(aiUserDto);
-        // TODO 解析数据查询最近使用时间也就是查询ai日志表
-        return list;
+        // 设置分页参数
+        Page<AiUser> aiUserPage = new Page<>(aiUserDto.getPageNum(), aiUserDto.getPageSize());
+        // 设置分页条件
+        LambdaQueryWrapper<AiUser> aiUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (!StringUtils.isEmpty(aiUserDto.getAccount())) {
+            aiUserLambdaQueryWrapper.like(AiUser::getAccount, aiUserDto.getAccount());
+        }
+        aiUserLambdaQueryWrapper.orderByDesc(AiUser::getRecentlyUsedTime);
+        // 开始查询
+        Page<AiUser> aiUserPageDb = aiUserMapper.selectPage(aiUserPage, aiUserLambdaQueryWrapper);
+
+        return Map.of(
+                "total", aiUserPageDb.getTotal(),
+                "rows", aiUserPageDb.getRecords()
+        );
     }
 }

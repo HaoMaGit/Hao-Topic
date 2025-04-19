@@ -5,7 +5,6 @@ import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.system.SysUser;
-import com.hao.topic.model.vo.ai.AiUserVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -24,7 +23,4 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     SysRole getByRoleName(String roleName);
 
-    List<AiUserVo> selectAiUserListVo(AiUserDto aiUserDto);
-
-    int countAiUserList(AiUserDto aiUserVos);
 }

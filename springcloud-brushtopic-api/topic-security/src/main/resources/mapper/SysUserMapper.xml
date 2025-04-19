@@ -73,30 +73,5 @@
         where name = #{roleName}
           and is_deleted = 0
     </select>
-    <!-- 查询ai用户列表 -->
-    <select id="selectAiUserListVo" resultType="com.hao.topic.model.vo.ai.AiUserVo">
-        select id,
-        account,
-        email,
-        ai_count as aiCount,
-        count
-        from sys_user
-        where is_deleted = 0
-        <if test="account != null and account != ''">
-            andaccount like concat('%', #{account}, '%')
-        </if>
-        order by create_time desc
-        <if test="pageNum != null and pageSize != null">
-            limit #{pageNum}, #{pageSize}
-        </if>
-    </select>
-    <!--  统计ai-->
-    <select id="countAiUserList" resultType="java.lang.Integer">
-        select count(*)
-        from sys_user
-        where is_deleted = 0
-        <if test="account != null and account != ''">
-            and account like concat('%', #{account}, '%')
-        </if>
-    </select>
+
 </mapper>
