@@ -1,5 +1,8 @@
 package com.hao.topic.ai.controller;
 
+import com.hao.topic.ai.service.ModelService;
+import com.hao.topic.model.dto.ai.ChatDto;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.AllArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,24 +20,17 @@ import reactor.core.publisher.Flux;
 @RequestMapping("ai/model")
 @AllArgsConstructor
 public class ModelController {
-    private final ChatClient chatClient;
+    private final ModelService modelService;
 
     /**
      * 流式对话
      *
-     * @param prompt
+     * @param chatDto
      * @return
      */
-    @GetMapping("/chat")
-    public Flux<String> chat() {
-        try {
-            return chatClient
-                    .prompt()
-                    .user("你是谁？")
-                    .stream()
-                    .content();
-        } catch (Exception e) {
-            return Flux.just("出错了");
-        }
+    @PostMapping("/chat")
+    public Flux<String> chat(@RequestBody ChatDto chatDto) {
+        return modelService.chat(chatDto);
+
     }
 }

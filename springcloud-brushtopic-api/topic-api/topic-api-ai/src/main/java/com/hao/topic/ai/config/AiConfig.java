@@ -1,5 +1,9 @@
 package com.hao.topic.ai.config;
 
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ChatCompletion;
+import com.openai.models.ChatCompletionCreateParams;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -8,6 +12,7 @@ import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,7 +26,7 @@ public class AiConfig {
 
 
     /**
-     * 创建ollama的客户端
+     * 创建本地ollama的客户端
      *
      * @param model
      * @return
@@ -35,6 +40,26 @@ public class AiConfig {
                 //         new SimpleLoggerAdvisor(),
                 //         new MessageChatMemoryAdvisor(chatMemory)
                 // )
+                .build();
+    }
+
+
+    @Value("${spring.ai.openai.base-url}")
+    private String baseUrl;
+
+    @Value("${spring.ai.openai.api-key}")
+    private String apiKey;
+
+    /**
+     * 创建openai客户端
+     *
+     * @return
+     */
+    @Bean
+    public OpenAIClient openAIClient() {
+        return OpenAIOkHttpClient.builder()
+                .apiKey(apiKey)
+                .baseUrl(baseUrl)
                 .build();
     }
 }
