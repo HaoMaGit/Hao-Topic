@@ -294,8 +294,11 @@ const sendPrompt = async () => {
                 isReply.value = true
                 break
               }
-              // 累积新内容
-              currentRecord.content += decoder.decode(value)  // 追加新内容
+              await nextTick(() => {
+                // 累积新内容
+                currentRecord.content += decoder.decode(value)
+              })
+              await scrollToBottom()
             }
           } catch (readError) {
             message.error('回复失败' + readError)
@@ -307,6 +310,15 @@ const sendPrompt = async () => {
       message.error('发送失败' + error)
       return
     }
+  }
+}
+// ai容器
+const contentRef = ref<any>(null)
+// 滚动到底部
+const scrollToBottom = async () => {
+  await nextTick()
+  if (contentRef.value) {
+    contentRef.value.scrollTop = contentRef.value.scrollHeight
   }
 }
 
@@ -433,10 +445,12 @@ const cancelReadAloud = () => {
                 </div>
               </div>
               <!-- AI返回的内容 -->
-              <div class="content-avatar">
+              <div class="content-avatar" ref="contentRef">
                 <!-- 需要带一个头像 -->
                 <a-avatar class="avatar" :src="'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
-                <div class="message-wrapper">
+                <!-- 加载中的图标 -->
+                <LoadingOutlined v-if="!item.content" />
+                <div class="message-wrapper" v-else>
                   <MdPreview v-model="item.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                   <div class="message-actions" v-if="aiId !== 0">
                     <a-tooltip title="重新生成" placement="bottom">
