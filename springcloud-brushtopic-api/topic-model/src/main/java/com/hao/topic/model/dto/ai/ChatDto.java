@@ -12,9 +12,8 @@ public class ChatDto {
     // 消息
     private String prompt;
     // 对话id
-    private Long chatId;
-    // 当前对话id
-    private Long currentChatId;
+    private String chatId;
     // 模式
     private String model;
+    private String content;
 }

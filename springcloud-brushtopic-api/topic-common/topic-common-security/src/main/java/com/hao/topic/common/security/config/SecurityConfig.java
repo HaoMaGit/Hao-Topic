@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/system/captchaImage").permitAll()
                         .requestMatchers("/system/role/**").permitAll()  // 添加这行，允许角色相关接口匿名访问
                         .requestMatchers("/system/user/**").permitAll()  // 添加这行，允许角色相关接口匿名访问
+                        .requestMatchers("/ai/model/**").permitAll()          // 流式接口不需要权限
                         .requestMatchers(HttpMethod.GET).authenticated()  // 添加这行
                         .requestMatchers(HttpMethod.POST).authenticated() // 添加这行
                         .requestMatchers(HttpMethod.PUT).authenticated()  // 添加这行

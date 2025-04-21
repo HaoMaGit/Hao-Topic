@@ -2,13 +2,8 @@ package com.hao.topic.ai.controller;
 
 import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.model.dto.ai.ChatDto;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.AllArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 /**
@@ -31,6 +26,5 @@ public class ModelController {
     @PostMapping("/chat")
     public Flux<String> chat(@RequestBody ChatDto chatDto) {
         return modelService.chat(chatDto);
-
     }
 }
