@@ -15,5 +15,8 @@ public class ChatDto {
     private String chatId;
     // 模式
     private String model;
+    // 内容
     private String content;
+    // 记忆id
+    private Long memoryId;
 }

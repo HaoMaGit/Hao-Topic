@@ -1,5 +1,7 @@
 package com.hao.topic.ai.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
@@ -12,6 +14,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 /**
  * Description:
@@ -64,12 +68,34 @@ public class ModelServiceImpl implements ModelService {
         Long currentId = SecurityUtils.getCurrentId();
         // 当前账户
         String currentName = SecurityUtils.getCurrentName();
+        // 提示词
+        String prompt = null;
+        // 判断是否为第一次
+        if (chatDto.getMemoryId() == 1) {
+            prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
+        } else {
+            // 分页
+            Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
+            // 添加上一次对话记忆 查询上一条数据
+            LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+            aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
+            Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+            if (aiHistoryPageDb.getRecords().size() > 0) {
+                AiHistory aiHistoryDb = aiHistoryPageDb.getRecords().get(0);
+                prompt = "你提出面试题：" + aiHistoryDb.getContent()
+                        + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
+                        + "继续提问下一道题";
+            }
+        }
         // 拼接信息
         StringBuffer fullReply = new StringBuffer();
         // 封装返回数据
         AiHistory aiHistory = new AiHistory();
         Flux<String> content = this.chatClient.prompt()
-                .user(PromptConstant.INTRODUCTION)
+                .user(prompt)
                 .stream()
                 .content();
         Flux<String> stringFlux = content.flatMap(response -> {
