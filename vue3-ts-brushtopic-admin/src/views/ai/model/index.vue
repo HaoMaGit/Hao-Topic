@@ -8,13 +8,13 @@ import {
   ApiOutlined,
   AppstoreOutlined,
 } from '@ant-design/icons-vue';
-import { apiSendMessage } from '@/api/ai/model/index'
 import { useUserStore } from '@/stores/modules/user';
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
-// import { message } from 'ant-design-vue';
+import { message } from 'ant-design-vue';
+import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
 // 引入系统设置
 const settingStore = useSettingStore()
 
@@ -49,7 +49,6 @@ const clearSearch = () => {
   isSearch.value = false;
 };
 
-// 历史记录列表
 // 历史记录列表
 const historyList = ref<any[]>([
   {
@@ -222,7 +221,7 @@ const placeholder = ref('请输入系统中的正确的题目分类，AI将自�
 // 初始化提示词
 const initPlaceholder = () => {
   // 判断是否有内容
-  if (messageList.value.length > 2) {
+  if (messageList.length > 2) {
     placeholder.value = '请输入题目答案，AI将自动判断并反馈给您'
   }
   if (aiModeValue.value === 'system') {
@@ -236,39 +235,77 @@ const initPlaceholder = () => {
 watch(() => aiModeValue.value, () => {
   initPlaceholder()
 })
+const { VITE_SERVE, VITE_APP_BASE_API } = import.meta.env
 // 发送
 const sendPrompt = async () => {
-  // if (prompt.value) {
-  // 发送
-  // prompt.value = ''
-  const reader = await apiSendMessage("你是谁")
-  const decoder = new TextDecoder('utf-8')
-  let accumulatedContent = ''  // 添加累积内容变量
-
-  while (true) {
+  if (prompt.value) {
+    if (aiId.value === 0) {
+      // 说明是第一次
+      localStorage.setItem('chatId', currentRecordId.value)
+      aiId.value++
+    }
+    // 添加一条数据
+    messageList.push({
+      prompt: prompt.value,
+      chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
+      model: aiModeValue.value,
+      content: ''
+    })
+    // 获取当前记录
+    const currentRecord = messageList[messageList.length - 1]
     try {
-      if (reader) {
-        const { value, done } = await reader.read()
-        if (done) break
-
-        // 累积新内容
-        accumulatedContent += decoder.decode(value)  // 追加新内容
-
-        // await nextTick(() => {
-        //   // 更新消息，使用累积的内容
-        //   const updatedMessage = {
-        //     ...assistantMessage,
-        //     content: accumulatedContent  // 使用累积的内容
-        //   }
-        //   const lastIndex = currentMessages.value.length - 1
-        //   currentMessages.value.splice(lastIndex, 1, updatedMessage)
-        // })
-        // await scrollToBottom()
-        console.log(accumulatedContent);
-      }
-    } catch (readError) {
-      console.error('读取流错误:', readError)
-      break
+      // 发送 get 请求
+      fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/chat`, {
+        method: "POST",
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": userStore.token,
+        },
+        body: JSON.stringify({
+          ...currentRecord
+        }),
+      }).then(response => {
+        prompt.value = ''
+        // 检查响应是否成功
+        if (!response.ok) {
+          message.error("HaoAi回复出现点问题请稍后再试！")
+        }
+        // 返回一个可读流
+        return response.body;
+      }).then(async body => {
+        if (!body) {
+          message.error("HaoAi回复出现点问题请稍后再试！")
+          return
+        }
+        // 获取读取流
+        const reader = body.getReader();
+        // 读取流
+        const decoder = new TextDecoder('utf-8')
+        // 循环读取流
+        while (true) {
+          try {
+            if (reader) {
+              const { value, done } = await reader.read()
+              if (done) {
+                message.success('回复成功')
+                // 回复成功
+                isReply.value = true
+                break
+              }
+              // 累积新内容
+              currentRecord.content += decoder.decode(value)  // 追加新内容
+            }
+          } catch (readError) {
+            message.error('回复失败' + readError)
+            break
+          }
+        }
+      })
+    } catch (error) {
+      message.error('发送失败' + error)
+      return
     }
   }
 }
@@ -277,31 +314,15 @@ const sendPrompt = async () => {
 // ai标识
 const aiId = ref(0)
 // 记录一下当前使用的id
-// const currentRecordId = ref(null)
+const currentRecordId = ref(uuidv4())
 // 内容
-const messageList = ref([
+const messageList = reactive([
   {
-    id: aiId.value,
     prompt: "我是" + userStore.userInfo.account,
+    chatId: currentRecordId.value, // 对话id
+    model: aiModeValue.value,
     content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
-    isHistory: false
-  },
-  // {
-  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。'
-  // },
-  // {
-  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  // },
-  // {
-  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  // },
-  // {
-  //   prompt: '你是AI，请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字。',
-  //   content: '请根据用户输入的指令，进行功能设计，并给出3个选项，每个选项不超过10个字AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性AI从系统题库中提取题目逐题提问并实时校验答案正确性。'
-  // }
+  }
 ])
 // 是否正在朗读
 const isSpeaking = ref(false);
@@ -414,8 +435,7 @@ const cancelReadAloud = () => {
               <!-- AI返回的内容 -->
               <div class="content-avatar">
                 <!-- 需要带一个头像 -->
-                <a-avatar class="avatar"
-                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
+                <a-avatar class="avatar" :src="'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
                 <div class="message-wrapper">
                   <MdPreview v-model="item.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                   <div class="message-actions" v-if="aiId !== 0">
