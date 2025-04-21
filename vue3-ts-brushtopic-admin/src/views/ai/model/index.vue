@@ -7,13 +7,14 @@ import {
   RobotOutlined,
   ApiOutlined,
   AppstoreOutlined,
-
 } from '@ant-design/icons-vue';
+import { apiSendMessage } from '@/api/ai/model/index'
 import { useUserStore } from '@/stores/modules/user';
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
+// import { message } from 'ant-design-vue';
 // 引入系统设置
 const settingStore = useSettingStore()
 
@@ -236,10 +237,39 @@ watch(() => aiModeValue.value, () => {
   initPlaceholder()
 })
 // 发送
-const sendPrompt = () => {
-  if (prompt.value) {
-    // 发送
-    // prompt.value = ''
+const sendPrompt = async () => {
+  // if (prompt.value) {
+  // 发送
+  // prompt.value = ''
+  const reader = await apiSendMessage("你是谁")
+  const decoder = new TextDecoder('utf-8')
+  let accumulatedContent = ''  // 添加累积内容变量
+
+  while (true) {
+    try {
+      if (reader) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        // 累积新内容
+        accumulatedContent += decoder.decode(value)  // 追加新内容
+
+        // await nextTick(() => {
+        //   // 更新消息，使用累积的内容
+        //   const updatedMessage = {
+        //     ...assistantMessage,
+        //     content: accumulatedContent  // 使用累积的内容
+        //   }
+        //   const lastIndex = currentMessages.value.length - 1
+        //   currentMessages.value.splice(lastIndex, 1, updatedMessage)
+        // })
+        // await scrollToBottom()
+        console.log(accumulatedContent);
+      }
+    } catch (readError) {
+      console.error('读取流错误:', readError)
+      break
+    }
   }
 }
 
@@ -367,7 +397,7 @@ const cancelReadAloud = () => {
                     </MdPreview>
                   </div>
                   <a-avatar class="avatar"
-                    :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'" />
+                    :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://114.116.233.218:9000/topic/H.png'" />
                 </div>
                 <div class="message-actions">
                   <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
@@ -385,7 +415,7 @@ const cancelReadAloud = () => {
               <div class="content-avatar">
                 <!-- 需要带一个头像 -->
                 <a-avatar class="avatar"
-                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://127.0.0.1:9000/topic/H.png'"></a-avatar>
+                  :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
                 <div class="message-wrapper">
                   <MdPreview v-model="item.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                   <div class="message-actions" v-if="aiId !== 0">

@@ -549,7 +549,8 @@ onMounted(() => {
           <span>{{ statusMap[record.status] }}</span>
         </template>
         <template v-if="column.key === 'imageUrl'">
-          <a-image :width="48" :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
+          <a-image :width="48"
+            :src="record.imageUrl != null ? record.imageUrl : 'http://114.116.233.218:9000/topic/H.png'" />
         </template>
         <template v-if="column.key === 'subjectDesc'">
           <a-tooltip>

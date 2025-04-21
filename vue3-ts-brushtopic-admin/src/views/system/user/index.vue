@@ -553,7 +553,7 @@ onMounted(() => {
             </template>
             <template v-if="column.key === 'avatar'">
               <a-image :width="48"
-                :src="record.imageUrl != null ? record.imageUrl : 'http://127.0.0.1:9000/topic/H.png'" />
+                :src="record.imageUrl != null ? record.imageUrl : 'http://114.116.233.218:9000/topic/H.png'" />
             </template>
             <template v-if="column.key === 'status'">
               <span>{{ record.status === 0 ? '正常' : '停用' }}</span>
