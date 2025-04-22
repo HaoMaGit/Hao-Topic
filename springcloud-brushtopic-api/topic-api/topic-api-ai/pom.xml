@@ -40,6 +40,12 @@
             <artifactId>dashscope-sdk-java</artifactId>
             <version>2.19.2</version>
         </dependency>
+        <!-- api的Utils -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-api-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <!--管理springAi版本-->
