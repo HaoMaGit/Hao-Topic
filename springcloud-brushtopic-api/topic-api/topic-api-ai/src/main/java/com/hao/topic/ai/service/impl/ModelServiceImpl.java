@@ -1,20 +1,41 @@
 package com.hao.topic.ai.service.impl;
 
+import com.alibaba.dashscope.audio.tts.SpeechSynthesisResult;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
+import com.alibaba.dashscope.common.ResultCallback;
+import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
+import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
+import com.hao.topic.common.enums.ResultCodeEnum;
+import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
+import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.entity.ai.AiHistory;
+import com.hao.topic.model.vo.ai.AiHistoryContent;
+import com.hao.topic.model.vo.ai.AiHistoryListVo;
+import com.hao.topic.model.vo.ai.AiHistoryVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -28,6 +49,9 @@ public class ModelServiceImpl implements ModelService {
     private final ChatClient chatClient;
     @Autowired
     private AiHistoryMapper aiHistoryMapper;
+
+    @Autowired
+    private TtsProperties ttsProperties;
 
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
@@ -64,6 +88,8 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     private Flux<String> systemModel(ChatDto chatDto) {
+        // 封装返回数据
+        AiHistory aiHistory = new AiHistory();
         // 获取当前用户Id
         Long currentId = SecurityUtils.getCurrentId();
         // 当前账户
@@ -73,7 +99,14 @@ public class ModelServiceImpl implements ModelService {
         // 判断是否为第一次
         if (chatDto.getMemoryId() == 1) {
             prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
+            aiHistory.setParent(1);
         } else {
+            if (chatDto.getMemoryId() >= 3) {
+                // 第三次需要输入继续
+                if (!chatDto.getContent().equals("继续")) {
+                    return Flux.just("请输入'继续'");
+                }
+            }
             // 分页
             Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
             // 添加上一次对话记忆 查询上一条数据
@@ -87,13 +120,12 @@ public class ModelServiceImpl implements ModelService {
                 AiHistory aiHistoryDb = aiHistoryPageDb.getRecords().get(0);
                 prompt = "你提出面试题：" + aiHistoryDb.getContent()
                         + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-                        + "继续提问下一道题";
+                        + "引导用户输入'继续'：你才继续生成题目！";
             }
         }
         // 拼接信息
         StringBuffer fullReply = new StringBuffer();
-        // 封装返回数据
-        AiHistory aiHistory = new AiHistory();
+
         Flux<String> content = this.chatClient.prompt()
                 .user(prompt)
                 .stream()
@@ -116,5 +148,126 @@ public class ModelServiceImpl implements ModelService {
         });
         return stringFlux;
     }
+
+
+    /**
+     * 获取历史记录
+     *
+     * @param aiHistoryDto
+     * @return
+     */
+    @Transactional
+    public List<AiHistoryListVo> getHistory(AiHistoryDto aiHistoryDto) {
+        // 获取当前用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        if (currentId == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_ERROR);
+        }
+        // 设置分页参数
+        Page<AiHistory> aiHistoryPage = new Page<>(aiHistoryDto.getPageNum(), aiHistoryDto.getPageSize());
+        // 设置分页条件
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId); // 设置用户id
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1); // 表示第一条数据
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        // 开始查询
+        aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+        // 解析数据
+        List<AiHistory> records = aiHistoryPage.getRecords();
+        // 获取当天日期
+        String today = DateUtils.format(new Date(), "yyyy-MM-dd");
+        // 封装当天数据
+        AiHistoryListVo aiHistoryListVo = new AiHistoryListVo();
+        // 筛选当天数据
+        List<AiHistoryVo> list = records.stream().filter(aiHistory -> {
+            // 获取当前记录的创建时间
+            String createTime = DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
+            return createTime.equals(today);
+        }).map(aiHistory -> {
+            AiHistoryVo aiHistoryVo = new AiHistoryVo();
+            BeanUtils.copyProperties(aiHistory, aiHistoryVo);
+            return aiHistoryVo;
+        }).toList();
+        aiHistoryListVo.setAiHistoryVos(list);
+        aiHistoryListVo.setDate(AiConstant.DAY_HISTORY);
+        // 封装其他日期的数据
+        AiHistoryListVo aiHistoryListVoAll = new AiHistoryListVo();
+        // 开始封装
+        List<AiHistoryVo> otherRecords = records.stream().filter(aiHistory -> {
+            // 获取当前记录的创建时间
+            String createTime = DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
+            return !createTime.equals(today);
+        }).map(aiHistory -> {
+            aiHistoryListVoAll.setDate(DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd"));
+            AiHistoryVo aiHistoryVo = new AiHistoryVo();
+            BeanUtils.copyProperties(aiHistory, aiHistoryVo);
+            return aiHistoryVo;
+        }).toList();
+        if (!otherRecords.isEmpty()) {
+            aiHistoryListVoAll.setAiHistoryVos(otherRecords);
+            // 合并到一起
+            return List.of(aiHistoryListVo, aiHistoryListVoAll);
+        } else {
+            return List.of(aiHistoryListVo);
+        }
+    }
+
+    /**
+     * 根据记录id获取到对话历史记录
+     *
+     * @param id
+     * @return
+     */
+    public List<AiHistoryContent> getHistoryById(Long id) {
+        // 校验
+        if (id == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_ERROR);
+        }
+        // 查询当前父级
+        AiHistory aiHistory = aiHistoryMapper.selectById(id);
+        // 获取到对话id
+        String chatId = aiHistory.getChatId();
+        // 根据对话id查询所有的历史记录
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, SecurityUtils.getCurrentId());
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getParent);
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        List<AiHistory> aiHistories = aiHistoryMapper.selectList(aiHistoryLambdaQueryWrapper);
+        // 封装返回数据
+        return aiHistories.stream().map(history -> {
+            AiHistoryContent aiHistoryContent = new AiHistoryContent();
+            BeanUtils.copyProperties(history, aiHistoryContent);
+            return aiHistoryContent;
+        }).toList();
+    }
+
+    /**
+     * 同步语言合成技术
+     *
+     * @param text
+     * @return
+     */
+    public ResponseEntity<byte[]> tts(String text) {
+        SpeechSynthesisParam param =
+                SpeechSynthesisParam.builder()
+                        .apiKey(ttsProperties.getApiKey())
+                        .model(ttsProperties.getModel())
+                        .voice(ttsProperties.getVoice())
+                        .build();
+        SpeechSynthesizer synthesizer = new SpeechSynthesizer(param, null);
+        ByteBuffer audio = synthesizer.call(text); // 用前端传入的text
+
+        byte[] audioBytes = audio.array();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=output.mp3");
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .body(audioBytes);
+    }
+
 
 }

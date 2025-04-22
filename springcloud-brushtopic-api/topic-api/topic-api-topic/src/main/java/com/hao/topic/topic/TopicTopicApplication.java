@@ -1,6 +1,7 @@
 package com.hao.topic.topic;
 
 
+import com.hao.topic.api.utils.config.MybatisPlusConfig;
 import com.hao.topic.common.config.MyMetaObjectHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,7 +23,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
         @ComponentScan("com.hao.topic.common.security")
         , @ComponentScan("com.hao.topic.common.handler"),
 })
-@Import(MyMetaObjectHandler.class)  // 直接导入配置类
+@Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
 @ComponentScan("com.hao.topic.api.utils")
 public class TopicTopicApplication {
     public static void main(String[] args) {

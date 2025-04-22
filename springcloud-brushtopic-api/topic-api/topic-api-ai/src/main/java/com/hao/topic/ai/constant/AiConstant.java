@@ -14,4 +14,5 @@ public class AiConstant {
     public final static String AI_MODEL = "model";
     // 混合模式'AI随机混合系统题库和AI自定义题目增加多样性'
     public final static String MIX_MODEL = "mix";
+    public static final String DAY_HISTORY = "当天";
 }

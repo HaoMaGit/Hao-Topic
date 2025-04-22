@@ -1,10 +1,27 @@
 package com.hao.topic.ai.controller;
 
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
+import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
+import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.vo.ai.AiHistoryContent;
+import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * Description: Ai模型控制器
@@ -27,4 +44,39 @@ public class ModelController {
     public Flux<String> chat(@RequestBody ChatDto chatDto) {
         return modelService.chat(chatDto);
     }
+
+    /**
+     * 获取历史记录
+     *
+     * @param aiHistoryDto
+     * @return
+     */
+    @GetMapping("/history")
+    public Result getHistory(AiHistoryDto aiHistoryDto) {
+        List<AiHistoryListVo> historyListVoList = modelService.getHistory(aiHistoryDto);
+        return Result.success(historyListVoList);
+    }
+
+    /**
+     * 根据id获取当前对话的历史记录
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/history/{id}")
+    public Result getHistoryById(@PathVariable Long id) {
+        List<AiHistoryContent> aiHistoryContentList = modelService.getHistoryById(id);
+        return Result.success(aiHistoryContentList);
+    }
+
+
+    /**
+     * 语音合成
+     */
+    @GetMapping("tts")
+    public ResponseEntity<byte[]> tts(@RequestParam String text) {
+        return modelService.tts(text);
+    }
+
+
 }

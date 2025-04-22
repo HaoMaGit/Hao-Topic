@@ -16,5 +16,6 @@ public class AiHistory extends BaseEntity {
     private String content;
     private String chatId;
     private Integer accuracy;
+    private Integer parent;
 
 }

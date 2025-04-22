@@ -1,5 +1,6 @@
 package com.hao.topic.system;
 
+import com.hao.topic.api.utils.config.MybatisPlusConfig;
 import com.hao.topic.common.config.MyMetaObjectHandler;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +22,7 @@ import org.springframework.context.annotation.Import;
         @ComponentScan("com.hao.topic.common.security")
         , @ComponentScan("com.hao.topic.common.handler"),
 })
-@Import(MyMetaObjectHandler.class)  // 直接导入配置类
+@Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
 @EnableFeignClients(basePackages = {"com.hao.topic.client.system", "com.hao.topic.client.security"})
 @ComponentScan("com.hao.topic.api.utils")
 public class TopicSystemApplication {

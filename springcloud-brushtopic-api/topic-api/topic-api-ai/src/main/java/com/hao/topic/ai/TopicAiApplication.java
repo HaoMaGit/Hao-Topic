@@ -1,10 +1,11 @@
 package com.hao.topic.ai;
 
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.hao.topic.api.utils.config.MybatisPlusConfig;
 import com.hao.topic.common.config.MyMetaObjectHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Import;
@@ -20,7 +21,7 @@ import org.springframework.context.annotation.Import;
         @ComponentScan("com.hao.topic.common.security")
         , @ComponentScan("com.hao.topic.common.handler"),
 })
-@Import(MyMetaObjectHandler.class)  // 直接导入配置类
+@Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
 public class TopicAiApplication {
 
     public static void main(String[] args) {
