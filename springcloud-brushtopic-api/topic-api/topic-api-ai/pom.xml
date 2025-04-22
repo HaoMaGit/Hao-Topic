@@ -34,6 +34,12 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
         </dependency>
+        <!-- 语音合成 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>dashscope-sdk-java</artifactId>
+            <version>2.19.2</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <!--管理springAi版本-->
