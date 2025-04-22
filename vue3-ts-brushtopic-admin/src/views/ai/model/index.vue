@@ -242,11 +242,12 @@ const sendPrompt = async () => {
     if (aiId.value === 0) {
       // 说明是第一次
       localStorage.setItem('chatId', currentRecordId.value)
-      aiId.value++
     }
+    aiId.value++
     // 添加一条数据
     messageList.push({
       prompt: prompt.value,
+      memoryId: aiId.value,
       chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
       model: aiModeValue.value,
       content: ''
@@ -334,33 +335,74 @@ const messageList = reactive([
     chatId: currentRecordId.value, // 对话id
     model: aiModeValue.value,
     content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
+    memoryId: aiId.value
   }
 ])
+
+
 // 是否正在朗读
 const isSpeaking = ref(false);
+// 当前audio实例
+let currentAudio: HTMLAudioElement | null = null;
+// 随机loading文案
+const loadingTextArr = [
+  "正在召唤HaoAi发声中...",
+  "HaoAi正在努力变声，请稍等~",
+  "语音合成中，马上就能听到啦！",
+  "HaoAi正在认真朗读你的内容...",
+  "别着急，精彩马上开始！"
+];
+// 随机loading文案
+const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr.length)]);
+// 语音合成loading
+const readAloudLoading = ref(false)
 // 朗读文字
 const readAloud = (content: string) => {
-  const utterance = new SpeechSynthesisUtterance(content);
-  utterance.lang = 'zh-CN'; // 设置语言为中文
-  utterance.rate = 1.4; // 稍微放慢语速
-  utterance.pitch = 2.5; // 提高音调，让声音更自然
-  utterance.volume = 1; // 音量最大
-
+  // 如果有正在播放的音频，先停止
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  readAloudLoading.value = true
   // 开始朗读
-  window.speechSynthesis.speak(utterance);
+  isSpeaking.value = true
+  // 调用语音合成模型
+  fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/tts?text=${content}`, {
+    method: "get",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    headers: {
+      "Authorization": userStore.token,
+    },
+  })
+    .then(res => res.blob())
+    .then(blob => {
+      readAloudLoading.value = false
+      // 合成对话
+      const url = URL.createObjectURL(blob);
+      // 创建播放器
+      const audio = new Audio(url);
+      currentAudio = audio
+      // 播放
+      audio.play();
+      // 监听播放结束，自动重置
+      audio.onended = () => {
+        isSpeaking.value = false;
 
-  // 更新状态
-  isSpeaking.value = true;
-
-  // 监听朗读结束事件
-  utterance.onend = () => {
-    isSpeaking.value = false;
-  };
+        currentAudio = null;
+        URL.revokeObjectURL(url);
+      };
+    });
 }
-// 取消朗读
+// 取消播放
 const cancelReadAloud = () => {
-  window.speechSynthesis.cancel();
   isSpeaking.value = false;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
 }
 </script>
 <template>
@@ -412,13 +454,14 @@ const cancelReadAloud = () => {
         </div>
       </ul>
     </div>
+
     <!-- 右侧输入大模型 -->
     <div class="model-print">
       <!-- 标题 -->
       <h2 class="title">HaoAi<i class="version">1.0</i></h2>
       <!-- 回复区域 -->
       <div class="reply-box">
-        <ul class="infinite-list-reply" ref="contentRef">
+        <ul class="infinite-list-reply">
           <!-- 有数据的时候显示 -->
           <template v-if="aiId >= 0">
             <div v-for="(item, index) in messageList" class="box" :key="index">
@@ -434,7 +477,7 @@ const cancelReadAloud = () => {
                 </div>
                 <div class="message-actions">
                   <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
-                    <SoundOutlined class="action-icon" @click="readAloud(item.content)" />
+                    <SoundOutlined class="action-icon" @click="readAloud(item.prompt)" />
                   </a-tooltip>
                   <a-tooltip title="暂停" placement="bottom" v-else>
                     <PauseOutlined class="action-icon" @click="cancelReadAloud" />
@@ -471,6 +514,8 @@ const cancelReadAloud = () => {
             </div>
           </template>
         </ul>
+        <!-- 语音合成的loading -->
+        <a-spin :tip="loadingText" v-if="readAloudLoading"></a-spin>
         <!-- 输入框 -->
         <div class="search-box">
           <a-textarea type="textarea" ref="promptInput" v-model:value="prompt" :auto-size="{ minRows: 1, maxRows: 1 }"
