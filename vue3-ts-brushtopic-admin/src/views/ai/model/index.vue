@@ -15,6 +15,8 @@ const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
 import { message } from 'ant-design-vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
+import { apiGetManageList } from '@/api/ai/model/index'
+import type { AiHistoryDto } from '@/api/ai/model/type';
 // 引入系统设置
 const settingStore = useSettingStore()
 
@@ -50,88 +52,27 @@ const clearSearch = () => {
 };
 
 // 历史记录列表
-const historyList = ref<any[]>([
-  {
-    date: '2023-10-01',
-    titleList: [
-      { id: 1, title: '历史记录1-1我是一个历史记录' },
-      { id: 2, title: '历史记录1-2' }
-    ]
-  },
-  {
-    date: '2023-10-02',
-    titleList: [
-      { id: 3, title: '历史记录2-1' },
-      { id: 4, title: '历史记录2-2' }
-    ]
-  },
-  {
-    date: '2023-10-03',
-    titleList: [
-      { id: 5, title: '历史记录3-1' },
-      { id: 6, title: '历史记录3-2' }
-    ]
-  },
-  {
-    date: '2023-10-04',
-    titleList: [
-      { id: 7, title: '历史记录4-1' },
-      { id: 8, title: '历史记录4-2' }
-    ]
-  },
-  {
-    date: '2023-10-05',
-    titleList: [
-      { id: 9, title: '历史记录5-1' },
-      { id: 10, title: '历史记录5-2' }
-    ]
-  },
-  {
-    date: '2023-10-05',
-    titleList: [
-      { id: 9, title: '历史记录5-1' },
-      { id: 10, title: '历史记录5-2' }
-    ]
-  },
-  {
-    date: '2023-10-05',
-    titleList: [
-      { id: 9, title: '历史记录5-1' },
-      { id: 10, title: '历史记录5-2' }
-    ]
-  },
-  {
-    date: '2023-10-05',
-    titleList: [
-      { id: 9, title: '历史记录5-1' },
-      { id: 10, title: '历史记录5-2' }
-    ]
-  },
-  {
-    date: '2023-10-05',
-    titleList: [
-      { id: 9, title: '历史记录5-1' },
-      { id: 10, title: '历史记录5-2' }
-    ]
-  }
-])
-// // 是否还有历史记录
-// const hasMoreData = ref(true);
+const historyList = ref<any[]>([])
+// 历史记录loading
+const historyLoading = ref(false)
+// 历史记录参数
+const historyParams = ref<AiHistoryDto>({
+  pageNum: 1,
+  pageSize: 999,
+  title: searchValue.value
+})
+// 获取历史记录
+const getHistoryList = async () => {
+  historyLoading.value = true
+  const res = await apiGetManageList(historyParams.value)
+  historyList.value = res.data
+  historyLoading.value = false
+}
+onMounted(() => {
+  getHistoryList()
+})
 // // 当前索引
 // const activeIndex = ref([])
-// // 加载历史记录
-// const loadHistory = async () => {
-//   // 没有数据了直接返回
-//   // if (!hasMoreData.value) return;
-//   // historyParams.value.pageNum++
-//   // const res = await apiGetRecordList(historyParams.value)
-//   // historyList.value.push(...res.data);
-//   // if (res.data && res.data[0].length > 0 && res.data[1].length > 0) {
-//   // } else {
-//   //   hasMoreData.value = false;
-//   // }
-// }
-
 // // 查询内容
 // const getHistoryContent = async (id: number, index: number, historyIndex: number) => {
 
@@ -242,6 +183,19 @@ const sendPrompt = async () => {
     if (aiId.value === 0) {
       // 说明是第一次
       localStorage.setItem('chatId', currentRecordId.value)
+      // 添加一条当天历史记录
+      // 判断当前是否有当天
+      if (historyList.value.length !== 0) {
+        console.log("添加一条历史记录");
+        if (historyList.value[0].date == "当天") {
+          console.log("需要添加一条数据");
+          // 等于当天在最前面添加一条数据
+          historyList.value[0].aiHistoryVos.unshift({
+            title: prompt.value,
+            id: uuidv4()
+          })
+        }
+      }
     }
     aiId.value++
     // 添加一条数据
@@ -404,6 +358,7 @@ const cancelReadAloud = () => {
     currentAudio = null;
   }
 }
+
 </script>
 <template>
   <div class="model-body">
@@ -427,15 +382,14 @@ const cancelReadAloud = () => {
         </a-input>
       </div>
       <!-- 无限滚动区域历史搜索 -->
-      <ul class="infinite-list" style="overflow: auto">
+      <ul class="infinite-list" style="overflow: auto" v-if="!historyLoading">
         <!-- 日期和记录 -->
-        <div class="list-box" infinite-scroll-distance="100px" v-for="(history, historyIndex) in historyList"
-          :key="historyIndex">
+        <div class="list-box" v-for="(history, historyIndex) in historyList" :key="historyIndex">
           <!-- 日期 -->
           <span class="date">{{ history.date }}</span>
           <!-- 标题 -->
           <!-- 开始遍历 -->
-          <li v-for="(record, index) in history.titleList" :key="index"
+          <li v-for="(record, index) in history.aiHistoryVos" :key="index"
             :class="{ 'infinite-list-item': true, 'no-hover': editingId === record.id, 'hover': editingId !== record.id }">
             <!-- 历史记录 -->
             <template v-if="editingId === record.id">
@@ -453,6 +407,8 @@ const cancelReadAloud = () => {
           </li>
         </div>
       </ul>
+      <!-- 语音合成的loading -->
+      <a-spin tip="HaoAi正在搜寻你的历史记录哦" v-else></a-spin>
     </div>
 
     <!-- 右侧输入大模型 -->
@@ -680,7 +636,6 @@ const cancelReadAloud = () => {
 // 无限滚动历史记录样式
 .infinite-list {
   height: calc(100vh - 185px);
-
 
   .date {
     color: #666666;
