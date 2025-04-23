@@ -23,6 +23,7 @@ import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,8 +102,9 @@ public class ModelServiceImpl implements ModelService {
             prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
             aiHistory.setParent(1);
         } else {
-            if (chatDto.getMemoryId() >= 3) {
-                // 第三次需要输入继续
+            // 1开始 2回答 3继续 4回答 5继续 6回答 7继续
+            if (chatDto.getMemoryId() >= PromptConstant.START_CONTINUE_MEMORY_ID && (chatDto.getMemoryId() - PromptConstant.START_CONTINUE_MEMORY_ID) % PromptConstant.CONTINUE_INTERVAL == 0) {
+                // 奇数次memoryId（3, 5, 7, ...）需要输入继续
                 if (!chatDto.getContent().equals("继续")) {
                     return Flux.just("请输入'继续'");
                 }
@@ -188,8 +190,10 @@ public class ModelServiceImpl implements ModelService {
             BeanUtils.copyProperties(aiHistory, aiHistoryVo);
             return aiHistoryVo;
         }).toList();
-        aiHistoryListVo.setAiHistoryVos(list);
-        aiHistoryListVo.setDate(AiConstant.DAY_HISTORY);
+        if (CollectionUtils.isNotEmpty(list)) {
+            aiHistoryListVo.setAiHistoryVos(list);
+            aiHistoryListVo.setDate(AiConstant.DAY_HISTORY);
+        }
         // 封装其他日期的数据
         AiHistoryListVo aiHistoryListVoAll = new AiHistoryListVo();
         // 开始封装
@@ -232,7 +236,7 @@ public class ModelServiceImpl implements ModelService {
         aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatId);
         aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, SecurityUtils.getCurrentId());
         aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getParent);
-        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        aiHistoryLambdaQueryWrapper.orderByAsc(AiHistory::getCreateTime);
         List<AiHistory> aiHistories = aiHistoryMapper.selectList(aiHistoryLambdaQueryWrapper);
         // 封装返回数据
         return aiHistories.stream().map(history -> {
@@ -292,23 +296,27 @@ public class ModelServiceImpl implements ModelService {
         aiHistoryMapper.delete(aiHistoryLambdaQueryWrapper);
     }
 
+
     /**
      * 根据记录id重命名标题
      *
-     * @param id
-     * @param title
+     * @param aiHistoryDto
      */
-    public void updateHistoryById(Long id, String title) {
-        // 校验
-        if (id == null || title == null) {
+    @Override
+    public void updateHistoryById(AiHistoryDto aiHistoryDto) {
+        if(aiHistoryDto == null){
             throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
         }
-        AiHistory aiHistory = aiHistoryMapper.selectById(id);
+        // 校验
+        if (aiHistoryDto.getId() == null || aiHistoryDto.getTitle() == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
+        }
+        AiHistory aiHistory = aiHistoryMapper.selectById(aiHistoryDto.getId());
         if (aiHistory == null) {
             throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
         }
         // 开始修改
-        aiHistory.setTitle(title);
+        aiHistory.setTitle(aiHistoryDto.getTitle());
         aiHistoryMapper.updateById(aiHistory);
     }
 }

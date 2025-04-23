@@ -93,12 +93,12 @@ public class ModelController {
     /**
      * 根据记录id重命名标题
      *
-     * @param title
+     * @param aiHistoryDto
      * @return
      */
-    @PutMapping("/history/{id}")
-    public Result updateHistory(@PathVariable Long id, @RequestParam String title) {
-        modelService.updateHistoryById(id, title);
+    @PutMapping("/history")
+    public Result updateHistory(@RequestBody AiHistoryDto aiHistoryDto) {
+        modelService.updateHistoryById(aiHistoryDto);
         return Result.success();
     }
 

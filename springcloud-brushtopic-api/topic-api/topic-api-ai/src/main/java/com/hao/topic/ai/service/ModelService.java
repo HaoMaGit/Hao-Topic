@@ -27,5 +27,7 @@ public interface ModelService {
 
     void deleteHistory(Long id);
 
-    void updateHistoryById(Long id, String title);
+
+    void updateHistoryById(AiHistoryDto aiHistoryDto);
+
 }
