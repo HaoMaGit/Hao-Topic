@@ -123,10 +123,6 @@ const getHistoryContent = async (id: number, index: number, historyIndex: number
   await scrollToBottom()
 }
 
-// // 删除历史记录
-// const delHistory = async (id: number) => {
-
-// }
 
 // 监听屏幕点击事件
 const handleClickOutside = (event: MouseEvent) => {
@@ -496,7 +492,8 @@ const copyContent = async (content: string) => {
           <!-- 标题 -->
           <!-- 开始遍历 -->
           <li @click="getHistoryContent(record.id, index, historyIndex)" v-for="(record, index) in history.aiHistoryVos"
-            :key="index" :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '' }"
+            :key="index"
+            :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '', 'pointer-events': isReply ? 'auto' : 'none' }"
             :class="{ 'infinite-list-item': true, 'no-hover': editingId === record.id, 'hover': editingId !== record.id }">
             <!-- 历史记录 -->
             <template v-if="editingId === record.id">
@@ -559,9 +556,6 @@ const copyContent = async (content: string) => {
                 <div class="message-wrapper" v-else>
                   <MdPreview v-model="item.content" class="md-preview" style="max-height: 100%;"></MdPreview>
                   <div class="message-actions" v-if="aiId !== 0">
-                    <a-tooltip title="重新生成" placement="bottom">
-                      <SyncOutlined class="action-icon" />
-                    </a-tooltip>
                     <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
                       <SoundOutlined class="action-icon" @click="readAloud(item.content)" />
                     </a-tooltip>
