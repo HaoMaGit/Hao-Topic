@@ -5,6 +5,7 @@ import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
 import com.alibaba.dashscope.common.ResultCallback;
+import com.alibaba.excel.util.StringUtils;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -172,6 +173,10 @@ public class ModelServiceImpl implements ModelService {
         aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId); // 设置用户id
         aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1); // 表示第一条数据
         aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        // 判断title是否存在
+        if (StringUtils.isNotBlank(aiHistoryDto.getTitle())) {
+            aiHistoryLambdaQueryWrapper.like(AiHistory::getTitle, aiHistoryDto.getTitle());
+        }
         // 开始查询
         aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
         // 解析数据
@@ -304,7 +309,7 @@ public class ModelServiceImpl implements ModelService {
      */
     @Override
     public void updateHistoryById(AiHistoryDto aiHistoryDto) {
-        if(aiHistoryDto == null){
+        if (aiHistoryDto == null) {
             throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
         }
         // 校验
