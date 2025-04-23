@@ -454,6 +454,16 @@ const handleDel = (id: number) => {
     }
   })
 }
+
+// 复制
+const copyContent = async (content: string) => {
+  try {
+    await navigator.clipboard.writeText(content)
+    message.success('复制成功')
+  } catch {
+    message.error('复制失败，请手动复制')
+  }
+}
 </script>
 <template>
   <div class="model-body">
@@ -535,7 +545,7 @@ const handleDel = (id: number) => {
                   <a-tooltip title="暂停" placement="bottom" v-else>
                     <PauseOutlined class="action-icon" @click="cancelReadAloud" />
                   </a-tooltip>
-                  <a-tooltip title="复制" placement="bottom">
+                  <a-tooltip title="复制" placement="bottom" @click="copyContent(item.prompt)">
                     <CopyOutlined class="action-icon" />
                   </a-tooltip>
                 </div>
@@ -558,7 +568,7 @@ const handleDel = (id: number) => {
                     <a-tooltip title="暂停" placement="bottom" v-else>
                       <PauseOutlined class="action-icon" @click="cancelReadAloud" />
                     </a-tooltip>
-                    <a-tooltip title="复制" placement="bottom">
+                    <a-tooltip title="复制" placement="bottom" @click="copyContent(item.content)">
                       <CopyOutlined class="action-icon" />
                     </a-tooltip>
                   </div>
