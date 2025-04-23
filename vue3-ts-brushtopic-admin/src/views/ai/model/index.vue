@@ -37,6 +37,7 @@ const createReply = () => {
     message.success('已是最新对话')
     return
   }
+  message.success('创建成功')
   setTimeout(() => {
     // 创建一个新对话刷新界面
     window.location.reload()
@@ -87,6 +88,7 @@ onMounted(() => {
 const chatLoading = ref(false)
 // 当前索引
 const activeIndex = ref<any>([])
+
 // 查询内容
 const getHistoryContent = async (id: number, index: number, historyIndex: number) => {
   chatLoading.value = true
@@ -240,31 +242,11 @@ watch(() => aiModeValue.value, () => {
 const { VITE_SERVE, VITE_APP_BASE_API } = import.meta.env
 // 发送
 const sendPrompt = async () => {
+  isReply.value = false
   if (prompt.value) {
     if (aiId.value === 0) {
       // 说明是第一次
       localStorage.setItem('chatId', currentRecordId.value)
-      // 添加一条当天历史记录
-      // 判断当前是否有当天
-      if (historyList.value.length !== 0) {
-        console.log("添加一条历史记录");
-        if (historyList.value[0].date == "当天") {
-          console.log("需要添加一条数据");
-          // 等于当天在最前面添加一条数据
-          historyList.value[0].aiHistoryVos.unshift({
-            title: prompt.value,
-            id: uuidv4()
-          })
-        } else {
-          historyList.value.push({
-            date: "当天",
-            aiHistoryVos: [{
-              title: prompt.value,
-              id: uuidv4()
-            }]
-          })
-        }
-      }
     }
     aiId.value++
     // 添加一条数据
@@ -316,6 +298,12 @@ const sendPrompt = async () => {
                 message.success('回复成功')
                 // 回复成功
                 isReply.value = true
+                // 如果是第一次
+                if (aiId.value === 1) {
+                  // 获取一下历史记录
+                  getHistoryList()
+                  activeIndex.value[0] = 0
+                }
                 break
               }
               await nextTick(() => {
@@ -474,7 +462,8 @@ const handleDel = (id: number) => {
           <a-button class="btn" shape="round" :disabled="!isReply" @click="createReply" type="primary"
             :icon="h(PlusOutlined)">新建对话</a-button>
           <!-- 搜索 -->
-          <a-button class="search" shape="circle" :icon="h(SearchOutlined)" @click="searchHistory"></a-button>
+          <a-button class="search" :disabled="!isReply" shape="circle" :icon="h(SearchOutlined)"
+            @click="searchHistory"></a-button>
         </template>
         <!-- 搜索输入框 -->
         <a-input v-if="isSearch" @search="onSearch" allowClear v-model:value="searchValue" ref="inputSearch"
