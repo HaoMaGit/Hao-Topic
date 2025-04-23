@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * Date: 2025/4/21 21:21
  */
 @Data
-public class AiHistory extends BaseEntity {
+public class AiHistory {
     @TableId(type = IdType.AUTO)
     private Long id;
 
