@@ -15,7 +15,7 @@ const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
 import { message } from 'ant-design-vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
-import { apiGetManageList, apiGetHistoryDetail } from '@/api/ai/model/index'
+import { apiGetManageList, apiGetHistoryDetail, apiRenameHistory } from '@/api/ai/model/index'
 import type { AiHistoryDto } from '@/api/ai/model/type';
 // 引入系统设置
 const settingStore = useSettingStore()
@@ -142,10 +142,13 @@ const editingId = ref<number | null>(null);
 const editInput = ref()
 // 要修改的值
 const editValue = ref('')
+// 当前标题
+const currentTitle = ref('')
 // 点击了重命名
 const handleEdit = async (record: any) => {
   editingId.value = record.id;
   editValue.value = record.title
+  currentTitle.value = record.title
   await nextTick();
   // 获取焦点
   const input = document.querySelector('.edit-input');
@@ -154,8 +157,25 @@ const handleEdit = async (record: any) => {
   }
 }
 // 修改输入框失去焦点提交重命名
-const handleEditBlur = () => {
+const handleEditBlur = async () => {
+  // 判断重命名的值是否为空
+  if (!editValue.value) {
+    editingId.value = null;
+    return;
+  }
+  // 是否跟原来的标题一摸一样的
+  if (currentTitle.value === editValue.value) {
+    editingId.value = null;
+    return;
+  }
+  // 提交重命名
+  await apiRenameHistory({
+    id: editingId.value,
+    title: editValue.value
+  })
   editingId.value = null
+  // 重新加载历史记录
+  getHistoryList()
 }
 
 // 模式
@@ -454,7 +474,7 @@ const cancelReadAloud = () => {
             </div>
             <template v-if="editingId !== record.id">
               <!-- 操作图标按钮 -->
-              <EditOutlined class="edit" @click="handleEdit(record)" />
+              <EditOutlined class="edit" @click.stop="handleEdit(record)" />
               <DeleteOutlined class="del" />
             </template>
           </li>

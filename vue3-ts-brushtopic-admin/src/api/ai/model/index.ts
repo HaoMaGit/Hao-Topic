@@ -19,3 +19,12 @@ export const apiGetHistoryDetail = (id: number) => {
     method: "get"
   });
 }
+
+// 重命名对话记录
+export const apiRenameHistory = (data: any) => {
+  return request({
+    url: prefix + "history",
+    method: "put",
+    data
+  });
+}
