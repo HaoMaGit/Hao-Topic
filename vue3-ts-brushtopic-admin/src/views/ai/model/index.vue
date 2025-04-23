@@ -55,11 +55,14 @@ const searchHistory = (event: MouseEvent) => {
 };
 // 开始搜索
 const onSearch = () => {
+  // 去除空格
+  searchValue.value = searchValue.value.trim();
+  historyParams.value.title = searchValue.value
+  getHistoryList()
 };
 
 // 隐藏清除
 const clearSearch = () => {
-  searchValue.value = '';
   isSearch.value = false;
 };
 
@@ -172,6 +175,7 @@ const handleEdit = async (record: any) => {
 }
 // 修改输入框失去焦点提交重命名
 const handleEditBlur = async () => {
+  editValue.value = editValue.value.trim();
   // 判断重命名的值是否为空
   if (!editValue.value) {
     editingId.value = null;
@@ -466,7 +470,7 @@ const handleDel = (id: number) => {
             @click="searchHistory"></a-button>
         </template>
         <!-- 搜索输入框 -->
-        <a-input v-if="isSearch" @search="onSearch" allowClear v-model:value="searchValue" ref="inputSearch"
+        <a-input v-if="isSearch" @blur="onSearch" allowClear v-model:value="searchValue" ref="inputSearch"
           placeholder="搜索历史刷题记录">
           <template #prefix>
             <SearchOutlined />
