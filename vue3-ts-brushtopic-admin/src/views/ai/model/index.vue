@@ -15,7 +15,8 @@ const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
 import { message } from 'ant-design-vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
-import { apiGetManageList, apiGetHistoryDetail, apiRenameHistory } from '@/api/ai/model/index'
+import { apiGetManageList, apiGetHistoryDetail, apiRenameHistory, apiDeleteHistory } from '@/api/ai/model/index'
+import { Modal } from 'ant-design-vue'
 import type { AiHistoryDto } from '@/api/ai/model/type';
 // 引入系统设置
 const settingStore = useSettingStore()
@@ -28,8 +29,20 @@ const isSearch = ref(false)
 const isReply = ref(true)
 // 搜索的值
 const searchValue = ref('')
+
+// 新增对话
 const createReply = () => {
+  // 判断是否为最新对话
+  if (aiId.value === 0) {
+    message.success('已是最新对话')
+    return
+  }
+  setTimeout(() => {
+    // 创建一个新对话刷新界面
+    window.location.reload()
+  }, 500)
 }
+// 点击添加历史记录
 const searchHistory = (event: MouseEvent) => {
   event.stopPropagation(); // 阻止事件冒泡
   isSearch.value = true;
@@ -39,8 +52,7 @@ const searchHistory = (event: MouseEvent) => {
     inputSearch.value?.focus();
   }, 0);
 };
-
-
+// 开始搜索
 const onSearch = () => {
 };
 
@@ -174,6 +186,7 @@ const handleEditBlur = async () => {
     title: editValue.value
   })
   editingId.value = null
+  message.success('修改成功')
   // 重新加载历史记录
   getHistoryList()
 }
@@ -431,6 +444,24 @@ const cancelReadAloud = () => {
   }
 }
 
+// 删除对话历史记录
+const handleDel = (id: number) => {
+  Modal.confirm({
+    title: '确认删除这条对话记录吗？',
+    content: '删除后对话记录无法恢复和找回，请谨慎操作。',
+    okText: '确认删除',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      await apiDeleteHistory(id)
+      message.success('删除成功')
+      setTimeout(() => {
+        // 创建一个新对话刷新界面
+        window.location.reload()
+      }, 500)
+    }
+  })
+}
 </script>
 <template>
   <div class="model-body">
@@ -475,7 +506,7 @@ const cancelReadAloud = () => {
             <template v-if="editingId !== record.id">
               <!-- 操作图标按钮 -->
               <EditOutlined class="edit" @click.stop="handleEdit(record)" />
-              <DeleteOutlined class="del" />
+              <DeleteOutlined class="del" @click.stop="handleDel(record.id)" />
             </template>
           </li>
         </div>

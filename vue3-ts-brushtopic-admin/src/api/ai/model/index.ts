@@ -28,3 +28,11 @@ export const apiRenameHistory = (data: any) => {
     data
   });
 }
+
+// 删除对话历史记录
+export const apiDeleteHistory = (id: number) => {
+  return request({
+    url: prefix + "history/" + id,
+    method: "delete"
+  });
+}
