@@ -58,7 +58,7 @@ public class ModelController {
     }
 
     /**
-     * 根据id获取当前对话的历史记录
+     * 根据记录id获取当前对话的历史记录
      *
      * @param id
      * @return
@@ -78,5 +78,28 @@ public class ModelController {
         return modelService.tts(text);
     }
 
+    /**
+     * 根据记录id删除对话记录
+     *
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/history/{id}")
+    public Result deleteHistory(@PathVariable Long id) {
+        modelService.deleteHistory(id);
+        return Result.success();
+    }
+
+    /**
+     * 根据记录id重命名标题
+     *
+     * @param title
+     * @return
+     */
+    @PutMapping("/history/{id}")
+    public Result updateHistory(@PathVariable Long id, @RequestParam String title) {
+        modelService.updateHistoryById(id, title);
+        return Result.success();
+    }
 
 }

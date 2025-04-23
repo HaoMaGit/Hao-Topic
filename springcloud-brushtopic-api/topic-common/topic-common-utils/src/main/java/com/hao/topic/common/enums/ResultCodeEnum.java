@@ -56,25 +56,40 @@ public enum ResultCodeEnum {
     LABEL_DELETE_IS_NULL(99926, "删除题目标签失败"),
     LABEL_DELETE_TOPIC_ERROR(99927, "该题目标签下有关联题目"),
 
-    AI_HISTORY_ERROR(99928, "历史记录不存在"),
-
+    AI_HISTORY_ERROR(99928, "对话记录不存在"),
+    AI_HISTORY_DELETE_ERROR(99929, "删除对话记录失败"),
+    AI_HISTORY_UPDATE_ERROR(99930, "修改对话记录失败"),
 
     TOPIC_NAME_EXIST(99928, "题目名称已存在"),
+
     SUBJECT_NOT_EXIST(99929, "题目专题不存在"),
+
     LABEL_NOT_EXIST(99930, "题目标签不存在"),
+
     TOPIC_UPDATE_IS_NULL(99931, "修改题目失败"),
+
     TOPIC_DELETE_IS_NULL(99932, "删除题目失败"),
+
     TOPIC_EVERYDAY_ERROR(99933, "每日推荐题目只能存在9个"),
+
     TOPIC_SUBJECT_IS_NULL(99934, "题目专题不能为空"),
+
     TOPIC_LABEL_IS_NULL(99935, "题目标签不能为空"),
 
     SERVICE_ERROR(2012, "服务异常"),
+
     DATA_ERROR(204, "数据异常"),
+
     ADMIN_LOCKED(207, "登录失败请确认身份"),
+
     REPEAT_SUBMIT(1001, "重复提交"),
+
     LOGIN_AUTH_ERROR(1000, "登录认证失败请重新登录"),
+
     AI_HISTORY_NOT_FOUND(1002, "历史记录不存在"),
+
     AI_COUNT_ERROR(1003, "使用次数不足请联系我们或晋升为我们的会员"),
+
     MENU_ERROR(1004, "没有权限访问"),
 
 
@@ -82,13 +97,17 @@ public enum ResultCodeEnum {
 
 
     USER_DATA_ERROR(1005, "暂时没有用户数据"),
+
     USER_ERROR(1006, "账号异常请联系管理员处理"),
 
     // SUBJECT_UPDATE_ERROR(1016, "修改专题失败"),
 
     REQUEST_TIMEOUT(1002, "请求超时"),
+
     REQUEST_LIMIT(1003, "请求次数超限"),
+
     REQUEST_NOT_FOUND(1004, "请求不存在"),
+
     REQUEST_METHOD_NOT_SUPPORTED(1005, "请求方法不支持"),
 
     REQUEST_PARAM_NOT_VALID(1006, "请求参数校验不通过");

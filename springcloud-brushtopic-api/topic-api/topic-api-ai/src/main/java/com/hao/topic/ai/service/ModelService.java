@@ -25,4 +25,7 @@ public interface ModelService {
 
     ResponseEntity<byte[]> tts(String text);
 
+    void deleteHistory(Long id);
+
+    void updateHistoryById(Long id, String title);
 }

@@ -270,4 +270,45 @@ public class ModelServiceImpl implements ModelService {
     }
 
 
+    /**
+     * 根据记录id删除对话记录
+     *
+     * @param id
+     */
+    public void deleteHistory(Long id) {
+        // 校验id
+        if (id == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_DELETE_ERROR);
+        }
+        // 查询当前记录
+        AiHistory aiHistory = aiHistoryMapper.selectById(id);
+        if (aiHistory == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_DELETE_ERROR);
+        }
+        // 根据对话id删除所有的历史记录
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, aiHistory.getChatId());
+        // 物理删除
+        aiHistoryMapper.delete(aiHistoryLambdaQueryWrapper);
+    }
+
+    /**
+     * 根据记录id重命名标题
+     *
+     * @param id
+     * @param title
+     */
+    public void updateHistoryById(Long id, String title) {
+        // 校验
+        if (id == null || title == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
+        }
+        AiHistory aiHistory = aiHistoryMapper.selectById(id);
+        if (aiHistory == null) {
+            throw new TopicException(ResultCodeEnum.AI_HISTORY_UPDATE_ERROR);
+        }
+        // 开始修改
+        aiHistory.setTitle(title);
+        aiHistoryMapper.updateById(aiHistory);
+    }
 }
