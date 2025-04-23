@@ -11,3 +11,11 @@ export const apiGetManageList = (param: AiHistoryDto) => {
     params: param
   });
 }
+
+// 根据历史记录id获取对话记录
+export const apiGetHistoryDetail = (id: number) => {
+  return request({
+    url: prefix + "history/" + id,
+    method: "get"
+  });
+}

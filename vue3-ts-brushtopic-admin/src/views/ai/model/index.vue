@@ -15,7 +15,7 @@ const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting.ts'
 import { message } from 'ant-design-vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
-import { apiGetManageList } from '@/api/ai/model/index'
+import { apiGetManageList, apiGetHistoryDetail } from '@/api/ai/model/index'
 import type { AiHistoryDto } from '@/api/ai/model/type';
 // 引入系统设置
 const settingStore = useSettingStore()
@@ -39,7 +39,6 @@ const searchHistory = (event: MouseEvent) => {
     inputSearch.value?.focus();
   }, 0);
 };
-
 
 
 const onSearch = () => {
@@ -71,12 +70,41 @@ const getHistoryList = async () => {
 onMounted(() => {
   getHistoryList()
 })
-// // 当前索引
-// const activeIndex = ref([])
-// // 查询内容
-// const getHistoryContent = async (id: number, index: number, historyIndex: number) => {
 
-// }
+// 加载对话记录loading
+const chatLoading = ref(false)
+// 当前索引
+const activeIndex = ref<any>([])
+// 查询内容
+const getHistoryContent = async (id: number, index: number, historyIndex: number) => {
+  chatLoading.value = true
+  // 清除默认对话
+  restoreDefaultRecord()
+  // 重置当前索引
+  activeIndex.value = []
+  // 添加当前索引
+  activeIndex.value[historyIndex] = index
+  // id:当前记录id
+  const res = await apiGetHistoryDetail(id)
+  // 封装内容
+  const content = res.data.map((item: any) => {
+    return {
+      prompt: item.title,
+      chatId: item.chatId,
+      content: item.content
+    }
+  })
+  // 追加
+  messageList.push(...content)
+  // 赋值当前id
+  currentRecordId.value = res.data[0].chatId
+  // 清空当前对话id
+  localStorage.removeItem('chatId')
+  // 赋值当前id
+  aiId.value = res.data.length;
+  chatLoading.value = false
+  await scrollToBottom()
+}
 
 // // 删除历史记录
 // const delHistory = async (id: number) => {
@@ -194,6 +222,14 @@ const sendPrompt = async () => {
             title: prompt.value,
             id: uuidv4()
           })
+        } else {
+          historyList.value.push({
+            date: "当天",
+            aiHistoryVos: [{
+              title: prompt.value,
+              id: uuidv4()
+            }]
+          })
         }
       }
     }
@@ -273,7 +309,11 @@ const contentRef = ref<any>(null)
 const scrollToBottom = async () => {
   await nextTick()
   if (contentRef.value) {
-    contentRef.value.scrollTop = contentRef.value.scrollHeight
+    // 平滑滚动到底部
+    contentRef.value.scrollTo({
+      top: contentRef.value.scrollHeight,
+      behavior: 'smooth'
+    })
   }
 }
 
@@ -283,7 +323,7 @@ const aiId = ref(0)
 // 记录一下当前使用的id
 const currentRecordId = ref(uuidv4())
 // 内容
-const messageList = reactive([
+const messageList = reactive<any>([
   {
     prompt: "我是" + userStore.userInfo.account,
     chatId: currentRecordId.value, // 对话id
@@ -292,6 +332,18 @@ const messageList = reactive([
     memoryId: aiId.value
   }
 ])
+// 恢复默认记录
+const restoreDefaultRecord = () => {
+  // 清空历史记录
+  messageList.splice(0, messageList.length)
+  // 添加一条数据
+  messageList.push({
+    prompt: "我是" + userStore.userInfo.account,
+    chatId: currentRecordId.value, // 对话id
+    model: aiModeValue.value,
+    content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
+  })
+}
 
 
 // 是否正在朗读
@@ -389,7 +441,8 @@ const cancelReadAloud = () => {
           <span class="date">{{ history.date }}</span>
           <!-- 标题 -->
           <!-- 开始遍历 -->
-          <li v-for="(record, index) in history.aiHistoryVos" :key="index"
+          <li @click="getHistoryContent(record.id, index, historyIndex)" v-for="(record, index) in history.aiHistoryVos"
+            :key="index" :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '' }"
             :class="{ 'infinite-list-item': true, 'no-hover': editingId === record.id, 'hover': editingId !== record.id }">
             <!-- 历史记录 -->
             <template v-if="editingId === record.id">
@@ -417,7 +470,7 @@ const cancelReadAloud = () => {
       <h2 class="title">HaoAi<i class="version">1.0</i></h2>
       <!-- 回复区域 -->
       <div class="reply-box">
-        <ul class="infinite-list-reply">
+        <ul class="infinite-list-reply" ref="contentRef" v-if="!chatLoading">
           <!-- 有数据的时候显示 -->
           <template v-if="aiId >= 0">
             <div v-for="(item, index) in messageList" class="box" :key="index">
@@ -444,7 +497,7 @@ const cancelReadAloud = () => {
                 </div>
               </div>
               <!-- AI返回的内容 -->
-              <div class="content-avatar" ref="contentRef">
+              <div class="content-avatar">
                 <!-- 需要带一个头像 -->
                 <a-avatar class="avatar" :src="'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
                 <!-- 加载中的图标 -->
@@ -470,6 +523,7 @@ const cancelReadAloud = () => {
             </div>
           </template>
         </ul>
+        <a-spin tip="HaoAi正在查询对话记录" v-else></a-spin>
         <!-- 语音合成的loading -->
         <a-spin :tip="loadingText" v-if="readAloudLoading"></a-spin>
         <!-- 输入框 -->
