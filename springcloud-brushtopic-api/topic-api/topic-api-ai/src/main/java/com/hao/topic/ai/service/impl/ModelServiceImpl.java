@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
+import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.common.enums.ResultCodeEnum;
@@ -20,6 +21,7 @@ import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.entity.ai.AiHistory;
+import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
@@ -39,6 +41,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Description:
@@ -51,6 +54,9 @@ public class ModelServiceImpl implements ModelService {
     private final ChatClient chatClient;
     @Autowired
     private AiHistoryMapper aiHistoryMapper;
+
+    @Autowired
+    private AiUserMapper aiUserMapper;
 
     @Autowired
     private TtsProperties ttsProperties;
@@ -67,6 +73,42 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     public Flux<String> chat(ChatDto chatDto) {
+        // 获取当前用户Id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+        // 根据当前用户id和账户查询数据
+        LambdaQueryWrapper<AiUser> aiUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiUserLambdaQueryWrapper.eq(AiUser::getUserId, currentId);
+        aiUserLambdaQueryWrapper.eq(AiUser::getAccount, currentName);
+        AiUser aiUser = aiUserMapper.selectOne(aiUserLambdaQueryWrapper);
+        if (aiUser == null) {
+            // 为空添加一条
+            aiUser = new AiUser();
+            aiUser.setUserId(currentId);
+            aiUser.setAccount(currentName);
+            aiUser.setAiCount(1L);
+            // 设置最近使用时间
+            aiUser.setRecentlyUsedTime(DateUtils.parseLocalDateTime(DateUtils.format(new Date())));
+            aiUserMapper.insert(aiUser);
+        } else {
+            // 不为空校验是否还有次数
+            if (Objects.equals(aiUser.getAiCount(), aiUser.getCount())) {
+                throw new TopicException(ResultCodeEnum.AI_COUNT_ERROR);
+            }
+            // 是否被管理员停用了
+            if (aiUser.getStatus() == 1) {
+                throw new TopicException(ResultCodeEnum.AI_ERROR);
+            }
+            // 都正常
+            // 使用次数+1
+            aiUser.setAiCount(aiUser.getAiCount() + 1);
+            // 更新最近使用时间
+            aiUser.setRecentlyUsedTime(DateUtils.parseLocalDateTime(DateUtils.format(new Date())));
+            aiUserMapper.updateById(aiUser);
+        }
+
+        // 判断用户状态
         // 校验模式
         if (chatDto.getModel().equals(AiConstant.SYSTEM_MODEL)) {
             // 系统模式

@@ -59,6 +59,9 @@ public enum ResultCodeEnum {
     AI_HISTORY_ERROR(99928, "对话记录不存在"),
     AI_HISTORY_DELETE_ERROR(99929, "删除对话记录失败"),
     AI_HISTORY_UPDATE_ERROR(99930, "修改对话记录失败"),
+    AI_COUNT_ERROR(99931, "使用次数不足请联系我们或晋升为我们的会员"),
+    AI_ERROR(99932, "使用异常请联系我们"),
+
 
     TOPIC_NAME_EXIST(99928, "题目名称已存在"),
 
@@ -88,7 +91,6 @@ public enum ResultCodeEnum {
 
     AI_HISTORY_NOT_FOUND(1002, "历史记录不存在"),
 
-    AI_COUNT_ERROR(1003, "使用次数不足请联系我们或晋升为我们的会员"),
 
     MENU_ERROR(1004, "没有权限访问"),
 
