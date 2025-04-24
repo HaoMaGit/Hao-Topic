@@ -1,11 +1,10 @@
 package com.hao.topic.ai.service.impl;
 
-import com.alibaba.dashscope.audio.tts.SpeechSynthesisResult;
-import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
-import com.alibaba.dashscope.common.ResultCallback;
 import com.alibaba.excel.util.StringUtils;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,6 +20,7 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
@@ -40,10 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Description:
@@ -380,5 +378,49 @@ public class ModelServiceImpl implements ModelService {
         // 开始修改
         aiHistory.setTitle(aiHistoryDto.getTitle());
         aiHistoryMapper.updateById(aiHistory);
+    }
+
+    /**
+     * 审核专题
+     *
+     * @param topicSubject
+     */
+    public void auditSubject(TopicAuditSubject topicSubject) {
+        // 获取分类
+        String categoryName = topicSubject.getCategoryName();
+        // 获取专题名称
+        String subjectName = topicSubject.getSubjectName();
+        // 提示词
+        String prompt = PromptConstant.AUDIT_SUBJECT +
+                "专题内容: " + subjectName + "\n" +
+                "分类名称: " + categoryName;
+        // 发送给ai
+        String content = this.chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+        // 解析结果
+        log.info("AI返回结果: {}", content);
+        try {
+            JSONObject jsonObject = JSON.parseObject(content);
+            boolean result = false;
+            if (jsonObject != null) {
+                result = jsonObject.getBooleanValue("result");
+            }
+            String reason = null;
+            if (jsonObject != null) {
+                reason = jsonObject.getString("reason");
+            }
+            if (result) {
+                log.info("审核通过: {}", reason);
+                // 处理审核通过的逻辑
+            } else {
+                log.warn("审核未通过: {}", reason);
+                // 处理审核未通过的逻辑
+            }
+        } catch (Exception e) {
+            log.error("解析AI返回结果失败: {}", content, e);
+            // 处理解析失败的情况
+        }
     }
 }

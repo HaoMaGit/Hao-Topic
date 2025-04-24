@@ -15,7 +15,12 @@ public class PromptConstant {
     // 评估
     public static final String EVALUATE = "请根据我的回答评估我的准确率，准确率(优秀（90%-100%）,良好（70%-89%）,一般（50%-69%）,较差（0%-49%）)，表达清晰度，完整性状态 然后如果准确率低于良好就帮我改进回答,准确率高于良好就返回评估信息就可以了";
 
+    // 刷题次数算法
     public static final int START_CONTINUE_MEMORY_ID = 3;
     public static final int CONTINUE_INTERVAL = 2;
 
+    // 审核专题提示词
+    public static final String AUDIT_SUBJECT = "请根据以下规则对题目专题进行审核：\\n\" +\n" +
+            "                \"1. 如果专题内容违反法律法规、社会公序良俗或与分类无关，请返回 {\\\"result\\\": false, \\\"reason\\\": \\\"违规原因描述\\\"}。\\n\" +\n" +
+            "                \"2. 如果专题内容合法且与分类相关，请返回 {\\\"result\\\": true, \\\"reason\\\": \\\"审核通过\\\"}。\\n\" +\n";
 }

@@ -1,12 +1,18 @@
 package com.hao.topic.topic.service.impl;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.nacos.shaded.io.grpc.internal.JsonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.constant.RabbitConstant;
+import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
@@ -24,6 +30,7 @@ import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.mapper.TopicSubjectMapper;
 import com.hao.topic.topic.mapper.TopicSubjectTopicMapper;
 import com.hao.topic.topic.service.TopicSubjectService;
+import com.rabbitmq.tools.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -51,6 +58,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
     private final TopicSubjectTopicMapper topicSubjectTopicMapper;
     private final TopicCategorySubjectMapper topicCategorySubjectMapper;
     private final TopicCategoryMapper topicCategoryMapper;
+    private final RabbitService rabbitService;
 
 
     /**
@@ -160,7 +168,15 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         BeanUtils.copyProperties(topicSubjectDto, topicSubject);
         topicSubject.setCreateBy(username);
         topicSubjectMapper.insert(topicSubject);
-        // TODO 异步发送消息给AI审核
+
+        // 封装消息对象
+        TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
+        topicAuditSubject.setSubjectName(topicSubject.getSubjectName());
+        topicAuditSubject.setCategoryName(topicCategoryDb.getCategoryName());
+        topicAuditSubject.setId(topicSubject.getId());
+
+        // 异步发送消息给AI审核
+        rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, "sdfdfsdsf");
         // 插入到关系表中
         TopicCategorySubject topicCategorySubject = new TopicCategorySubject();
         topicCategorySubject.setCategoryId(topicCategoryDb.getId());
