@@ -552,8 +552,14 @@ onMounted(() => {
               <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record)">删除</a-button>
             </template>
             <template v-if="column.key === 'avatar'">
-              <a-image :width="48"
-                :src="record.imageUrl != null ? record.imageUrl : 'http://114.116.233.218:9000/topic/H.png'" />
+              <template v-if="record.avatar">
+                <a-image :width="48" :src="record.avatar" />
+              </template>
+              <template v-else>
+                <a-avatar :size="48" :style="{ backgroundColor: '#1677ff', fontSize: '20px' }">
+                  {{ record.account?.charAt(0)?.toUpperCase() }}
+                </a-avatar>
+              </template>
             </template>
             <template v-if="column.key === 'status'">
               <span>{{ record.status === 0 ? '正常' : '停用' }}</span>

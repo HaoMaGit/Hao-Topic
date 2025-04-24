@@ -273,7 +273,6 @@ const sendPrompt = async () => {
           ...currentRecord
         }),
       }).then(response => {
-        prompt.value = ''
         // 检查响应是否成功
         if (!response.ok) {
           message.error("HaoAi回复出现点问题请稍后再试！")
@@ -281,6 +280,7 @@ const sendPrompt = async () => {
         // 返回一个可读流
         return response.body;
       }).then(async body => {
+        prompt.value = ''
         if (!body) {
           message.error("HaoAi回复出现点问题请稍后再试！")
           return
@@ -571,6 +571,7 @@ const copyContent = async (content: string) => {
             </div>
           </template>
         </ul>
+        <!-- 聊天的loading -->
         <a-spin tip="HaoAi正在查询对话记录" v-else></a-spin>
         <!-- 语音合成的loading -->
         <a-spin :tip="loadingText" v-if="readAloudLoading"></a-spin>

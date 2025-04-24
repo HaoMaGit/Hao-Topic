@@ -186,8 +186,14 @@ const handleErrorImg = (event: any) => {
     <!-- 设置 -->
     <a-button @click="viewSetting" :icon="h(SettingOutlined)" shape="circle"></a-button>
     <!-- 头像 -->
-    <img class="user-avatar" @error="handleErrorImg"
-      :src="userStore.userInfo?.avatar == null ? userStore.userInfo.avatar : Hao" alt="" srcset="">
+    <template v-if="userStore.userInfo?.avatar">
+      <img class="user-avatar" @error="handleErrorImg" :src="userStore.userInfo.avatar" alt="" />
+    </template>
+    <template v-else>
+      <a-avatar class="user-avatar" :style="{ backgroundColor: '#1677ff' }">
+        {{ userStore.userInfo?.account?.charAt(0)?.toUpperCase() }}
+      </a-avatar>
+    </template>
     <!-- 下拉菜单：个人中心 退出登录 -->
     <a-dropdown class="dropdown">
       <span>
