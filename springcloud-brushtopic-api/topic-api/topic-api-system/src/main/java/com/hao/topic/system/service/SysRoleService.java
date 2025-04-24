@@ -24,4 +24,6 @@ public interface SysRoleService extends IService<SysRole> {
 
     List<SysMenuVo> getRoleMenu(Long roleId);
 
+    SysRole getRoleKey(String roleKey);
+
 }

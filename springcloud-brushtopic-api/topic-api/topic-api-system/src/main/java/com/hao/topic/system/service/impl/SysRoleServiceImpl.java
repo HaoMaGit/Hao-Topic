@@ -36,6 +36,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private final SysMenuService service;
     private final SysRoleMenuMapper sysRoleMenuMapper;
     private final SecurityFeignClient securityFeignClient;
+    private final SysRoleMapper sysRoleMapper;
 
     /**
      * 获取角色列表
@@ -156,5 +157,21 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 根据角色key获取角色信息
+     *
+     * @param roleKey
+     * @return
+     */
+    public SysRole getRoleKey(String roleKey) {
+        LambdaQueryWrapper<SysRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleLambdaQueryWrapper.eq(SysRole::getRoleKey, roleKey);
+        SysRole sysRole = sysRoleMapper.selectOne(sysRoleLambdaQueryWrapper);
+        if (sysRole == null) {
+            return null;
+        }
+        return sysRole;
     }
 }

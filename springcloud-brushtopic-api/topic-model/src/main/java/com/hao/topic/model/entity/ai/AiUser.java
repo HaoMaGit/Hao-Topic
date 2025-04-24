@@ -26,4 +26,5 @@ public class AiUser extends BaseEntity {
     private LocalDateTime recentlyUsedTime;
     // 状态
     private Integer status;
+    private String roleName;
 }

@@ -33,8 +33,8 @@ public class ManageController {
      */
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('admin')")
-    public Map<String, Object> list(AiUserDto aiUserDto) {
-        return manageService.list(aiUserDto);
+    public Result<Map<String, Object>> list(AiUserDto aiUserDto) {
+        return Result.success(manageService.list(aiUserDto));
     }
 
 

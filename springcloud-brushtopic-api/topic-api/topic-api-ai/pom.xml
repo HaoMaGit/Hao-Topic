@@ -46,6 +46,12 @@
             <artifactId>topic-api-utils</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- 系统服务 -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-client-system</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <!--管理springAi版本-->

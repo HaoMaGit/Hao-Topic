@@ -88,6 +88,14 @@ public class SysRoleController {
     }
 
     /**
+     * 根据角色权限key查询用户角色细腻系
+     */
+    @GetMapping("/key/{role}")
+    public SysRole getByRoleKey(@PathVariable String role) {
+        return sysRoleService.getRoleKey(role);
+    }
+
+    /**
      * 获取角色下的菜单
      *
      * @param roleId

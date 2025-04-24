@@ -15,6 +15,7 @@ import com.hao.topic.ai.mapper.AiHistoryMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
+import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -22,6 +23,7 @@ import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
+import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
@@ -61,6 +63,9 @@ public class ModelServiceImpl implements ModelService {
     @Autowired
     private TtsProperties ttsProperties;
 
+    @Autowired
+    private SystemFeignClient systemFeignClient;
+
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
     }
@@ -77,6 +82,8 @@ public class ModelServiceImpl implements ModelService {
         Long currentId = SecurityUtils.getCurrentId();
         // 当前账户
         String currentName = SecurityUtils.getCurrentName();
+        // 判断角色
+        String role = SecurityUtils.getCurrentRole();
         // 根据当前用户id和账户查询数据
         LambdaQueryWrapper<AiUser> aiUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
         aiUserLambdaQueryWrapper.eq(AiUser::getUserId, currentId);
@@ -88,13 +95,21 @@ public class ModelServiceImpl implements ModelService {
             aiUser.setUserId(currentId);
             aiUser.setAccount(currentName);
             aiUser.setAiCount(1L);
+            // 根据角色标识查询角色
+            SysRole byRoleKey = systemFeignClient.getByRoleKey(role);
+            if (byRoleKey == null) {
+                throw new TopicException(ResultCodeEnum.ROLE_NO_EXIST);
+            }
+            aiUser.setRoleName(byRoleKey.getName());
             // 设置最近使用时间
             aiUser.setRecentlyUsedTime(DateUtils.parseLocalDateTime(DateUtils.format(new Date())));
             aiUserMapper.insert(aiUser);
         } else {
-            // 不为空校验是否还有次数
-            if (Objects.equals(aiUser.getAiCount(), aiUser.getCount())) {
-                throw new TopicException(ResultCodeEnum.AI_COUNT_ERROR);
+            if (!aiUser.getRoleName().equals("管理员") && !aiUser.getRoleName().equals("会员")) {
+                // 不为空校验是否还有次数
+                if (aiUser.getAiCount() >= aiUser.getCount()) {
+                    throw new TopicException(ResultCodeEnum.AI_COUNT_ERROR);
+                }
             }
             // 是否被管理员停用了
             if (aiUser.getStatus() == 1) {

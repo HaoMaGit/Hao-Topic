@@ -36,5 +36,9 @@ public interface SystemFeignClient {
     @GetMapping("/system/role/{id}")
     public SysRole getById(@PathVariable Long id);
 
-
+    /**
+     * 根据角色权限key查询用户角色细腻系
+     */
+    @GetMapping("/system/role/key/{role}")
+    public SysRole getByRoleKey(@PathVariable String role);
 }
