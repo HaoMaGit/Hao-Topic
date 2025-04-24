@@ -7,6 +7,7 @@ import {
   RobotOutlined,
   ApiOutlined,
   AppstoreOutlined,
+  PauseCircleOutlined
 } from '@ant-design/icons-vue';
 import { useUserStore } from '@/stores/modules/user';
 import { MdPreview } from 'md-editor-v3'
@@ -260,6 +261,8 @@ const sendPrompt = async () => {
     // 获取当前记录
     const currentRecord = messageList[messageList.length - 1]
     try {
+      // 创建新的 AbortController
+      currentController = new AbortController()
       // 发送 get 请求
       fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/chat`, {
         method: "POST",
@@ -269,6 +272,8 @@ const sendPrompt = async () => {
           "Content-Type": "application/json",
           "Authorization": userStore.token,
         },
+        // 添加 signal
+        signal: currentController.signal,
         body: JSON.stringify({
           ...currentRecord
         }),
@@ -312,15 +317,24 @@ const sendPrompt = async () => {
               })
               await scrollToBottom()
             }
-          } catch (readError) {
-            message.error('回复失败' + readError)
+          } catch (readError: any) {
+            if (readError.name === 'AbortError') {
+              message.info('已暂停回复')
+              isReply.value = true
+            } else {
+              message.error('回复失败' + readError)
+            }
             break
           }
         }
       })
-    } catch (error) {
-      message.error('发送失败' + error)
-      return
+    } catch (error: any) {
+      console.log(error);
+      if (error.name === 'AbortError') {
+        message.info('已暂停回复')
+      } else {
+        message.error('发送失败' + error)
+      }
     }
   }
 }
@@ -460,6 +474,21 @@ const copyContent = async (content: string) => {
     message.error('复制失败，请手动复制')
   }
 }
+
+// 是否暂停回复
+const isPaused = ref(false)
+// 当前的 AbortController 实例
+let currentController: AbortController | null
+// 添加暂停函数
+const pauseReply = () => {
+  if (currentController) {
+    // 暂停回复
+    currentController.abort()
+    currentController = null
+    isPaused.value = false
+    isReply.value = true
+  }
+}
 </script>
 <template>
   <div class="model-body">
@@ -591,7 +620,13 @@ const copyContent = async (content: string) => {
               </a-radio-group>
             </div>
             <div class="right-icons">
-              <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" />
+              <template v-if="!isReply">
+                <PauseCircleOutlined class="pause-icon" @click="pauseReply" />
+              </template>
+              <template v-else>
+                <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" />
+              </template>
+              <!-- <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" /> -->
             </div>
           </div>
         </div>
@@ -727,6 +762,16 @@ const copyContent = async (content: string) => {
 
             &:hover {
               color: #4096ff;
+            }
+          }
+
+          .pause-icon {
+            font-size: 25px;
+            color: #ff4d4f;
+            cursor: pointer;
+
+            &:hover {
+              color: #ff7875;
             }
           }
         }
