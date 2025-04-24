@@ -14,10 +14,12 @@ const params = ref<ManageQueryType>({
 })
 // 获取用户列表
 const getManageList = async () => {
+  tableLoading.value = true
   const res = await apiGetManageList(params.value)
-  console.log("====>", res);
   tableData.value = res.data.rows
   total.value = res.data.total
+  tableLoading.value = false
+
 }
 // 分页变化处理
 const handleTableChange = (pagination: any) => {
@@ -28,7 +30,8 @@ const handleTableChange = (pagination: any) => {
 
 // 数量
 const total = ref<number>(0)
-
+// 表格loading
+const tableLoading = ref(false)
 // 表格数据
 const tableData = ref([])
 // 表格字段
@@ -38,15 +41,9 @@ const columns = [
     dataIndex: 'account',
     key: 'account',
     align: 'center',
-    width: 180,
+    width: 180
   },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    align: 'center',
-    width: 180,
-  },
+
   {
     title: '使用次数',
     dataIndex: 'aiCount',
@@ -58,11 +55,32 @@ const columns = [
     dataIndex: 'count',
     key: 'count',
     align: 'center',
+    width: 130
+  },
+  {
+    title: '身份',
+    dataIndex: 'roleName',
+    key: 'roleName',
+    align: 'center',
+    width: 150
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    align: 'center',
+    width: 170
   },
   {
     title: '最近使用时间',
     dataIndex: 'recentlyUsedTime',
     key: 'recentlyUsedTime',
+    align: 'center'
+  },
+  {
+    title: '首次使用时间',
+    dataIndex: 'createTime',
+    key: 'createTime',
     align: 'center'
   },
   {
@@ -94,29 +112,13 @@ const handleReset = () => {
 const formRef = ref<any>(null)
 // 表单数据
 const formData = ref({
-  account: '',
   id: null,
-  aiCount: null,
   count: null,
   status: null,
 
 })
 // 表单规则
 const rules = ref({
-  account: [
-    {
-      required: true,
-      message: '请输入用户名称',
-      trigger: 'blur',
-    },
-  ],
-  aiCount: [
-    {
-      required: true,
-      message: 'AI次数不能为空',
-      trigger: 'blur',
-    },
-  ],
   count: [
     {
       required: true,
@@ -137,9 +139,7 @@ const onClose = () => {
 // 清空表单数据
 const clearFormData = () => {
   formData.value = {
-    account: '',
     id: null,
-    aiCount: null,
     count: null,
     status: null,
   }
@@ -161,6 +161,7 @@ const onSave = () => {
     drawer.value = false
     message.success("修改成功")
     clearFormData()
+    getManageList()
   })
 }
 
@@ -193,21 +194,19 @@ onMounted(() => {
       total: total,
       showTotal: (total: any) => `共 ${total} 条`,
       showSizeChanger: true,
-    }" @change="handleTableChange" :dataSource="tableData" :columns="columns">
+    }" @change="handleTableChange" :loading="tableLoading" :dataSource="tableData" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
           <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>
         </template>
-        <template v-if="column.key === 'remark'">
-          <a-tooltip>
-            <template #title>{{ record.remark }}</template>
-            <!-- 超出部分显示为 tooltip截取20个字符 -->
-            {{ record.remark.slice(0, 20) }}
-          </a-tooltip>
-        </template>
         <template v-if="column.key === 'status'">
-          <a-tag v-if="record.status === 0" color="green">正常</a-tag>
-          <a-tag v-if="record.status === 1" color="red">停用</a-tag>
+          <div class="tag-box">
+            <a-tag v-if="record.status === 0" color="#1677ff">正常</a-tag>
+            <a-tag v-if="record.status === 1" color="red">停用</a-tag>
+          </div>
+        </template>
+        <template v-if="column.key === 'count'">
+          <span v-if="record.roleName === '管理员' || record.roleName === '会员'">无限制</span>
         </template>
       </template>
     </a-table>
@@ -215,19 +214,13 @@ onMounted(() => {
     <!-- 新增修改  -->
     <a-drawer :title="drawerTitle" placement="right" v-model:open="drawer" @close="onClose">
       <a-form ref="formRef" :model="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="账户" name="account">
-          <a-input placeholder="请输入账户名称" v-model:value="formData.account"></a-input>
-        </a-form-item>
-        <a-form-item label="AI次数" name="aiCount">
-          <a-input placeholder="请输入AI次数" v-model:value="formData.aiCount"></a-input>
-        </a-form-item>
         <a-form-item label="总次数" name="count">
-          <a-input placeholder="请输入总次数" v-model:value="formData.count"></a-input>
+          <a-input type="number" placeholder="请输入总次数" v-model:value="formData.count"></a-input>
         </a-form-item>
         <a-form-item label="状态" name="status">
           <a-select placeholder="请选择状态" v-model:value="formData.status">
-            <a-select-option value="0">正常</a-select-option>
-            <a-select-option value="1">停用</a-select-option>
+            <a-select-option :value="0">正常</a-select-option>
+            <a-select-option :value="1">停用</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -241,4 +234,13 @@ onMounted(() => {
     </a-drawer>
   </div>
 </template>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.tag-box {
+  padding-left: 10px;
+}
+
+.space-footer-box {
+  display: flex;
+  justify-content: flex-end;
+}
+</style>
