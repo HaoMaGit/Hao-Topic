@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -359,6 +360,10 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         }
         // 开始修改
         BeanUtils.copyProperties(topicCategory, topicCategoryDb);
+        // 如果是正常将失败原因置空
+        if (Objects.equals(topicCategory.getStatus(), StatusEnums.NORMAL.getCode())) {
+            topicCategory.setFailMsg("");
+        }
         topicCategoryMapper.updateById(topicCategory);
     }
 }
