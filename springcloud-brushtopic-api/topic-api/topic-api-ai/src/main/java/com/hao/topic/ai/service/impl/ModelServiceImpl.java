@@ -478,16 +478,22 @@ public class ModelServiceImpl implements ModelService {
         }
         // 调用远程服务的接口实现状态修改
         topicFeignClient.audit(topicCategory);
+        // TODO 记录日志
     }
 
     /**
      * 获取ai返回的内容同步返回
      */
     public String getAiContent(String prompt) {
-        // 发送给ai
-        return this.chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content();
+        try {
+            // 发送给ai
+            return this.chatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .content();
+        } catch (Exception e) {
+            // TODO 记录日志
+            throw new TopicException(ResultCodeEnum.AI_ERROR);
+        }
     }
 }

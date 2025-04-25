@@ -37,6 +37,9 @@ public class TopicCategoryExcelExport {
     @ExcelProperty(value = "状态")
     private String status;
 
+    @ExcelProperty(value = "原因")
+    private String failMsg;
+
     @ExcelProperty(value = "专题数量")
     private Long subjectCount;
 
