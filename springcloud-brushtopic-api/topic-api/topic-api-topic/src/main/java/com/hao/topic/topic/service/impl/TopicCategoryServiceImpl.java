@@ -151,9 +151,26 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         if (topicCategory == null) {
             throw new TopicException(ResultCodeEnum.CATEGORY_UPDATE_IS_NULL);
         }
+        // 获取当前id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 判断当前名称和要修改的名称是否一样
+        if (!topicCategory.getCategoryName().equals(topicCategoryDto.getCategoryName())) {
+            // 判断当前
+            if (currentId == 1L) {
+                // 是开发者不需要审核
+                topicCategory.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                // 不是开发者需要审核一下分类名称
+                topicCategory.setStatus(StatusEnums.AUDITING.getCode());
+                // 转换json
+                String jsonString = JSON.toJSONString(topicCategoryDto);
+                log.info("发送的消息：{}", jsonString);
+                // 异步发送消息给ai审核
+                rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
+            }
+        }
         // 开始修改
         topicCategory.setCategoryName(topicCategoryDto.getCategoryName());
-        topicCategory.setStatus(StatusEnums.AUDITING.getCode());
         topicCategoryMapper.updateById(topicCategory);
     }
 
