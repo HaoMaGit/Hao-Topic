@@ -435,6 +435,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         log.info("当前用户登录名称和id：{},{}", username, currentId);
         // 设置分页条件
         LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus,0);
         // 判断是否为Hao
         if (currentId != 1L) {
 

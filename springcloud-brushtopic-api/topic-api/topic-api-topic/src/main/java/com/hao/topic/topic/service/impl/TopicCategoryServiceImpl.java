@@ -77,6 +77,9 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         }
         topicCategoryLambdaQueryWrapper.orderByDesc(TopicCategory::getCreateTime);
         if (topicCategoryDto.getPageNum() == null || topicCategoryDto.getPageSize() == null) {
+            if (topicCategoryDto.getStatus() != null) {
+                topicCategoryLambdaQueryWrapper.eq(TopicCategory::getStatus, topicCategoryDto.getStatus());
+            }
             List<TopicCategory> categories = topicCategoryMapper.selectList(topicCategoryLambdaQueryWrapper);
             return Map.of("total", categories.size(), "rows", categories);
         } else {
