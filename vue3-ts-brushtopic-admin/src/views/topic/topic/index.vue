@@ -212,7 +212,6 @@ const handleEdit = (record: any) => {
   // 根据labelName获取labelId集合
   formData.value.labelIds = labelNameAndId.value.filter((item: any) => record.labels.includes(item.label)).map((item: any) => item.value)
 
-
 }
 // 删除
 const handleDelete = (record: any) => {

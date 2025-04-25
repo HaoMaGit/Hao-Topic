@@ -7,8 +7,8 @@ export interface CommonResultType<T> {
 
 // 分页类型
 export interface PageType {
-  pageNum: number;
-  pageSize: number;
+  pageNum: number | null;
+  pageSize: number | null;
 }
 
 // 分页返回数据

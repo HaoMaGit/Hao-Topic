@@ -48,7 +48,14 @@ interface Category {
 }
 // 获取分类列表
 const getCategoryList = async () => {
-  const res = await apiGetCategoryList(null)
+  const res = await apiGetCategoryList({
+    status: 0,
+    categoryName: null,
+    createBy: null,
+    pageNum: null,
+    pageSize: null,
+    params: null
+  })
   categoryList.value = res.data.rows.map((item: Category) => {
     return {
       label: item.categoryName,

@@ -27,7 +27,8 @@ const params = ref<TopicCatgoryQueryType>({
   pageSize: 5,
   categoryName: '',
   createBy: '',
-  params: {}
+  params: {},
+  status: null
 })
 
 // 获取分类列表
@@ -124,7 +125,8 @@ const handleReset = () => {
     pageSize: 5,
     categoryName: '',
     createBy: '',
-    params: null
+    params: null,
+    status: null
   }
   createTimeDateRange.value = []
   total.value = 0

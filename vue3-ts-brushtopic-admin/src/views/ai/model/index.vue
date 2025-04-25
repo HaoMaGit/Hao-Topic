@@ -561,8 +561,14 @@ const pauseReply = () => {
                     <MdPreview v-model="item.prompt" class="prompt-preview">
                     </MdPreview>
                   </div>
-                  <a-avatar class="avatar"
-                    :src="userStore.userInfo.avatar != null ? userStore.userInfo.avatar : 'http://114.116.233.218:9000/topic/H.png'" />
+                  <template v-if="userStore.userInfo.avatar">
+                    <a-avatar class="avatar" :src="userStore.userInfo.avatar" />
+                  </template>
+                  <template v-else>
+                    <a-avatar class="avatar" :style="{ backgroundColor: '#1677ff', fontSize: '20px' }">
+                      {{ userStore.userInfo.account?.charAt(0)?.toUpperCase() }}
+                    </a-avatar>
+                  </template>
                 </div>
                 <div class="message-actions">
                   <a-tooltip title="朗读" placement="bottom" v-if="!isSpeaking">
