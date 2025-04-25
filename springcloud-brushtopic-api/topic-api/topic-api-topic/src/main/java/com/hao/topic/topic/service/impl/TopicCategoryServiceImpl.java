@@ -266,6 +266,8 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         StringBuilder successMsg = new StringBuilder();
         // 拼接错误消息
         StringBuilder failureMsg = new StringBuilder();
+        // 获取当前用户id
+        Long currentId = SecurityUtils.getCurrentId();
         // 遍历
         for (TopicCategoryExcel topicCategoryExcel : excelVoList) {
             try {
@@ -277,12 +279,49 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                     TopicCategory topicCategoryDb = new TopicCategory();
                     BeanUtils.copyProperties(topicCategoryExcel, topicCategoryDb);
                     topicCategoryDb.setCreateBy(username);
-                    topicCategoryMapper.insert(topicCategoryDb);
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicCategoryDb.setStatus(StatusEnums.NORMAL.getCode());
+                        topicCategoryMapper.insert(topicCategoryDb);
+                    } else {
+                        // 不是开发者是会员需要审核
+                        topicCategoryDb.setStatus(StatusEnums.AUDITING.getCode());
+                        topicCategoryMapper.insert(topicCategoryDb);
+                        // 封装发送消息数据
+                        TopicCategoryDto topicCategoryDto = new TopicCategoryDto();
+                        topicCategoryDto.setCategoryName(topicCategoryExcel.getCategoryName());
+                        topicCategoryDto.setId(topicCategoryDb.getId());
+                        // 转换字符串
+                        String jsonString = JSON.toJSONString(topicCategoryDto);
+                        log.info("发送消息{}", jsonString);
+                        // 异步调用发送消息给ai审核
+                        rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
+                    }
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目分类：").append(topicCategoryDb.getCategoryName()).append("-导入成功");
                 } else if (updateSupport) {
                     // 更新
                     BeanUtils.copyProperties(topicCategoryExcel, topicCategory);
+                    // 判断要更新的名称和当前数据库的名称是否一致
+                    if (!topicCategory.getCategoryName().equals(topicCategoryExcel.getCategoryName())) {
+                        // 不一致
+                        if (currentId == 1L) {
+                            // 是开发者不需要审核
+                            topicCategory.setStatus(StatusEnums.NORMAL.getCode());
+                        } else {
+                            // 不是开发者是会员需要审核
+                            topicCategory.setStatus(StatusEnums.AUDITING.getCode());
+                            // 封装发送消息数据
+                            TopicCategoryDto topicCategoryDto = new TopicCategoryDto();
+                            topicCategoryDto.setCategoryName(topicCategory.getCategoryName());
+                            topicCategoryDto.setId(topicCategory.getId());
+                            // 转换字符串
+                            String jsonString = JSON.toJSONString(topicCategoryDto);
+                            log.info("发送消息{}", jsonString);
+                            // 异步调用发送消息给ai审核
+                            rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
+                        }
+                    }
                     topicCategoryMapper.updateById(topicCategory);
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目分类：").append(topicCategory.getCategoryName()).append("-更新成功");
