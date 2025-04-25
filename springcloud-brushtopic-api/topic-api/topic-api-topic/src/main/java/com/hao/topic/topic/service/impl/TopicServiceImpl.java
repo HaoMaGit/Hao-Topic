@@ -4,6 +4,7 @@ package com.hao.topic.topic.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -14,7 +15,6 @@ import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.model.vo.topic.TopicVo;
-import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -199,8 +199,19 @@ public class TopicServiceImpl implements TopicService {
                 throw new TopicException(ResultCodeEnum.TOPIC_EVERYDAY_ERROR);
             }
         }
-        // TODO 生成AI题目
-        // TODO 异步发送信息给AI审核
+
+        // 获取当前用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        if (currentId == 1L) {
+            // 是开发者不需要审核
+            topic.setStatus(StatusEnums.NORMAL.getCode());
+        } else {
+            // 不是开发者需要审核
+            topic.setStatus(StatusEnums.AUDITING.getCode());
+            // TODO 异步发送信息给AI审核
+        }
+        // TODO 异步发送信息生成AI答案
+
         // 开始插入
         topicMapper.insert(topic);
 

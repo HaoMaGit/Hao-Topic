@@ -1,10 +1,10 @@
 package com.hao.topic.ai.receiver;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.api.utils.constant.RabbitConstant;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
-import com.hao.topic.model.entity.topic.TopicSubject;
+import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -24,14 +24,35 @@ import java.io.IOException;
  */
 @Component
 @Slf4j
-public class SubjectReceiver {
+public class AuditReceiver {
 
     @Autowired
     private ModelService modelService;
 
+    /**
+     * 接收生产者题目分类发送审核的信息
+     *
+     * @param topicAuditCategoryJson 要审核的分类
+     * @param message                接收到的完整消息对象
+     * @param channel                跟mq通信的方法
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(value = @Queue(value = RabbitConstant.CATEGORY_AUDIT_QUEUE_NAME),// 存储消息队列
+                    exchange = @Exchange(value = RabbitConstant.CATEGORY_AUDIT_EXCHANGE),// 转发消息的交换机
+                    key = {RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME}))// 路由key
+    public void auditCategory(String topicAuditCategoryJson, Message message, Channel channel) throws IOException {
+        log.info("接收到分类审核消息{}", topicAuditCategoryJson);
+        // 转换json
+        TopicCategoryDto topicCategoryDto = JSON.parseObject(topicAuditCategoryJson, TopicCategoryDto.class);
+        // 开始审核
+        modelService.auditCategory(topicCategoryDto);
+        // 手动确认该消息 通过唯一标识已被消费
+        // 参数1：标号用于消息确认 记载 消息重试等
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+    }
 
     /**
-     * 接收生产者发送审核的信息
+     * 接收生产者题目专题发送审核的信息
      *
      * @param topicAuditSubjectJson 要审核的专题
      * @param message               接收到的完整消息对象
@@ -42,7 +63,7 @@ public class SubjectReceiver {
                     exchange = @Exchange(value = RabbitConstant.SUBJECT_AUDIT_EXCHANGE),// 转发消息的交换机
                     key = {RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME}))// 路由key
     public void auditSubject(String topicAuditSubjectJson, Message message, Channel channel) throws IOException {
-        log.info("接收到专题审核消息{}",topicAuditSubjectJson);
+        log.info("接收到专题审核消息{}", topicAuditSubjectJson);
         // // 转换json
         // TopicAuditSubject topicAuditSubject = JSON.parseObject(topicAuditSubjectJson, TopicAuditSubject.class);
         // // 开始审核

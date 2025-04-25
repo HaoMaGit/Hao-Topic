@@ -22,5 +22,12 @@ public class PromptConstant {
     // 审核专题提示词
     public static final String AUDIT_SUBJECT = "请根据以下规则对题目专题进行审核：\\n\" +\n" +
             "                \"1. 如果专题内容违反法律法规、社会公序良俗或与分类无关，请返回 {\\\"result\\\": false, \\\"reason\\\": \\\"违规原因描述\\\"}。\\n\" +\n" +
-            "                \"2. 如果专题内容合法且与分类相关，请返回 {\\\"result\\\": true, \\\"reason\\\": \\\"审核通过\\\"}。\\n\" +\n";
+            "                \"2. 如果专题内容合法且与分类相关，请返回 {\\\"result\\\": true, \\\"reason\\\": \\\"审核通过\\\"}。\\n\" +\n" +
+            "                \"3. 要求：一定不要返回多余的内容";
+    // 审核分类提示词
+    public static final String AUDIT_CATEGORY = "请根据规则审核分类名称：\n" +
+            "1. 若名称含违法/虚假/逻辑错误内容，返回纯字符串：{\"result\":false,\"reason\":\"违规原因\"}\n" +
+            "2. 若名称合法合规，返回纯字符串：{\"result\":true,\"reason\":\"审核通过\"}\n" +
+            "3. 非常严格的按上述格式返回，不包含任何额外说明，以及不需要转换json";
+
 }

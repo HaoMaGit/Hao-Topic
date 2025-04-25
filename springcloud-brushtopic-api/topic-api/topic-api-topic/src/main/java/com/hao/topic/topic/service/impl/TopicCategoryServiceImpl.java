@@ -1,8 +1,12 @@
 package com.hao.topic.topic.service.impl;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.constant.RabbitConstant;
+import com.hao.topic.api.utils.enums.StatusEnums;
+import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -13,7 +17,6 @@ import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicCategorySubject;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
-import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.service.TopicCategoryService;
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
 public class TopicCategoryServiceImpl implements TopicCategoryService {
     private final TopicCategoryMapper topicCategoryMapper;
     private final TopicCategorySubjectMapper topicCategorySubjectMapper;
+    private final RabbitService rabbitService;
 
     /**
      * 分页查询分类列表
@@ -110,10 +114,26 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
         }
         // 获取当前用户登录名称
         String username = SecurityUtils.getCurrentName();
+        // 获取当前id
+        Long currentId = SecurityUtils.getCurrentId();
         TopicCategory topicCategory = new TopicCategory();
         topicCategory.setCategoryName(topicCategoryDto.getCategoryName());
         topicCategory.setCreateBy(username);
-        topicCategoryMapper.insert(topicCategory);
+        if (currentId == 1L) {
+            // 是开发者不需要审核
+            topicCategory.setStatus(StatusEnums.NORMAL.getCode());
+            topicCategoryMapper.insert(topicCategory);
+        } else {
+            // 不是开发者进行审核
+            topicCategory.setStatus(StatusEnums.AUDITING.getCode());
+            topicCategoryMapper.insert(topicCategory);
+            topicCategoryDto.setId(topicCategory.getId());
+            // 转换json
+            String jsonString = JSON.toJSONString(topicCategoryDto);
+            log.info("发送的消息：{}", jsonString);
+            // 异步发送消息调用ai审核
+            rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
+        }
     }
 
     /**
@@ -268,5 +288,21 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 审核分类
+     *
+     * @param topicCategory
+     */
+    public void auditCategory(TopicCategory topicCategory) {
+        // 查询一下这个分类存不存在
+        TopicCategory topicCategoryDb = topicCategoryMapper.selectById(topicCategory.getId());
+        if (topicCategoryDb == null) {
+            throw new TopicException(ResultCodeEnum.CATEGORY_UPDATE_IS_NULL);
+        }
+        // 开始修改
+        BeanUtils.copyProperties(topicCategory, topicCategoryDb);
+        topicCategoryMapper.updateById(topicCategory);
     }
 }

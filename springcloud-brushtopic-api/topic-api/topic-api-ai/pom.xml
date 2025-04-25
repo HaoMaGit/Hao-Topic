@@ -52,6 +52,13 @@
             <artifactId>topic-client-system</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- 题目远程服务 -->
+        <dependency>
+            <groupId>com.hao.topic</groupId>
+            <artifactId>topic-client-topic</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <!--管理springAi版本-->

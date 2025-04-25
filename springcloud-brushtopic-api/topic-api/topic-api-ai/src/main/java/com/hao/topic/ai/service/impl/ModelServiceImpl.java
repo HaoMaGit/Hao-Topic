@@ -14,16 +14,20 @@ import com.hao.topic.ai.mapper.AiHistoryMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
+import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.system.SystemFeignClient;
+import com.hao.topic.client.topic.TopicFeignClient;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
+import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
@@ -63,6 +67,9 @@ public class ModelServiceImpl implements ModelService {
 
     @Autowired
     private SystemFeignClient systemFeignClient;
+
+    @Autowired
+    private TopicFeignClient topicFeignClient;
 
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
@@ -422,5 +429,65 @@ public class ModelServiceImpl implements ModelService {
             log.error("解析AI返回结果失败: {}", content, e);
             // 处理解析失败的情况
         }
+    }
+
+    /**
+     * 审核分类名称是否合法
+     *
+     * @param topicCategoryDto
+     */
+    public void auditCategory(TopicCategoryDto topicCategoryDto) {
+        // 获取分类名称
+        String categoryName = topicCategoryDto.getCategoryName();
+        // 封装提示词
+        String prompt = PromptConstant.AUDIT_CATEGORY + "\n" +
+                "分类名称: 【" + categoryName + "】";
+        // 发送给ai
+        String content = getAiContent(prompt);
+        // 解析结果
+        log.info("AI返回结果: {}", content);
+        TopicCategory topicCategory = new TopicCategory();
+        try {
+            // 转换结果
+            JSONObject jsonObject = JSON.parseObject(content);
+            boolean result = false;
+            if (jsonObject != null) {
+                result = jsonObject.getBooleanValue("result");
+            }
+            String reason = null;
+            if (jsonObject != null) {
+                reason = jsonObject.getString("reason");
+            }
+            topicCategory.setId(topicCategoryDto.getId());
+            if (result) {
+                log.info("审核通过: {}", reason);
+                // 处理审核通过的逻辑
+                topicCategory.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                log.warn("审核未通过: {}", reason);
+                // 处理审核未通过的逻辑
+                // 失败原因
+                topicCategory.setFailMsg(reason);
+                topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            }
+        } catch (Exception e) {
+            log.error("解析AI返回结果失败: {}", content, e);
+            // 处理解析失败的情况
+            topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            topicCategory.setFailMsg("解析AI返回结果失败");
+        }
+        // 调用远程服务的接口实现状态修改
+        topicFeignClient.audit(topicCategory);
+    }
+
+    /**
+     * 获取ai返回的内容同步返回
+     */
+    public String getAiContent(String prompt) {
+        // 发送给ai
+        return this.chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
     }
 }

@@ -7,6 +7,7 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
+import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
@@ -68,6 +69,14 @@ public class TopicCategoryController {
     public Result update(@RequestBody TopicCategoryDto topicCategoryDto) {
         topicCategoryService.update(topicCategoryDto);
         return Result.success();
+    }
+
+    /**
+     * 审核修改题目分类
+     */
+    @PutMapping("/audit")
+    public void audit(@RequestBody TopicCategory topicCategory) {
+        topicCategoryService.auditCategory(topicCategory);
     }
 
     /**
@@ -134,6 +143,5 @@ public class TopicCategoryController {
         } catch (IOException e) {
             throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
         }
-
     }
 }

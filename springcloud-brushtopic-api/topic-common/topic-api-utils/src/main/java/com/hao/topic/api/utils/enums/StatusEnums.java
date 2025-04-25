@@ -1,4 +1,4 @@
-package com.hao.topic.topic.enums;
+package com.hao.topic.api.utils.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;

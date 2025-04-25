@@ -7,6 +7,7 @@ import com.alibaba.nacos.shaded.io.grpc.internal.JsonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.api.utils.constant.RabbitConstant;
+import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
@@ -24,7 +25,6 @@ import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
-import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.mapper.TopicSubjectMapper;
@@ -169,14 +169,27 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         topicSubject.setCreateBy(username);
         topicSubjectMapper.insert(topicSubject);
 
-        // 封装消息对象
-        TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
-        topicAuditSubject.setSubjectName(topicSubject.getSubjectName());
-        topicAuditSubject.setCategoryName(topicCategoryDb.getCategoryName());
-        topicAuditSubject.setId(topicSubject.getId());
+        // 获取当前id
+        Long currentId = SecurityUtils.getCurrentId();
+        if (currentId == 1L) {
+            // 是开发者不需要审核
+            topicSubject.setStatus(StatusEnums.NORMAL.getCode());
+        } else {
+            // 不是开发者需要审核
+            topicSubject.setStatus(StatusEnums.AUDITING.getCode());
+            // 封装消息对象
+            TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
+            topicAuditSubject.setSubjectName(topicSubject.getSubjectName());
+            topicAuditSubject.setCategoryName(topicCategoryDb.getCategoryName());
+            topicAuditSubject.setId(topicSubject.getId());
+            topicAuditSubject.setSubjectDesc(topicSubject.getSubjectDesc());
+            // 转换json
+            String topicAuditSubjectJson = JSON.toJSONString(topicAuditSubject);
+            log.info("发送消息{}", topicAuditSubjectJson);
+            // 异步发送消息给AI审核
+            rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, "sdfdfsdsf");
+        }
 
-        // 异步发送消息给AI审核
-        rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, "sdfdfsdsf");
         // 插入到关系表中
         TopicCategorySubject topicCategorySubject = new TopicCategorySubject();
         topicCategorySubject.setCategoryId(topicCategoryDb.getId());
@@ -435,7 +448,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         log.info("当前用户登录名称和id：{},{}", username, currentId);
         // 设置分页条件
         LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus,0);
+        topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, 0);
         // 判断是否为Hao
         if (currentId != 1L) {
 

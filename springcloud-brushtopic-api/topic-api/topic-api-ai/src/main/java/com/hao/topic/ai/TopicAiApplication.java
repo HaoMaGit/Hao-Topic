@@ -23,7 +23,8 @@ import org.springframework.context.annotation.Import;
         , @ComponentScan("com.hao.topic.common.handler"),
 })
 @Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
-@EnableFeignClients(basePackages = {"com.hao.topic.client.system"})
+@ComponentScan({"com.hao.topic.common.auth"})
+@EnableFeignClients(basePackages = {"com.hao.topic.client.system", "com.hao.topic.client.topic"})
 public class TopicAiApplication {
 
     public static void main(String[] args) {

@@ -3,6 +3,7 @@ package com.hao.topic.topic.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -15,7 +16,6 @@ import com.hao.topic.model.excel.topic.TopicLabelExcel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.model.vo.topic.TopicLabelVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
-import com.hao.topic.topic.enums.StatusEnums;
 import com.hao.topic.topic.mapper.TopicLabelMapper;
 import com.hao.topic.topic.mapper.TopicLabelTopicMapper;
 import com.hao.topic.topic.service.TopicLabelService;
@@ -109,7 +109,16 @@ public class TopicLabelServiceImpl implements TopicLabelService {
         TopicLabel topicLabel = new TopicLabel();
         topicLabel.setLabelName(topicLabelDto.getLabelName());
         topicLabel.setCreateBy(username);
-        // TODO 异步发送消息给AI审核
+        // 获取当前用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        if (currentId == 1L) {
+            // 是开发者不需要审核
+            topicLabel.setStatus(StatusEnums.NORMAL.getCode());
+        } else {
+            // 不是开发者进行审核
+            topicLabel.setStatus(StatusEnums.AUDITING.getCode());
+            // TODO 异步发送消息给AI审核
+        }
         topicLabelMapper.insert(topicLabel);
     }
 

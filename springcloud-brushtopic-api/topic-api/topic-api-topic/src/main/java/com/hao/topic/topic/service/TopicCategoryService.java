@@ -2,6 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
+import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,4 +27,7 @@ public interface TopicCategoryService {
     List<TopicCategoryExcelExport> getExcelVo(TopicCategoryListDto sysUserListDto, Long[] ids);
 
     String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
+
+    void auditCategory(TopicCategory topicCategory);
+
 }
