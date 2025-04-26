@@ -30,6 +30,7 @@ import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.topic.TopicCategory;
+import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
@@ -395,25 +396,28 @@ public class ModelServiceImpl implements ModelService {
     /**
      * 审核专题
      *
-     * @param topicSubject
+     * @param topicAuditSubject
      */
-    public void auditSubject(TopicAuditSubject topicSubject) {
+    public void auditSubject(TopicAuditSubject topicAuditSubject) {
         // 获取分类
-        String categoryName = topicSubject.getCategoryName();
+        String categoryName = topicAuditSubject.getCategoryName();
         // 获取专题名称
-        String subjectName = topicSubject.getSubjectName();
+        String subjectName = topicAuditSubject.getSubjectName();
+        // 专题描述
+        String subjectDesc = topicAuditSubject.getSubjectDesc();
         // 提示词
-        String prompt = PromptConstant.AUDIT_SUBJECT +
-                "专题内容: " + subjectName + "\n" +
-                "分类名称: " + categoryName;
+        String prompt = PromptConstant.AUDIT_SUBJECT + "\n" +
+                "专题内容: 【" + subjectName + "】\n" +
+                "专题描述: 【" + subjectDesc + "】\n" +
+                "分类名称: 【" + categoryName + "】";
         // 发送给ai
-        String content = this.chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content();
+        String content = getAiContent(prompt, topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
         // 解析结果
         log.info("AI返回结果: {}", content);
+        TopicSubject topicSubject = new TopicSubject();
+        StringBuilder resultContent = new StringBuilder();
         try {
+            // 转换结果
             JSONObject jsonObject = JSON.parseObject(content);
             boolean result = false;
             if (jsonObject != null) {
@@ -423,17 +427,31 @@ public class ModelServiceImpl implements ModelService {
             if (jsonObject != null) {
                 reason = jsonObject.getString("reason");
             }
+            topicSubject.setId(topicAuditSubject.getId());
             if (result) {
                 log.info("审核通过: {}", reason);
+                resultContent.append(resultContent.append(reason));
                 // 处理审核通过的逻辑
+                topicSubject.setStatus(StatusEnums.NORMAL.getCode());
             } else {
                 log.warn("审核未通过: {}", reason);
+                resultContent.append(resultContent.append(reason));
                 // 处理审核未通过的逻辑
+                // 失败原因
+                topicSubject.setFailMsg(reason);
+                topicSubject.setStatus(StatusEnums.AUDIT_FAIL.getCode());
             }
         } catch (Exception e) {
             log.error("解析AI返回结果失败: {}", content, e);
             // 处理解析失败的情况
+            topicSubject.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            topicSubject.setFailMsg("解析AI返回结果失败");
+            resultContent.append(resultContent.append("解析AI返回结果失败"));
         }
+        // 调用远程服务的接口实现状态修改
+        topicFeignClient.auditSubject(topicSubject);
+        // 记录日志
+        recordAuditLog(resultContent.toString(), topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
     }
 
     /**
@@ -448,7 +466,7 @@ public class ModelServiceImpl implements ModelService {
         String prompt = PromptConstant.AUDIT_CATEGORY + "\n" +
                 "分类名称: 【" + categoryName + "】";
         // 发送给ai
-        String content = getAiContent(prompt);
+        String content = getAiContent(prompt, topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
         // 解析结果
         log.info("AI返回结果: {}", content);
         TopicCategory topicCategory = new TopicCategory();
@@ -486,7 +504,7 @@ public class ModelServiceImpl implements ModelService {
             resultContent.append(resultContent.append("解析AI返回结果失败"));
         }
         // 调用远程服务的接口实现状态修改
-        topicFeignClient.audit(topicCategory);
+        topicFeignClient.auditCategory(topicCategory);
         // 记录日志
         recordAuditLog(resultContent.toString(), topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
     }
@@ -494,7 +512,7 @@ public class ModelServiceImpl implements ModelService {
     /**
      * 获取ai返回的内容同步返回
      */
-    public String getAiContent(String prompt) {
+    public String getAiContent(String prompt, String account, Long userId) {
         try {
             // 发送给ai
             return this.chatClient.prompt()
@@ -504,9 +522,9 @@ public class ModelServiceImpl implements ModelService {
         } catch (Exception e) {
             // 记录日志
             AiAuditLog aiAuditLog = new AiAuditLog();
-            aiAuditLog.setAccount(SecurityUtils.getCurrentName());
+            aiAuditLog.setAccount(account);
             aiAuditLog.setContent("AI回复异常");
-            aiAuditLog.setUserId(SecurityUtils.getCurrentId());
+            aiAuditLog.setUserId(userId);
             aiAuditLogMapper.insert(aiAuditLog);
             throw new TopicException(ResultCodeEnum.FAIL);
         }

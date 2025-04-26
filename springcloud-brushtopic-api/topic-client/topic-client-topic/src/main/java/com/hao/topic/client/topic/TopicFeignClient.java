@@ -2,6 +2,7 @@ package com.hao.topic.client.topic;
 
 import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.model.entity.topic.TopicCategory;
+import com.hao.topic.model.entity.topic.TopicSubject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,5 +21,11 @@ public interface TopicFeignClient {
      * @param topicCategory
      */
     @PutMapping("/topic/category/audit")
-    public void audit(@RequestBody TopicCategory topicCategory);
+    public void auditCategory(@RequestBody TopicCategory topicCategory);
+
+    /**
+     * 审核专题
+     */
+    @PutMapping("/topic/subject/audit")
+    public void auditSubject(@RequestBody TopicSubject topicSubject);
 }

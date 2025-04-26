@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -167,27 +168,31 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         TopicSubject topicSubject = new TopicSubject();
         BeanUtils.copyProperties(topicSubjectDto, topicSubject);
         topicSubject.setCreateBy(username);
-        topicSubjectMapper.insert(topicSubject);
 
         // 获取当前id
         Long currentId = SecurityUtils.getCurrentId();
         if (currentId == 1L) {
             // 是开发者不需要审核
             topicSubject.setStatus(StatusEnums.NORMAL.getCode());
+            topicSubjectMapper.insert(topicSubject);
+
         } else {
             // 不是开发者需要审核
             topicSubject.setStatus(StatusEnums.AUDITING.getCode());
+            topicSubjectMapper.insert(topicSubject);
             // 封装消息对象
             TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
             topicAuditSubject.setSubjectName(topicSubject.getSubjectName());
             topicAuditSubject.setCategoryName(topicCategoryDb.getCategoryName());
             topicAuditSubject.setId(topicSubject.getId());
             topicAuditSubject.setSubjectDesc(topicSubject.getSubjectDesc());
+            topicAuditSubject.setAccount(username);
+            topicAuditSubject.setUserId(currentId);
             // 转换json
             String topicAuditSubjectJson = JSON.toJSONString(topicAuditSubject);
             log.info("发送消息{}", topicAuditSubjectJson);
             // 异步发送消息给AI审核
-            rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, "sdfdfsdsf");
+            rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
         }
 
         // 插入到关系表中
@@ -460,5 +465,25 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
             BeanUtils.copyProperties(topicSubject, topicSubjectVo);
             return topicSubjectVo;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 审核题目专题
+     *
+     * @param topicSubject
+     */
+    public void auditSubject(TopicSubject topicSubject) {
+        // 查询一下这个分类存不存在
+        TopicSubject topicSubjectDb = topicSubjectMapper.selectById(topicSubject.getId());
+        if (topicSubjectDb == null) {
+            throw new TopicException(ResultCodeEnum.SUBJECT_UPDATE_IS_NULL);
+        }
+        // 开始修改
+        BeanUtils.copyProperties(topicSubject, topicSubjectDb);
+        // 如果是正常将失败原因置空
+        if (Objects.equals(topicSubject.getStatus(), StatusEnums.NORMAL.getCode())) {
+            topicSubject.setFailMsg("");
+        }
+        topicSubjectMapper.updateById(topicSubject);
     }
 }

@@ -9,6 +9,7 @@ import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
+import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
@@ -88,6 +89,15 @@ public class TopicSubjectController {
     public Result update(@RequestBody TopicSubjectDto topicSubjectDto) {
         topicSubjectService.update(topicSubjectDto);
         return Result.success();
+    }
+
+
+    /**
+     * 审核修改题目专题
+     */
+    @PutMapping("/audit")
+    public void auditSubject(@RequestBody TopicSubject topicSubject) {
+        topicSubjectService.auditSubject(topicSubject);
     }
 
     /**

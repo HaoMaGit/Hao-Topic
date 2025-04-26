@@ -15,4 +15,6 @@ public class TopicAuditSubject implements Serializable {
     private String subjectName;
     private String categoryName;
     private String subjectDesc;
+    private String account;
+    private Long userId;
 }

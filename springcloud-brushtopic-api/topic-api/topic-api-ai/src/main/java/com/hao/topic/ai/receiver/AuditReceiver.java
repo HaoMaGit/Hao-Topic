@@ -33,8 +33,6 @@ public class AuditReceiver {
     private ModelService modelService;
 
 
-
-
     /**
      * 接收生产者题目分类发送审核的信息
      *
@@ -48,6 +46,9 @@ public class AuditReceiver {
                     key = {RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME}))// 路由key
     public void auditCategory(String topicAuditCategoryJson, Message message, Channel channel) {
         log.info("接收到分类审核消息{}", topicAuditCategoryJson);
+        // TODO 将消息存入redis判断是否有
+        // 如果有就直接返回
+        // 没有就消费
         // 转换json
         TopicAuditCategory topicAuditCategory = JSON.parseObject(topicAuditCategoryJson, TopicAuditCategory.class);
         try {
@@ -58,7 +59,7 @@ public class AuditReceiver {
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             log.error("接收到分类审核消息失败{}", topicAuditCategoryJson);
-            modelService.recordAuditLog("MQ收到消息失败", topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+            modelService.recordAuditLog("MQ接收消息失败", topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
         }
 
     }
@@ -74,15 +75,23 @@ public class AuditReceiver {
             bindings = @QueueBinding(value = @Queue(value = RabbitConstant.SUBJECT_AUDIT_QUEUE_NAME),// 存储消息队列
                     exchange = @Exchange(value = RabbitConstant.SUBJECT_AUDIT_EXCHANGE),// 转发消息的交换机
                     key = {RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME}))// 路由key
-    public void auditSubject(String topicAuditSubjectJson, Message message, Channel channel) throws IOException {
+    public void auditSubject(String topicAuditSubjectJson, Message message, Channel channel) {
         log.info("接收到专题审核消息{}", topicAuditSubjectJson);
-        // // 转换json
-        // TopicAuditSubject topicAuditSubject = JSON.parseObject(topicAuditSubjectJson, TopicAuditSubject.class);
-        // // 开始审核
-        // modelService.auditSubject(topicAuditSubject);
-        // // 手动确认该消息 通过唯一标识已被消费
-        // // 参数1：标号用于消息确认 记载 消息重试等
-        // channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        // TODO 将消息存入redis判断是否有
+        // 如果有就直接返回
+        // 没有就消费
+        // 转换json
+        TopicAuditSubject topicAuditSubject = JSON.parseObject(topicAuditSubjectJson, TopicAuditSubject.class);
+        try {
+            // 开始审核
+            modelService.auditSubject(topicAuditSubject);
+            // 手动确认该消息 通过唯一标识已被消费
+            // 参数1：标号用于消息确认 记载 消息重试等
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            log.error("接收到分类审核消息失败{}", topicAuditSubject);
+            modelService.recordAuditLog("MQ接收消息失败", topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
+        }
     }
 }
 

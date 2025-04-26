@@ -20,4 +20,5 @@ public class TopicSubject extends BaseEntity {
     private Integer status;
     @TableField(exist = false)
     private String categoryName;
+    private String failMsg;
 }

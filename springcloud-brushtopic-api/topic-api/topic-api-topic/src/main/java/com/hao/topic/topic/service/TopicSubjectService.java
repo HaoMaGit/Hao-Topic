@@ -2,6 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
+import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,5 +32,7 @@ public interface TopicSubjectService {
 
     List<TopicSubjectVo> list();
 
+
+    void auditSubject(TopicSubject topicSubject);
 
 }

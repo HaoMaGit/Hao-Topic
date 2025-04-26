@@ -75,7 +75,7 @@ public class TopicCategoryController {
      * 审核修改题目分类
      */
     @PutMapping("/audit")
-    public void audit(@RequestBody TopicCategory topicCategory) {
+    public void auditCategory(@RequestBody TopicCategory topicCategory) {
         topicCategoryService.auditCategory(topicCategory);
     }
 
