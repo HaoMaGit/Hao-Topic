@@ -253,7 +253,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
                 log.info("发送消息{}", topicAuditSubjectJson);
                 rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
             }
-
+            topicSubjectDb.setFailMsg("");
         }
         BeanUtils.copyProperties(topicSubjectDto, topicSubjectDb);
         topicSubjectMapper.updateById(topicSubjectDb);

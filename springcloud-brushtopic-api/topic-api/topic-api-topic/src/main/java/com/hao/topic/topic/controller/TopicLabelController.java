@@ -9,6 +9,7 @@ import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
+import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.excel.topic.TopicLabelExcel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.model.vo.topic.TopicLabelVo;
@@ -151,5 +152,15 @@ public class TopicLabelController {
     public Result<List<TopicLabelVo>> getSubject() {
         List<TopicLabelVo> list = topicLabelService.list();
         return Result.success(list);
+    }
+
+    /**
+     * 审核标签
+     *
+     * @param topicLabel
+     */
+    @PutMapping("/audit")
+    public void auditLabel(@RequestBody TopicLabel topicLabel) {
+        topicLabelService.auditLabel(topicLabel);
     }
 }

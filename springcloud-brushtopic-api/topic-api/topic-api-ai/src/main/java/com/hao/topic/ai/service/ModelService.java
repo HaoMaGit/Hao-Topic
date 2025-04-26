@@ -3,6 +3,7 @@ package com.hao.topic.ai.service;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.dto.topic.TopicAuditCategory;
+import com.hao.topic.model.dto.topic.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
@@ -37,5 +38,7 @@ public interface ModelService {
     void auditCategory(TopicAuditCategory topicCategoryDto);
 
     void recordAuditLog(String content, String account, Long userId);
+
+    void auditLabel(TopicAuditLabel topicAuditLabel);
 
 }

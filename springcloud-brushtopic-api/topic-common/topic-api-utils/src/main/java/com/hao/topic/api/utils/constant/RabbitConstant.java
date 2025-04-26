@@ -24,13 +24,11 @@ public class RabbitConstant {
     public static final String CATEGORY_AUDIT_QUEUE_NAME = "category.audit.queue";
     // 分类审核路由键
     public static final String CATEGORY_AUDIT_ROUTING_KEY_NAME = "category.audit.routing.key";
+    /**
+     * 标签审核
+     */
+    public static final String LABEL_AUDIT_EXCHANGE = "label.audit.exchange";
+    public static final String LABEL_AUDIT_QUEUE_NAME = "label.audit.queue";
+    public static final String LABEL_AUDIT_ROUTING_KEY_NAME = "label.audit.routing.key";
 
-    // // 审核成功的路由键发送到指定的交换机
-    // public static final String SUBJECT_AUDIT_ROUTING_KEY = "subject.audit.success.routing.key";
-    // // 审核失败的路由键发送到指定的交换机
-    // public static final String SUBJECT_AUDIT_ROUTING_KEY_ERROR = "subject.audit.error.routing.key";
-    // // 存储成功的队列消息等待消费者消费
-    // public static final String SUBJECT_AUDIT_SUCCESS_QUEUE_NAME = "subject.audit.success.queue";
-    // // 存储失败的队列消息等待消费者消费
-    // public static final String SUBJECT_AUDIT_ERROR_QUEUE_NAME = "subject.audit.error.queue";
 }

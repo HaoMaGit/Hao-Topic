@@ -1,13 +1,17 @@
 package com.hao.topic.topic.service.impl;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.constant.RabbitConstant;
 import com.hao.topic.api.utils.enums.StatusEnums;
+import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.topic.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.entity.topic.*;
@@ -30,6 +34,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +49,7 @@ public class TopicLabelServiceImpl implements TopicLabelService {
 
     private final TopicLabelMapper topicLabelMapper;
     private final TopicLabelTopicMapper topicLabelTopicMapper;
+    private final RabbitService rabbitService;
 
     /**
      * 分页查询标签列表
@@ -114,12 +120,21 @@ public class TopicLabelServiceImpl implements TopicLabelService {
         if (currentId == 1L) {
             // 是开发者不需要审核
             topicLabel.setStatus(StatusEnums.NORMAL.getCode());
+            topicLabelMapper.insert(topicLabel);
         } else {
             // 不是开发者进行审核
             topicLabel.setStatus(StatusEnums.AUDITING.getCode());
-            // TODO 异步发送消息给AI审核
+            topicLabelMapper.insert(topicLabel);
+            // 异步发送消息给AI审核
+            TopicAuditLabel topicAuditLabel = new TopicAuditLabel();
+            topicAuditLabel.setLabelName(topicLabelDto.getLabelName());
+            topicAuditLabel.setAccount(username);
+            topicAuditLabel.setUserId(currentId);
+            topicAuditLabel.setId(topicLabel.getId());
+            String topicAuditLabelJson = JSON.toJSONString(topicAuditLabel);
+            log.info("发送消息{}", topicAuditLabelJson);
+            rabbitService.sendMessage(RabbitConstant.LABEL_AUDIT_EXCHANGE, RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME, topicAuditLabelJson);
         }
-        topicLabelMapper.insert(topicLabel);
     }
 
     /**
@@ -134,11 +149,32 @@ public class TopicLabelServiceImpl implements TopicLabelService {
         if (topicLabel == null) {
             throw new TopicException(ResultCodeEnum.CATEGORY_UPDATE_IS_NULL);
         }
+        // 判断是否要修改的名称是一样的
+        if (!topicLabel.getLabelName().equals(topicLabelDto.getLabelName())) {
+            // 不一样
+            //  异步发送消息给AI审核
+            // 判断是否是开发者
+            Long currentId = SecurityUtils.getCurrentId();
+            if (currentId == 1L) {
+                // 是开发者不需要审核
+                topicLabel.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                // 不是开发者进行审核
+                topicLabel.setStatus(StatusEnums.AUDITING.getCode());
+                // 异步发送消息给AI审核
+                TopicAuditLabel topicAuditLabel = new TopicAuditLabel();
+                topicAuditLabel.setLabelName(topicLabelDto.getLabelName());
+                topicAuditLabel.setAccount(SecurityUtils.getCurrentName());
+                topicAuditLabel.setUserId(currentId);
+                topicAuditLabel.setId(topicLabelDto.getId());
+                String topicAuditLabelJson = JSON.toJSONString(topicAuditLabel);
+                log.info("发送消息{}", topicAuditLabelJson);
+                rabbitService.sendMessage(RabbitConstant.LABEL_AUDIT_EXCHANGE, RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME, topicAuditLabelJson);
+            }
+            topicLabel.setFailMsg("");
+        }
         // 开始修改
         topicLabel.setLabelName(topicLabelDto.getLabelName());
-        topicLabel.setStatus(StatusEnums.AUDITING.getCode());
-        // TODO 异步发送消息给AI审核
-
         topicLabelMapper.updateById(topicLabel);
     }
 
@@ -214,6 +250,7 @@ public class TopicLabelServiceImpl implements TopicLabelService {
     public String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException {
         // 获取当前用户登录名称
         String username = SecurityUtils.getCurrentName();
+        Long currentId = SecurityUtils.getCurrentId();
         // 读取数据
         List<TopicLabelExcel> excelVoList = EasyExcel.read(multipartFile.getInputStream())
                 // 映射数据
@@ -245,10 +282,51 @@ public class TopicLabelServiceImpl implements TopicLabelService {
                     TopicLabel topicLabelDb = new TopicLabel();
                     BeanUtils.copyProperties(topicLabelExcel, topicLabelDb);
                     topicLabelDb.setCreateBy(username);
-                    topicLabelMapper.insert(topicLabelDb);
+                    // 判断是否为开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicLabelDb.setStatus(StatusEnums.NORMAL.getCode());
+                        topicLabelMapper.insert(topicLabelDb);
+                    } else {
+                        // 不是开发者需要审核
+                        topicLabelDb.setStatus(StatusEnums.AUDITING.getCode());
+                        topicLabelMapper.insert(topicLabelDb);
+                        // 封装发送消息数据
+                        TopicAuditLabel topicAuditLabel = new TopicAuditLabel();
+                        // 封装审核消息
+                        topicAuditLabel.setAccount(username);
+                        topicAuditLabel.setUserId(currentId);
+                        topicAuditLabel.setLabelName(topicLabelDb.getLabelName());
+                        topicAuditLabel.setId(topicLabelDb.getId());
+                        // 转换字符串
+                        String jsonString = JSON.toJSONString(topicAuditLabel);
+                        log.info("发送消息{}", jsonString);
+                        // 异步调用发送消息给ai审核
+                        rabbitService.sendMessage(RabbitConstant.LABEL_AUDIT_EXCHANGE, RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME, jsonString);
+                    }
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目标签：").append(topicLabelDb.getLabelName()).append("-导入成功");
                 } else if (updateSupport) {
+                    // 判断要更新的名称和当前数据库的名称是否一致
+                    if (!topicLabel.getLabelName().equals(topicLabelExcel.getLabelName())) {
+                        // 不一致
+                        if (currentId == 1L) {
+                            // 是开发者不需要审核
+                            topicLabel.setStatus(StatusEnums.NORMAL.getCode());
+                        } else {
+                            // 不是开发者需要审核
+                            topicLabel.setStatus(StatusEnums.AUDITING.getCode());
+                            // 封装发送消息数据
+                            TopicAuditLabel topicAuditLabel = new TopicAuditLabel();
+                            topicAuditLabel.setAccount(username);
+                            topicAuditLabel.setUserId(currentId);
+                            topicAuditLabel.setLabelName(topicLabelExcel.getLabelName());
+                            topicAuditLabel.setId(topicLabel.getId());
+                            String jsonString = JSON.toJSONString(topicAuditLabel);
+                            log.info("发送消息{}", jsonString);
+                            rabbitService.sendMessage(RabbitConstant.LABEL_AUDIT_EXCHANGE, RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME, jsonString);
+                        }
+                    }
                     // 更新
                     BeanUtils.copyProperties(topicLabelExcel, topicLabel);
                     topicLabelMapper.updateById(topicLabel);
@@ -301,5 +379,25 @@ public class TopicLabelServiceImpl implements TopicLabelService {
             BeanUtils.copyProperties(topicLabel, topicLabelVo);
             return topicLabelVo;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 审核标签
+     *
+     * @param topicLabel
+     */
+    public void auditLabel(TopicLabel topicLabel) {
+        // 查询一下这个分类存不存在
+        TopicLabel topicLabelDb = topicLabelMapper.selectById(topicLabel.getId());
+        if (topicLabelDb == null) {
+            throw new TopicException(ResultCodeEnum.LABEL_NOT_EXIST);
+        }
+        // 开始修改
+        BeanUtils.copyProperties(topicLabel, topicLabelDb);
+        // 如果是正常将失败原因置空
+        if (Objects.equals(topicLabel.getStatus(), StatusEnums.NORMAL.getCode())) {
+            topicLabel.setFailMsg("");
+        }
+        topicLabelMapper.updateById(topicLabel);
     }
 }

@@ -24,12 +24,14 @@ import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
 import com.hao.topic.model.dto.topic.TopicAuditCategory;
+import com.hao.topic.model.dto.topic.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.entity.ai.AiAuditLog;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.topic.TopicCategory;
+import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
@@ -415,7 +417,7 @@ public class ModelServiceImpl implements ModelService {
         // 解析结果
         log.info("AI返回结果: {}", content);
         TopicSubject topicSubject = new TopicSubject();
-        StringBuilder resultContent = new StringBuilder();
+        String reason = null;
         try {
             // 转换结果
             JSONObject jsonObject = JSON.parseObject(content);
@@ -423,19 +425,16 @@ public class ModelServiceImpl implements ModelService {
             if (jsonObject != null) {
                 result = jsonObject.getBooleanValue("result");
             }
-            String reason = null;
             if (jsonObject != null) {
                 reason = jsonObject.getString("reason");
             }
             topicSubject.setId(topicAuditSubject.getId());
             if (result) {
                 log.info("审核通过: {}", reason);
-                resultContent.append(resultContent.append(reason));
                 // 处理审核通过的逻辑
                 topicSubject.setStatus(StatusEnums.NORMAL.getCode());
             } else {
                 log.warn("审核未通过: {}", reason);
-                resultContent.append(resultContent.append(reason));
                 // 处理审核未通过的逻辑
                 // 失败原因
                 topicSubject.setFailMsg(reason);
@@ -446,12 +445,12 @@ public class ModelServiceImpl implements ModelService {
             // 处理解析失败的情况
             topicSubject.setStatus(StatusEnums.AUDIT_FAIL.getCode());
             topicSubject.setFailMsg("解析AI返回结果失败");
-            resultContent.append(resultContent.append("解析AI返回结果失败"));
+            reason = "解析AI返回结果失败";
         }
         // 调用远程服务的接口实现状态修改
         topicFeignClient.auditSubject(topicSubject);
         // 记录日志
-        recordAuditLog(resultContent.toString(), topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
+        recordAuditLog(reason, topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
     }
 
     /**
@@ -470,7 +469,7 @@ public class ModelServiceImpl implements ModelService {
         // 解析结果
         log.info("AI返回结果: {}", content);
         TopicCategory topicCategory = new TopicCategory();
-        StringBuilder resultContent = new StringBuilder();
+        String reason = null;
         try {
             // 转换结果
             JSONObject jsonObject = JSON.parseObject(content);
@@ -478,19 +477,16 @@ public class ModelServiceImpl implements ModelService {
             if (jsonObject != null) {
                 result = jsonObject.getBooleanValue("result");
             }
-            String reason = null;
             if (jsonObject != null) {
                 reason = jsonObject.getString("reason");
             }
             topicCategory.setId(topicAuditCategory.getId());
             if (result) {
                 log.info("审核通过: {}", reason);
-                resultContent.append(resultContent.append(reason));
                 // 处理审核通过的逻辑
                 topicCategory.setStatus(StatusEnums.NORMAL.getCode());
             } else {
                 log.warn("审核未通过: {}", reason);
-                resultContent.append(resultContent.append(reason));
                 // 处理审核未通过的逻辑
                 // 失败原因
                 topicCategory.setFailMsg(reason);
@@ -501,12 +497,64 @@ public class ModelServiceImpl implements ModelService {
             // 处理解析失败的情况
             topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
             topicCategory.setFailMsg("解析AI返回结果失败");
-            resultContent.append(resultContent.append("解析AI返回结果失败"));
+            reason = "解析AI返回结果失败";
         }
         // 调用远程服务的接口实现状态修改
         topicFeignClient.auditCategory(topicCategory);
         // 记录日志
-        recordAuditLog(resultContent.toString(), topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+        recordAuditLog(reason, topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+    }
+
+    /**
+     * 审核题目标签是否合法
+     *
+     * @param topicAuditLabel
+     */
+    public void auditLabel(TopicAuditLabel topicAuditLabel) {
+        // 获取分类名称
+        String labelName = topicAuditLabel.getLabelName();
+        // 封装提示词
+        String prompt = PromptConstant.AUDIT_LABEL + "\n" +
+                "标签名称: 【" + labelName + "】";
+        // 发送给ai
+        String content = getAiContent(prompt, topicAuditLabel.getAccount(), topicAuditLabel.getUserId());
+        // 解析结果
+        log.info("AI返回结果: {}", content);
+        TopicLabel topicLabel = new TopicLabel();
+        String reason = null;
+        try {
+            // 转换结果
+            JSONObject jsonObject = JSON.parseObject(content);
+            boolean result = false;
+            if (jsonObject != null) {
+                result = jsonObject.getBooleanValue("result");
+            }
+            if (jsonObject != null) {
+                reason = jsonObject.getString("reason");
+            }
+            topicLabel.setId(topicAuditLabel.getId());
+            if (result) {
+                log.info("审核通过: {}", reason);
+                // 处理审核通过的逻辑
+                topicLabel.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                log.warn("审核未通过: {}", reason);
+                // 处理审核未通过的逻辑
+                // 失败原因
+                topicLabel.setFailMsg(reason);
+                topicLabel.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            }
+        } catch (Exception e) {
+            log.error("解析AI返回结果失败: {}", content, e);
+            // 处理解析失败的情况
+            topicLabel.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            topicLabel.setFailMsg("解析AI返回结果失败");
+            reason = "解析AI返回结果失败";
+        }
+        // 调用远程服务的接口实现状态修改
+        topicFeignClient.auditLabel(topicLabel);
+        // 记录日志
+        recordAuditLog(reason, topicAuditLabel.getAccount(), topicAuditLabel.getUserId());
     }
 
     /**
@@ -540,4 +588,6 @@ public class ModelServiceImpl implements ModelService {
         aiAuditLog.setUserId(userId);
         aiAuditLogMapper.insert(aiAuditLog);
     }
+
+
 }

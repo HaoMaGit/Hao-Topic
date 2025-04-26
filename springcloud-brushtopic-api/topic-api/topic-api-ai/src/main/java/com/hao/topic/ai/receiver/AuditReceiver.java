@@ -6,6 +6,7 @@ import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.api.utils.constant.RabbitConstant;
 import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.model.dto.topic.TopicAuditCategory;
+import com.hao.topic.model.dto.topic.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.rabbitmq.client.Channel;
@@ -58,8 +59,7 @@ public class AuditReceiver {
             // 参数1：标号用于消息确认 记载 消息重试等
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
-            log.error("接收到分类审核消息失败{}", topicAuditCategoryJson);
-            modelService.recordAuditLog("MQ接收消息失败", topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+            modelService.recordAuditLog("服务器发生异常", topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
         }
 
     }
@@ -89,8 +89,36 @@ public class AuditReceiver {
             // 参数1：标号用于消息确认 记载 消息重试等
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
-            log.error("接收到分类审核消息失败{}", topicAuditSubject);
-            modelService.recordAuditLog("MQ接收消息失败", topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
+            modelService.recordAuditLog("服务器发生异常", topicAuditSubject.getAccount(), topicAuditSubject.getUserId());
+        }
+    }
+
+    /**
+     * 接收生产者题目标签发送审核的信息
+     *
+     * @param topicAuditLabelJson 要审核的标签
+     * @param message             接收到的完整消息对象
+     * @param channel             跟mq通信的方法
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(value = @Queue(value = RabbitConstant.LABEL_AUDIT_QUEUE_NAME),// 存储消息队列
+                    exchange = @Exchange(value = RabbitConstant.LABEL_AUDIT_EXCHANGE),// 转发消息的交换机
+                    key = {RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME}))// 路由key
+    public void auditLabel(String topicAuditLabelJson, Message message, Channel channel) {
+        log.info("接收到标签审核消息{}", topicAuditLabelJson);
+        // TODO 将消息存入redis判断是否有
+        // 如果有就直接返回
+        // 没有就消费
+        // 转换json
+        TopicAuditLabel topicAuditLabel = JSON.parseObject(topicAuditLabelJson, TopicAuditLabel.class);
+        try {
+            // 开始审核
+            modelService.auditLabel(topicAuditLabel);
+            // 手动确认该消息 通过唯一标识已被消费
+            // 参数1：标号用于消息确认 记载 消息重试等
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            modelService.recordAuditLog("服务器发生异常", topicAuditLabel.getAccount(), topicAuditLabel.getUserId());
         }
     }
 }

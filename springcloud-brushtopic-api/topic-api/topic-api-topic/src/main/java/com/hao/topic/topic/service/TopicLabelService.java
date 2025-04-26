@@ -2,6 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
+import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.model.vo.topic.TopicLabelVo;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,4 +32,5 @@ public interface TopicLabelService {
     List<TopicLabelVo> list();
 
 
+    void auditLabel(TopicLabel topicLabel);
 }

@@ -14,4 +14,5 @@ public class TopicLabel  extends BaseEntity {
     private Integer status;
     private String createBy;
     private Long useCount;
+    private String failMsg;
 }

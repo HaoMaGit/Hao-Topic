@@ -184,6 +184,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                 // 异步发送消息给ai审核
                 rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
             }
+            topicCategory.setFailMsg("");
         }
         // 开始修改
         topicCategory.setCategoryName(topicCategoryDto.getCategoryName());
@@ -323,7 +324,6 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目分类：").append(topicCategoryDb.getCategoryName()).append("-导入成功");
                 } else if (updateSupport) {
-
                     // 判断要更新的名称和当前数据库的名称是否一致
                     if (!topicCategory.getCategoryName().equals(topicCategoryExcel.getCategoryName())) {
                         // 不一致
