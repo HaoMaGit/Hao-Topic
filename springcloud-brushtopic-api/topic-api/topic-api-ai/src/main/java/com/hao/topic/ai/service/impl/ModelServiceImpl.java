@@ -23,13 +23,15 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
-import com.hao.topic.model.dto.topic.TopicAuditCategory;
-import com.hao.topic.model.dto.topic.TopicAuditLabel;
-import com.hao.topic.model.dto.topic.TopicAuditSubject;
-import com.hao.topic.model.entity.ai.AiAuditLog;
+import com.hao.topic.model.dto.audit.TopicAudit;
+import com.hao.topic.model.dto.audit.TopicAuditCategory;
+import com.hao.topic.model.dto.audit.TopicAuditLabel;
+import com.hao.topic.model.dto.audit.TopicAuditSubject;
+import com.hao.topic.model.entity.ai.AiLog;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
+import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicSubject;
@@ -558,6 +560,89 @@ public class ModelServiceImpl implements ModelService {
     }
 
     /**
+     * 审核题目并生成题目答案
+     *
+     * @param topicAudit
+     */
+    public void auditTopic(TopicAudit topicAudit) {
+        // 获取题目标题
+        String topicName = topicAudit.getTopicName();
+        // 获取题目专题名称
+        String subjectName = topicAudit.getTopicSubjectName();
+        // 获取标题名称
+        String labelName = topicAudit.getTopicLabelName();
+        // 获取题目答案
+        String answer = topicAudit.getAnswer();
+        // 封装提示词
+        String prompt = PromptConstant.AUDIT_TOPIC + "\n" +
+                "面试题名称: 【" + topicName + "】\n" +
+                "用户输入的面试题答案: 【" + answer + "】\n" +
+                "关联标签可以有多个他们是通过':'分割的: 【" + labelName + "】\n" +
+                "所属专题: 【" + subjectName + "】\n";
+        // 发送给ai
+        String content = getAiContent(prompt, topicAudit.getAccount(), topicAudit.getUserId());
+        // 解析结果
+        log.info("AI返回结果: {}", content);
+        Topic topic = new Topic();
+        String reason = null;
+        try {
+            // 转换结果
+            JSONObject jsonObject = JSON.parseObject(content);
+            boolean result = false;
+            if (jsonObject != null) {
+                result = jsonObject.getBooleanValue("result");
+            }
+            if (jsonObject != null) {
+                reason = jsonObject.getString("reason");
+            }
+            topic.setId(topicAudit.getId());
+            if (result) {
+                log.info("审核通过: {}", reason);
+                // 处理审核通过的逻辑
+                topic.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                log.warn("审核未通过: {}", reason);
+                // 处理审核未通过的逻辑
+                topic.setAiAnswer("");
+                // 失败原因
+                topic.setFailMsg(reason);
+                topic.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            }
+        } catch (Exception e) {
+            log.error("解析AI返回结果失败: {}", content, e);
+            // 处理解析失败的情况
+            topic.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+            topic.setFailMsg("解析AI返回结果失败");
+            reason = "解析AI返回结果失败";
+        }
+        // 调用远程服务的接口实现状态修改
+        topicFeignClient.auditTopic(topic);
+        // 记录日志
+        recordAuditLog(reason, topicAudit.getAccount(), topicAudit.getUserId());
+    }
+
+    /**
+     * 生成ai答案
+     *
+     * @param topicAudit
+     */
+    public void generateAnswer(TopicAudit topicAudit) {
+        // 封装提示词
+        String prompt = PromptConstant.GENERATE_ANSWER + "\n" +
+                "面试题: 【" + topicAudit.getTopicName() + "】";
+        // 发送给ai
+        String aiContent = getAiContent(prompt, topicAudit.getAccount(), topicAudit.getUserId());
+        Topic topic = new Topic();
+        topic.setAiAnswer(aiContent);
+        topic.setId(topicAudit.getId());
+        // 调用远程服务的接口实现修改ai答案
+        topicFeignClient.updateAiAnswer(topic);
+        // 记录日志
+        recordAuditLog("生成AI答案成功啦！", topicAudit.getAccount(), topicAudit.getUserId());
+    }
+
+
+    /**
      * 获取ai返回的内容同步返回
      */
     public String getAiContent(String prompt, String account, Long userId) {
@@ -569,11 +654,11 @@ public class ModelServiceImpl implements ModelService {
                     .content();
         } catch (Exception e) {
             // 记录日志
-            AiAuditLog aiAuditLog = new AiAuditLog();
-            aiAuditLog.setAccount(account);
-            aiAuditLog.setContent("AI回复异常");
-            aiAuditLog.setUserId(userId);
-            aiAuditLogMapper.insert(aiAuditLog);
+            AiLog aiLog = new AiLog();
+            aiLog.setAccount(account);
+            aiLog.setContent("AI回复异常");
+            aiLog.setUserId(userId);
+            aiAuditLogMapper.insert(aiLog);
             throw new TopicException(ResultCodeEnum.FAIL);
         }
     }
@@ -582,12 +667,11 @@ public class ModelServiceImpl implements ModelService {
      * 记录审核的日志
      */
     public void recordAuditLog(String content, String account, Long userId) {
-        AiAuditLog aiAuditLog = new AiAuditLog();
-        aiAuditLog.setAccount(account);
-        aiAuditLog.setContent(content);
-        aiAuditLog.setUserId(userId);
-        aiAuditLogMapper.insert(aiAuditLog);
+        AiLog aiLog = new AiLog();
+        aiLog.setAccount(account);
+        aiLog.setContent(content);
+        aiLog.setUserId(userId);
+        aiAuditLogMapper.insert(aiLog);
     }
-
 
 }

@@ -30,5 +30,16 @@ public class RabbitConstant {
     public static final String LABEL_AUDIT_EXCHANGE = "label.audit.exchange";
     public static final String LABEL_AUDIT_QUEUE_NAME = "label.audit.queue";
     public static final String LABEL_AUDIT_ROUTING_KEY_NAME = "label.audit.routing.key";
-
+    /**
+     * 题目审核
+     */
+    public static final String TOPIC_AUDIT_EXCHANGE = "topic.audit.exchange";
+    public static final String TOPIC_AUDIT_QUEUE_NAME = "topic.audit.queue";
+    public static final String TOPIC_AUDIT_ROUTING_KEY_NAME = "topic.audit.routing.key";
+    /**
+     * ai生成面试答案
+     */
+    public static final String AI_ANSWER_EXCHANGE = "ai.answer.exchange";
+    public static final String AI_ANSWER_QUEUE_NAME = "ai.answer.queue";
+    public static final String AI_ANSWER_ROUTING_KEY_NAME = "ai.answer.routing.key";
 }

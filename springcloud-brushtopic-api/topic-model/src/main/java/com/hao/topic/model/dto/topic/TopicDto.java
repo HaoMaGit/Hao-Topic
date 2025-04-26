@@ -3,6 +3,7 @@ package com.hao.topic.model.dto.topic;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  * Date: 2025/4/16 21:46
  */
 @Data
-public class TopicDto {
+public class TopicDto implements Serializable {
     private Long id;
     @NotBlank(message = "题目名称不能为空")
     private String topicName;

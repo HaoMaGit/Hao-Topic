@@ -64,20 +64,16 @@ public enum ResultCodeEnum {
 
 
     TOPIC_NAME_EXIST(99928, "题目名称已存在"),
-
     SUBJECT_NOT_EXIST(99929, "题目专题不存在"),
-
     LABEL_NOT_EXIST(99930, "题目标签不存在"),
-
     TOPIC_UPDATE_IS_NULL(99931, "修改题目失败"),
-
     TOPIC_DELETE_IS_NULL(99932, "删除题目失败"),
-
     TOPIC_EVERYDAY_ERROR(99933, "每日推荐题目只能存在9个"),
-
     TOPIC_SUBJECT_IS_NULL(99934, "题目专题不能为空"),
-
     TOPIC_LABEL_IS_NULL(99935, "题目标签不能为空"),
+
+    // 生成ai答案失败
+    TOPIC_GENERATE_ANSWER_ERROR(99936, "生成ai答案失败"),
 
     SERVICE_ERROR(2012, "服务异常"),
 

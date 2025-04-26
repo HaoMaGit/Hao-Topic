@@ -19,4 +19,5 @@ public class Topic extends BaseEntity {
     private Long viewCount;
     private Integer status;
     private String createBy;
+    private String failMsg;
 }

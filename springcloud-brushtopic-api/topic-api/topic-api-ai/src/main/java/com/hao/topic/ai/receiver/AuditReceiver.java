@@ -1,14 +1,12 @@
 package com.hao.topic.ai.receiver;
 
 import com.alibaba.fastjson2.JSON;
-import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.api.utils.constant.RabbitConstant;
-import com.hao.topic.api.utils.mq.RabbitService;
-import com.hao.topic.model.dto.topic.TopicAuditCategory;
-import com.hao.topic.model.dto.topic.TopicAuditLabel;
-import com.hao.topic.model.dto.topic.TopicAuditSubject;
-import com.hao.topic.model.dto.topic.TopicCategoryDto;
+import com.hao.topic.model.dto.audit.TopicAudit;
+import com.hao.topic.model.dto.audit.TopicAuditCategory;
+import com.hao.topic.model.dto.audit.TopicAuditLabel;
+import com.hao.topic.model.dto.audit.TopicAuditSubject;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -18,8 +16,6 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /**
  * Description: 接收专题审核消息
@@ -119,6 +115,64 @@ public class AuditReceiver {
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception e) {
             modelService.recordAuditLog("服务器发生异常", topicAuditLabel.getAccount(), topicAuditLabel.getUserId());
+        }
+    }
+
+    /**
+     * 接收生产者题目发送审核的信息
+     *
+     * @param topicAuditJson 要审核的题目
+     * @param message        接收到的完整消息对象
+     * @param channel        跟mq通信的方法
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(value = @Queue(value = RabbitConstant.TOPIC_AUDIT_QUEUE_NAME),// 存储消息队列
+                    exchange = @Exchange(value = RabbitConstant.TOPIC_AUDIT_EXCHANGE),// 转发消息的交换机
+                    key = {RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME}))// 路由key
+    public void auditTopic(String topicAuditJson, Message message, Channel channel) {
+        log.info("接收到题目审核消息{}", topicAuditJson);
+        // TODO 将消息存入redis判断是否有
+        // 如果有就直接返回
+        // 没有就消费
+        // 转换json
+        TopicAudit topicAudit = JSON.parseObject(topicAuditJson, TopicAudit.class);
+        try {
+            // 开始审核
+            modelService.auditTopic(topicAudit);
+            // 手动确认该消息 通过唯一标识已被消费
+            // 参数1：标号用于消息确认 记载 消息重试等
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            modelService.recordAuditLog("服务器发生异常", topicAudit.getAccount(), topicAudit.getUserId());
+        }
+    }
+
+    /**
+     * 接收生产者题目发送生成ai答案的信息
+     *
+     * @param topicAuditJson 要生成的题目
+     * @param message        接收到的完整消息对象
+     * @param channel        跟mq通信的方法
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(value = @Queue(value = RabbitConstant.AI_ANSWER_QUEUE_NAME),// 存储消息队列
+                    exchange = @Exchange(value = RabbitConstant.AI_ANSWER_EXCHANGE),// 转发消息的交换机
+                    key = {RabbitConstant.AI_ANSWER_ROUTING_KEY_NAME}))// 路由key
+    public void generateAnswer(String topicAuditJson, Message message, Channel channel) {
+        log.info("接收到题目生成答案消息{}", topicAuditJson);
+        // TODO 将消息存入redis判断是否有
+        // 如果有就直接返回
+        // 没有就消费
+        // 转换json
+        TopicAudit topicAudit = JSON.parseObject(topicAuditJson, TopicAudit.class);
+        try {
+            // 开始审核
+            modelService.generateAnswer(topicAudit);
+            // 手动确认该消息 通过唯一标识已被消费
+            // 参数1：标号用于消息确认 记载 消息重试等
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            modelService.recordAuditLog("服务器发生异常", topicAudit.getAccount(), topicAudit.getUserId());
         }
     }
 }

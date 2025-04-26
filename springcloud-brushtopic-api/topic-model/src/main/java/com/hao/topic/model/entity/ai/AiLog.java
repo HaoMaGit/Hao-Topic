@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.hao.topic.model.entity.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
  * Date: 2025/4/26 9:34
  */
 @Data
-public class AiAuditLog  {
+public class AiLog {
     @TableId(type = IdType.AUTO)
     private Long id;
 

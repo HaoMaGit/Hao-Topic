@@ -38,7 +38,7 @@ public class TopicExcel {
     private Integer isMember;
     @ExcelProperty(value = "题目专题")
     private String subjectName;
-    @ColumnWidth(50)
+    @ColumnWidth(80)
     @ExcelProperty(value = "题目标签格式(label1:label2:label3等等")
     private String labelName;
 }

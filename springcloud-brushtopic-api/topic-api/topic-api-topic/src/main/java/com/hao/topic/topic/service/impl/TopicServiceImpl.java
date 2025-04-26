@@ -2,13 +2,18 @@ package com.hao.topic.topic.service.impl;
 
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hao.topic.api.utils.constant.RabbitConstant;
 import com.hao.topic.api.utils.enums.StatusEnums;
+import com.hao.topic.api.utils.mq.RabbitService;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.audit.TopicAudit;
+import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.*;
@@ -17,24 +22,16 @@ import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.model.vo.topic.TopicVo;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +48,7 @@ public class TopicServiceImpl implements TopicService {
     private final TopicSubjectMapper topicSubjectMapper;
     private final TopicLabelMapper topicLabelMapper;
     private final TopicLabelTopicMapper topicLabelTopicMapper;
+    private final RabbitService rabbitService;
 
     /**
      * 查询题目列表
@@ -177,11 +175,21 @@ public class TopicServiceImpl implements TopicService {
         if (topicSubject == null) {
             throw new TopicException(ResultCodeEnum.SUBJECT_NOT_EXIST);
         }
+        StringBuilder labelNames = new StringBuilder();
         // 查询标签
         List<TopicLabel> topicLabels = topicLabelMapper.selectBatchIds(topicDto.getLabelIds());
         if (CollectionUtils.isEmpty(topicLabels)) {
             throw new TopicException(ResultCodeEnum.LABEL_NOT_EXIST);
         }
+        for (TopicLabel topicLabel : topicLabels) {
+            labelNames.append(topicLabel.getLabelName());
+            // 拼接最后一个不要拼接
+            if (topicLabels.size() != topicLabels.indexOf(topicLabel) + 1) {
+                labelNames.append(":");
+            }
+        }
+        log.info("标签名称：{}", labelNames);
+
 
         // 获取当前用户登录名称
         String username = SecurityUtils.getCurrentName();
@@ -203,17 +211,27 @@ public class TopicServiceImpl implements TopicService {
         // 获取当前用户id
         Long currentId = SecurityUtils.getCurrentId();
         if (currentId == 1L) {
+            // 开始插入
+            topicMapper.insert(topic);
             // 是开发者不需要审核
             topic.setStatus(StatusEnums.NORMAL.getCode());
         } else {
+            topicMapper.insert(topic);
             // 不是开发者需要审核
             topic.setStatus(StatusEnums.AUDITING.getCode());
-            // TODO 异步发送信息给AI审核
+            // 异步发送信息给AI审核
+            TopicAudit topicAudit = new TopicAudit();
+            topicAudit.setId(topic.getId());
+            topicAudit.setTopicName(topic.getTopicName());
+            topicAudit.setAccount(username);
+            topicAudit.setAnswer(topic.getAnswer());
+            topicAudit.setUserId(currentId);
+            topicAudit.setTopicSubjectName(topicSubject.getSubjectName());
+            topicAudit.setTopicLabelName(labelNames.toString());
+            String topicAuditJson = JSON.toJSONString(topicAudit);
+            log.info("发送消息{}", topicAuditJson);
+            rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
         }
-        // TODO 异步发送信息生成AI答案
-
-        // 开始插入
-        topicMapper.insert(topic);
 
         // 插入到专题题目关系表中
         TopicSubjectTopic topicSubjectTopic = new TopicSubjectTopic();
@@ -260,10 +278,19 @@ public class TopicServiceImpl implements TopicService {
         if (CollectionUtils.isEmpty(topicLabels)) {
             throw new TopicException(ResultCodeEnum.LABEL_NOT_EXIST);
         }
+        StringBuilder labelNames = new StringBuilder();
+        for (TopicLabel topicLabel : topicLabels) {
+            labelNames.append(topicLabel.getLabelName());
+            // 拼接最后一个不要拼接
+            if (topicLabels.size() != topicLabels.indexOf(topicLabel) + 1) {
+                labelNames.append(":");
+            }
+        }
         // 修改题目
         Topic topic = new Topic();
         BeanUtils.copyProperties(topicDto, topic);
-
+        // 获取当前用户登录名称
+        String username = SecurityUtils.getCurrentName();
         // 每日题目只能有9题
         if (topic.getIsEveryday() == 1) {
             LambdaQueryWrapper<Topic> topicLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
@@ -273,9 +300,29 @@ public class TopicServiceImpl implements TopicService {
                 throw new TopicException(ResultCodeEnum.TOPIC_EVERYDAY_ERROR);
             }
         }
-        // TODO 生成AI题目
-        // TODO 异步发送信息给AI审核
-        topic.setStatus(StatusEnums.AUDITING.getCode());
+
+        // 获取当前用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        if (currentId == 1L) {
+            // 是开发者不需要审核
+            topic.setStatus(StatusEnums.NORMAL.getCode());
+        } else {
+            // 不是开发者需要审核
+            topic.setStatus(StatusEnums.AUDITING.getCode());
+            // 异步发送信息给AI审核
+            TopicAudit topicAudit = new TopicAudit();
+            topicAudit.setId(topicDto.getId());
+            topicAudit.setTopicName(topicDto.getTopicName());
+            topicAudit.setAccount(username);
+            topicAudit.setAnswer(topicDto.getAnswer());
+            topicAudit.setUserId(currentId);
+            topicAudit.setTopicSubjectName(topicSubject.getSubjectName());
+            topicAudit.setTopicLabelName(labelNames.toString());
+            String topicAuditJson = JSON.toJSONString(topicAudit);
+            log.info("发送消息{}", topicAuditJson);
+            rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
+        }
+        topic.setFailMsg("");
         // 开始更新
         topicMapper.updateById(topic);
 
@@ -492,10 +539,11 @@ public class TopicServiceImpl implements TopicService {
         StringBuilder successMsg = new StringBuilder();
         // 拼接错误消息
         StringBuilder failureMsg = new StringBuilder();
+        Long currentId = SecurityUtils.getCurrentId();
+
         // 遍历
         for (TopicMemberExcel topicExcel : excelVoList) {
             try {
-
                 // 查询这个题目是否存在
                 LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 topicLambdaQueryWrapper.eq(Topic::getTopicName, topicExcel.getTopicName());
@@ -505,9 +553,6 @@ public class TopicServiceImpl implements TopicService {
                     Topic topicDb = new Topic();
                     BeanUtils.copyProperties(topicExcel, topicDb);
                     topicDb.setCreateBy(username);
-                    topicMapper.insert(topicDb);
-                    // TODO 生成AI答案
-                    // TODO 异步发送信息给AI审核
                     if (topicExcel.getSubjectName() == null) {
                         throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
                     }
@@ -517,10 +562,24 @@ public class TopicServiceImpl implements TopicService {
                     // 查询专题
                     LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
                     topicSubjectLambdaQueryWrapper.eq(TopicSubject::getSubjectName, topicExcel.getSubjectName());
-                    TopicSubject topicSubjectDb = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                    TopicSubject topicSubjectDb = null;
+                    if (topicSubjectMapper != null) {
+                        topicSubjectDb = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                    }
                     if (StringUtils.isNull(topicSubjectDb)) {
                         throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
                     }
+                    // 判断是否是开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicDb.setStatus(StatusEnums.NORMAL.getCode());
+                        topicMapper.insert(topicDb);
+                    } else {
+                        // 不是开发者进行审核
+                        topicDb.setStatus(StatusEnums.AUDITING.getCode());
+                        topicMapper.insert(topicDb);
+                    }
+
                     topicSubjectDb.setTopicCount(topicSubjectDb.getTopicCount() + 1);
                     topicSubjectMapper.updateById(topicSubjectDb);
                     // 添加到题目关联专题表中
@@ -560,9 +619,24 @@ public class TopicServiceImpl implements TopicService {
                         topicLabelTopic.setLabelId(topicLabelDb.getId());
                         topicLabelTopicMapper.insert(topicLabelTopic);
                     }
+                    // 判断是否是开发者
+                    if (currentId == 1L) {
+                    } else {
+                        // 异步发送消息给AI审核
+                        TopicAudit topicAudit = new TopicAudit();
+                        topicAudit.setTopicName(topicExcel.getTopicName());
+                        topicAudit.setAnswer(topicExcel.getAnswer());
+                        topicAudit.setAccount(username);
+                        topicAudit.setUserId(currentId);
+                        topicAudit.setTopicSubjectName(topicExcel.getSubjectName());
+                        topicAudit.setTopicLabelName(topicExcel.getLabelName());
+                        topicAudit.setId(topicDb.getId());
+                        // 转换json
+                        String topicAuditJson = JSON.toJSONString(topicAudit);
+                        rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
+                    }
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目：").append(topicDb.getTopicName()).append("-导入成功");
-
                 } else if (updateSupport) {
                     if (topicExcel.getSubjectName() == null) {
                         throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
@@ -650,17 +724,31 @@ public class TopicServiceImpl implements TopicService {
                             }
                         }
                     }
+
+
+                    // 判断是否是开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topic.setStatus(StatusEnums.NORMAL.getCode());
+                    } else {
+                        // 不是开发者进行审核
+                        topic.setStatus(StatusEnums.AUDITING.getCode());
+                        // 异步发送消息给AI审核
+                        TopicAudit topicAudit = new TopicAudit();
+                        topicAudit.setTopicName(topicExcel.getTopicName());
+                        topicAudit.setAnswer(topicExcel.getAnswer());
+                        topicAudit.setAccount(username);
+                        topicAudit.setUserId(currentId);
+                        topicAudit.setTopicSubjectName(topicExcel.getSubjectName());
+                        topicAudit.setTopicLabelName(topicExcel.getLabelName());
+                        topicAudit.setId(topic.getId());
+                        // 转换json
+                        String topicAuditJson = JSON.toJSONString(topicAudit);
+                        rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
+                    }
+                    topic.setFailMsg("");
                     // 更新
                     BeanUtils.copyProperties(topicExcel, topic);
-                    // 把状态修改为待审核
-                    topic.setStatus(StatusEnums.AUDITING.getCode());
-                    // 判断当前题目名称是否与导入的名称一样
-                    if (!topic.getTopicName().equals(topicExcel.getTopicName())) {
-                        // 不一样将当前AI答案滞空
-                        topic.setAiAnswer("");
-                        // TODO 生成AI答案
-                        // TODO 异步发送信息给AI审核
-                    }
                     topicMapper.updateById(topic);
 
                     successNum++;
@@ -718,7 +806,7 @@ public class TopicServiceImpl implements TopicService {
         StringBuilder successMsg = new StringBuilder();
         // 拼接错误消息
         StringBuilder failureMsg = new StringBuilder();
-
+        Long currentId = SecurityUtils.getCurrentId();
         // 遍历
         for (TopicExcel topicExcel : excelVoList) {
             try {
@@ -732,9 +820,6 @@ public class TopicServiceImpl implements TopicService {
                     Topic topicDb = new Topic();
                     BeanUtils.copyProperties(topicExcel, topicDb);
                     topicDb.setCreateBy(username);
-                    topicMapper.insert(topicDb);
-                    // TODO 生成AI答案
-                    // TODO 异步发送信息给AI审核
                     if (topicExcel.getSubjectName() == null) {
                         throw new TopicException(ResultCodeEnum.TOPIC_SUBJECT_IS_NULL);
                     }
@@ -786,6 +871,28 @@ public class TopicServiceImpl implements TopicService {
                         topicLabelTopic.setTopicId(topicDb.getId());
                         topicLabelTopic.setLabelId(topicLabelDb.getId());
                         topicLabelTopicMapper.insert(topicLabelTopic);
+                    }
+                    // 判断是否是开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicDb.setStatus(StatusEnums.NORMAL.getCode());
+                        topicMapper.insert(topicDb);
+                    } else {
+                        // 不是开发者进行审核
+                        topicDb.setStatus(StatusEnums.AUDITING.getCode());
+                        topicMapper.insert(topicDb);
+                        // 异步发送消息给AI审核
+                        TopicAudit topicAudit = new TopicAudit();
+                        topicAudit.setTopicName(topicExcel.getTopicName());
+                        topicAudit.setAnswer(topicExcel.getAnswer());
+                        topicAudit.setAccount(username);
+                        topicAudit.setUserId(currentId);
+                        topicAudit.setTopicSubjectName(topicExcel.getSubjectName());
+                        topicAudit.setTopicLabelName(topicExcel.getLabelName());
+                        topicAudit.setId(topicDb.getId());
+                        // 转换json
+                        String topicAuditJson = JSON.toJSONString(topicAudit);
+                        rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
                     }
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目：").append(topicDb.getTopicName()).append("-导入成功");
@@ -877,23 +984,33 @@ public class TopicServiceImpl implements TopicService {
                             }
                         }
                     }
+
+                    // 判断是否是开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topic.setStatus(StatusEnums.NORMAL.getCode());
+                    } else {
+                        // 不是开发者进行审核
+                        topic.setStatus(StatusEnums.AUDITING.getCode());
+                        // 异步发送消息给AI审核
+                        TopicAudit topicAudit = new TopicAudit();
+                        topicAudit.setTopicName(topicExcel.getTopicName());
+                        topicAudit.setAnswer(topicExcel.getAnswer());
+                        topicAudit.setAccount(username);
+                        topicAudit.setUserId(currentId);
+                        topicAudit.setTopicSubjectName(topicExcel.getSubjectName());
+                        topicAudit.setTopicLabelName(topicExcel.getLabelName());
+                        topicAudit.setId(topic.getId());
+                        // 转换json
+                        String topicAuditJson = JSON.toJSONString(topicAudit);
+                        rabbitService.sendMessage(RabbitConstant.TOPIC_AUDIT_EXCHANGE, RabbitConstant.TOPIC_AUDIT_ROUTING_KEY_NAME, topicAuditJson);
+                    }
+                    topic.setFailMsg("");
                     // 更新
                     BeanUtils.copyProperties(topicExcel, topic);
-                    // 把状态修改为待审核
-                    topic.setStatus(StatusEnums.AUDITING.getCode());
-                    // 判断当前题目名称是否与导入的名称一样
-                    if (!topic.getTopicName().equals(topicExcel.getTopicName())) {
-                        // 不一样将当前AI答案滞空
-                        topic.setAiAnswer("");
-                        // TODO 生成AI答案
-                        // TODO 异步发送信息给AI审核
-                    }
                     topicMapper.updateById(topic);
-
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目：").append(topic.getTopicName()).append("-更新成功");
-
-
                 } else {
                     // 已存在
                     failureNum++;
@@ -913,6 +1030,62 @@ public class TopicServiceImpl implements TopicService {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 审核题目
+     *
+     * @param topic
+     */
+    public void auditTopic(Topic topic) {
+        // 查询一下这个题目存不存在
+        Topic topicDb = topicMapper.selectById(topic.getId());
+        if (topicDb == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_UPDATE_IS_NULL);
+        }
+        // 开始修改
+        BeanUtils.copyProperties(topic, topicDb);
+        // 如果是正常将失败原因置空
+        if (Objects.equals(topic.getStatus(), StatusEnums.NORMAL.getCode())) {
+            topic.setFailMsg("");
+        }
+        topicMapper.updateById(topic);
+    }
+
+    /**
+     * 生成ai答案
+     *
+     * @param id
+     */
+    public void generateAnswer(Long id) {
+        // 查询一下这个题目存不存在
+        Topic topicDb = topicMapper.selectById(id);
+        if (topicDb == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_GENERATE_ANSWER_ERROR);
+        }
+        // 发送消息给ai生成答案
+        TopicAudit topicAudit = new TopicAudit();
+        topicAudit.setTopicName(topicDb.getTopicName());
+        topicAudit.setId(topicDb.getId());
+        topicAudit.setUserId(SecurityUtils.getCurrentId());
+        topicAudit.setUserId(SecurityUtils.getCurrentId());
+        rabbitService.sendMessage(RabbitConstant.AI_ANSWER_EXCHANGE, RabbitConstant.AI_ANSWER_ROUTING_KEY_NAME, JSON.toJSONString(topicAudit));
+    }
+
+    /**
+     * 修改
+     *
+     * @param topic
+     */
+    public void updateAiAnswer(Topic topic) {
+        // 查询一下这个题目存不存在
+        Topic topicDb = topicMapper.selectById(topic.getId());
+        if (topicDb == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_GENERATE_ANSWER_ERROR);
+        }
+        // 将答案封装
+        topicDb.setAiAnswer(topic.getAiAnswer());
+        topicMapper.updateById(topicDb);
     }
 
 }

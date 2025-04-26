@@ -11,7 +11,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
-import com.hao.topic.model.dto.topic.TopicAuditLabel;
+import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicLabelDto;
 import com.hao.topic.model.dto.topic.TopicLabelListDto;
 import com.hao.topic.model.entity.topic.*;
@@ -19,7 +19,6 @@ import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.excel.topic.TopicLabelExcel;
 import com.hao.topic.model.excel.topic.TopicLabelExcelExport;
 import com.hao.topic.model.vo.topic.TopicLabelVo;
-import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.mapper.TopicLabelMapper;
 import com.hao.topic.topic.mapper.TopicLabelTopicMapper;
 import com.hao.topic.topic.service.TopicLabelService;
@@ -326,6 +325,7 @@ public class TopicLabelServiceImpl implements TopicLabelService {
                             log.info("发送消息{}", jsonString);
                             rabbitService.sendMessage(RabbitConstant.LABEL_AUDIT_EXCHANGE, RabbitConstant.LABEL_AUDIT_ROUTING_KEY_NAME, jsonString);
                         }
+                        topicLabel.setFailMsg("");
                     }
                     // 更新
                     BeanUtils.copyProperties(topicLabelExcel, topicLabel);

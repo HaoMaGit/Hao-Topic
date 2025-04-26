@@ -1,6 +1,7 @@
 package com.hao.topic.client.topic;
 
 import com.hao.topic.common.auth.TokenInterceptor;
+import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicSubject;
@@ -37,4 +38,15 @@ public interface TopicFeignClient {
      */
     @PutMapping("/topic/label/audit")
     void auditLabel(@RequestBody TopicLabel topicLabel);
+
+    /**
+     * 审核题目
+     *
+     * @param topic
+     */
+    @PutMapping("/topic/topic/audit")
+    void auditTopic(@RequestBody Topic topic);
+
+    @PutMapping("/topic/topic/answer")
+    void updateAiAnswer(@RequestBody Topic topic);
 }

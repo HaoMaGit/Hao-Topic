@@ -2,6 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.TopicExcelExport;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,4 +32,10 @@ public interface TopicService {
     String memberImport(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
 
     String adminImport(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
+
+    void auditTopic(Topic topic);
+
+    void generateAnswer(Long id);
+
+    void updateAiAnswer(Topic topic);
 }

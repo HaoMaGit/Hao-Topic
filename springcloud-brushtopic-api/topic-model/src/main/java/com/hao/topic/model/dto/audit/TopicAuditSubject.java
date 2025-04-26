@@ -1,4 +1,4 @@
-package com.hao.topic.model.dto.topic;
+package com.hao.topic.model.dto.audit;
 
 import lombok.Data;
 

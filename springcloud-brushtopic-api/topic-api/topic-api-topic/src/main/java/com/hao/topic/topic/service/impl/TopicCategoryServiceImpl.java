@@ -11,7 +11,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
-import com.hao.topic.model.dto.topic.TopicAuditCategory;
+import com.hao.topic.model.dto.audit.TopicAuditCategory;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
@@ -350,6 +350,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                             // 异步调用发送消息给ai审核
                             rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
                         }
+                        topicCategory.setFailMsg("");
                     }
                     // 更新
                     BeanUtils.copyProperties(topicCategoryExcel, topicCategory);

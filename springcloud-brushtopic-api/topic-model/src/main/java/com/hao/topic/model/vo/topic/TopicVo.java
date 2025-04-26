@@ -26,4 +26,5 @@ public class TopicVo extends BaseEntity {
     private String subject;
     // 标签
     private List<String> labels;
+    private String failMsg;
 }

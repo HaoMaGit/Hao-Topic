@@ -1,7 +1,7 @@
 package com.hao.topic.ai.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.hao.topic.model.entity.ai.AiAuditLog;
+import com.hao.topic.model.entity.ai.AiLog;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * Date: 2025/4/26 9:36
  */
 @Mapper
-public interface AiAuditLogMapper extends BaseMapper<AiAuditLog> {
+public interface AiAuditLogMapper extends BaseMapper<AiLog> {
 }

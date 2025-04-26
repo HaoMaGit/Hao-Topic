@@ -10,6 +10,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Description:
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Import;
 @Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
 @ComponentScan({"com.hao.topic.common.auth"})
 @EnableFeignClients(basePackages = {"com.hao.topic.client.system", "com.hao.topic.client.topic"})
+@EnableAsync
 public class TopicAiApplication {
 
     public static void main(String[] args) {

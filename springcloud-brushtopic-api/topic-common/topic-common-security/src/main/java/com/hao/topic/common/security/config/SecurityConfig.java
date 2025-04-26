@@ -53,7 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/topic/category/audit").permitAll()          // 流式接口不需要权限
                         .requestMatchers("/topic/subject/audit").permitAll()          // 流式接口不需要权限
                         .requestMatchers("/topic/label/audit").permitAll()          // 流式接口不需要权限
-                        .requestMatchers("/topic/audit").permitAll()          // 流式接口不需要权限
+                        .requestMatchers("/topic/topic/audit").permitAll()          // 流式接口不需要权限
+                        .requestMatchers("/topic/topic/answer").permitAll()          // 流式接口不需要权限
                         .requestMatchers(HttpMethod.GET).authenticated()  // 添加这行
                         .requestMatchers(HttpMethod.POST).authenticated() // 添加这行
                         .requestMatchers(HttpMethod.PUT).authenticated()  // 添加这行

@@ -9,6 +9,7 @@ import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -164,5 +165,31 @@ public class TopicController {
                 throw new TopicException(ResultCodeEnum.DOWNLOAD_ERROR);
             }
         }
+    }
+
+    /**
+     * 审核题目
+     *
+     * @param topic
+     */
+    @PutMapping("/audit")
+    public void auditTopic(@RequestBody Topic topic) {
+        topicService.auditTopic(topic);
+    }
+
+    /**
+     * 发送消息生成ai答案
+     */
+    @GetMapping("/generateAnswer/{id}")
+    public void generateAnswer(@PathVariable Long id) {
+        topicService.generateAnswer(id);
+    }
+
+    /**
+     * 修改ai答案
+     */
+    @PutMapping("/answer")
+    void updateAiAnswer(@RequestBody Topic topic) {
+        topicService.updateAiAnswer(topic);
     }
 }

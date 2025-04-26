@@ -2,8 +2,6 @@ package com.hao.topic.topic.service.impl;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.nacos.shaded.io.grpc.internal.JsonUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.api.utils.constant.RabbitConstant;
@@ -13,15 +11,13 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
-import com.hao.topic.model.dto.topic.TopicAuditSubject;
+import com.hao.topic.model.dto.audit.TopicAuditSubject;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicCategorySubject;
 import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.entity.topic.TopicSubjectTopic;
-import com.hao.topic.model.excel.topic.TopicCategoryExcel;
-import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
@@ -30,7 +26,6 @@ import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.mapper.TopicSubjectMapper;
 import com.hao.topic.topic.mapper.TopicSubjectTopicMapper;
 import com.hao.topic.topic.service.TopicSubjectService;
-import com.rabbitmq.tools.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -469,6 +464,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
                             log.info("发送消息{}", topicAuditSubjectJson);
                             rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
                         }
+                        topicSubject.setFailMsg("");
                     }
                     // 更新
                     BeanUtils.copyProperties(topicSubjectExcel, topicSubject);

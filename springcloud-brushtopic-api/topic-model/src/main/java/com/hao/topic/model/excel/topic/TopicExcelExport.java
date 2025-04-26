@@ -45,7 +45,7 @@ public class TopicExcelExport {
     @ColumnWidth(30)
     @ExcelProperty(value = "题目专题")
     private String subjectName;
-    @ColumnWidth(30)
+    @ColumnWidth(80)
     @ExcelProperty(value = "题目标签格式(label1:label2:label3等等")
     private String labelName;
 
