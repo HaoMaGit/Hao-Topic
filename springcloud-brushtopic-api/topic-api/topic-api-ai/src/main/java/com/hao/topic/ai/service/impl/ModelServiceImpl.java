@@ -18,6 +18,7 @@ import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.client.topic.TopicFeignClient;
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -43,6 +44,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -80,6 +82,9 @@ public class ModelServiceImpl implements ModelService {
 
     @Autowired
     private AiAuditLogMapper aiAuditLogMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
@@ -461,6 +466,8 @@ public class ModelServiceImpl implements ModelService {
      * @param topicAuditCategory
      */
     public void auditCategory(TopicAuditCategory topicAuditCategory) {
+        // 锁的key
+        String lockKey = RedisConstant.CATEGORY_AUDIT_KEY_PREFIX + topicAuditCategory.getId();
         // 获取分类名称
         String categoryName = topicAuditCategory.getCategoryName();
         // 封装提示词
@@ -487,12 +494,14 @@ public class ModelServiceImpl implements ModelService {
                 log.info("审核通过: {}", reason);
                 // 处理审核通过的逻辑
                 topicCategory.setStatus(StatusEnums.NORMAL.getCode());
+
             } else {
                 log.warn("审核未通过: {}", reason);
                 // 处理审核未通过的逻辑
                 // 失败原因
                 topicCategory.setFailMsg(reason);
                 topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
+
             }
         } catch (Exception e) {
             log.error("解析AI返回结果失败: {}", content, e);
@@ -500,11 +509,14 @@ public class ModelServiceImpl implements ModelService {
             topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
             topicCategory.setFailMsg("解析AI返回结果失败");
             reason = "解析AI返回结果失败";
+            // 释放锁
+            stringRedisTemplate.delete(lockKey);
         }
         // 调用远程服务的接口实现状态修改
         topicFeignClient.auditCategory(topicCategory);
         // 记录日志
         recordAuditLog(reason, topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+
     }
 
     /**

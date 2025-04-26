@@ -74,6 +74,7 @@ public enum ResultCodeEnum {
 
     // 生成ai答案失败
     TOPIC_GENERATE_ANSWER_ERROR(99936, "生成ai答案失败"),
+    TOPIC_GENERATE_ANSWER_PROCESSING(99937, "HaoAi正在努力生成中"),
 
     SERVICE_ERROR(2012, "服务异常"),
 

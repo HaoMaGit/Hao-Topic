@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.api.utils.constant.RabbitConstant;
 import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.api.utils.mq.RabbitService;
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -26,12 +27,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +52,7 @@ public class TopicServiceImpl implements TopicService {
     private final TopicLabelMapper topicLabelMapper;
     private final TopicLabelTopicMapper topicLabelTopicMapper;
     private final RabbitService rabbitService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 查询题目列表
@@ -1049,6 +1053,9 @@ public class TopicServiceImpl implements TopicService {
         if (Objects.equals(topic.getStatus(), StatusEnums.NORMAL.getCode())) {
             topic.setFailMsg("");
         }
+        topic.setAiAnswer("");
+        // 删除缓存
+        stringRedisTemplate.delete(RedisConstant.GENERATE_ANSWER_KEY_PREFIX + topic.getId());
         topicMapper.updateById(topic);
     }
 
@@ -1058,6 +1065,15 @@ public class TopicServiceImpl implements TopicService {
      * @param id
      */
     public void generateAnswer(Long id) {
+        // 防止重复生成
+        String s = stringRedisTemplate.opsForValue().get(RedisConstant.GENERATE_ANSWER_KEY_PREFIX + id);
+        // 判断
+        if (s == null || s.equals("")) {
+            // 为空就存入
+            stringRedisTemplate.opsForValue().set(RedisConstant.GENERATE_ANSWER_KEY_PREFIX + id, String.valueOf(id), 1, TimeUnit.DAYS);
+        } else {
+            throw new TopicException(ResultCodeEnum.TOPIC_GENERATE_ANSWER_PROCESSING);
+        }
         // 查询一下这个题目存不存在
         Topic topicDb = topicMapper.selectById(id);
         if (topicDb == null) {
@@ -1068,7 +1084,7 @@ public class TopicServiceImpl implements TopicService {
         topicAudit.setTopicName(topicDb.getTopicName());
         topicAudit.setId(topicDb.getId());
         topicAudit.setUserId(SecurityUtils.getCurrentId());
-        topicAudit.setUserId(SecurityUtils.getCurrentId());
+        topicAudit.setAccount(SecurityUtils.getCurrentName());
         rabbitService.sendMessage(RabbitConstant.AI_ANSWER_EXCHANGE, RabbitConstant.AI_ANSWER_ROUTING_KEY_NAME, JSON.toJSONString(topicAudit));
     }
 
