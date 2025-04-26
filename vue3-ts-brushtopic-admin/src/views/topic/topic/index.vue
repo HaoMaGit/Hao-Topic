@@ -7,9 +7,10 @@ import {
   DownloadOutlined,
   UploadOutlined,
   LoadingOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  RobotOutlined
 } from '@ant-design/icons-vue'
-import { apiGetTopicList, apiAddTopic, apiGetExportTemplate, apiUpdateTopic, apiDeleteTopic, apiExportTopic } from '@/api/topic/topic'
+import { apiGetTopicList, apiAddTopic, apiGenerateAnswer, apiGetExportTemplate, apiUpdateTopic, apiDeleteTopic, apiExportTopic } from '@/api/topic/topic'
 import { apiGetSubjectName } from '@/api/topic/subject'
 import { apiGetLabelName } from '@/api/topic/label'
 import type { TopicQueryType } from '@/api/topic/topic/type';
@@ -163,7 +164,7 @@ const columns = [
     key: 'operation',
     align: 'center',
     fixed: 'right', // 固定在右侧
-    width: 200
+    width: 230
   }
 ]
 
@@ -292,7 +293,7 @@ const upload = reactive({
   // 上传文件的loading
   uploadLoading: false,
   // 上传的地址
-  url: VITE_SERVE + (userStore.userInfo.identity === 2 ? "/api/topic/topic/memberImport" : "/api/topic/topic/adminImport"),
+  url: VITE_SERVE + (identity === 1 ? "/api/topic/topic/memberImport" : "/api/topic/topic/adminImport"),
   // 上传的文件
   uploadFileList: [],
   // 结果弹窗
@@ -488,6 +489,12 @@ const getLabelNameAndId = async () => {
   }
 }
 
+// 生成ai答案
+const handleGenerateAnswer = (id: number) => {
+  apiGenerateAnswer(id)
+  message.success('正在生成中，请稍后...')
+}
+
 
 
 onMounted(() => {
@@ -546,6 +553,9 @@ onMounted(() => {
         <template v-if="column.key === 'operation'">
           <a-button type="link" size="small" :icon="h(EditOutlined)" @click="handleEdit(record)">修改</a-button>
           <a-button type="link" size="small" :icon="h(DeleteOutlined)" @click="handleDelete(record)">删除</a-button>
+          <!-- 如果没有aiAnswer或者审核成功就显示生成答案按钮 -->
+          <a-button v-if="(record.aiAnswer === null || record.aiAnswer === '') && record.status === 0" type="link"
+            size="small" :icon="h(RobotOutlined)" @click="handleGenerateAnswer(record.id)">生成</a-button>
         </template>
         <template v-if="column.key === 'status'">
           <span>{{ statusMap[record.status] }}</span>

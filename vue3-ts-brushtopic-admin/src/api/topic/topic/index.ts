@@ -57,3 +57,11 @@ export function apiGetExportTemplate() {
     responseType: 'blob' // 二进制文件流
   })
 }
+
+// 生成ai答案
+export function apiGenerateAnswer(id: number) {
+  return request({
+    url: prefix + 'generateAnswer/' + id,
+    method: 'get',
+  })
+}
