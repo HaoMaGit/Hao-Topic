@@ -85,7 +85,7 @@ const columns = [
     width: 140,
   },
   {
-    title: '原因',
+    title: '失败原因',
     dataIndex: 'failMsg',
     key: 'failMsg',
     align: 'center',
