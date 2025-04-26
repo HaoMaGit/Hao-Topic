@@ -323,8 +323,7 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目分类：").append(topicCategoryDb.getCategoryName()).append("-导入成功");
                 } else if (updateSupport) {
-                    // 更新
-                    BeanUtils.copyProperties(topicCategoryExcel, topicCategory);
+
                     // 判断要更新的名称和当前数据库的名称是否一致
                     if (!topicCategory.getCategoryName().equals(topicCategoryExcel.getCategoryName())) {
                         // 不一致
@@ -352,6 +351,8 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                             rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
                         }
                     }
+                    // 更新
+                    BeanUtils.copyProperties(topicCategoryExcel, topicCategory);
                     topicCategoryMapper.updateById(topicCategory);
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目分类：").append(topicCategory.getCategoryName()).append("-更新成功");

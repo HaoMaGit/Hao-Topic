@@ -230,9 +230,32 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         topicCategorySubjectMapper
                 .delete(new LambdaQueryWrapper<TopicCategorySubject>()
                         .eq(TopicCategorySubject::getSubjectId, topicSubjectDto.getId()));
+        // 判断当前要修改的名称是否和数据库的名称一样
+        if (!topicSubjectDb.getSubjectName().equals(topicSubjectDto.getSubjectName())
+                || !topicSubjectDb.getSubjectDesc().equals(topicSubjectDto.getSubjectDesc())) {
+            // 不一致就要判断是否是开发者
+            Long currentId = SecurityUtils.getCurrentId();
+            if (currentId == 1L) {
+                // 是开发者不需要审核
+                topicSubjectDb.setStatus(StatusEnums.NORMAL.getCode());
+            } else {
+                // 不是开发者需要审核
+                topicSubjectDb.setStatus(StatusEnums.AUDITING.getCode());
+                // 异步发送消息给AI审核
+                TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
+                topicAuditSubject.setSubjectName(topicSubjectDb.getSubjectName());
+                topicAuditSubject.setCategoryName(topicCategoryDb.getCategoryName());
+                topicAuditSubject.setUserId(currentId);
+                topicAuditSubject.setAccount(SecurityUtils.getCurrentName());
+                topicAuditSubject.setId(topicSubjectDb.getId());
+                topicAuditSubject.setSubjectDesc(topicSubjectDto.getSubjectDesc());
+                String topicAuditSubjectJson = JSON.toJSONString(topicAuditSubject);
+                log.info("发送消息{}", topicAuditSubjectJson);
+                rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
+            }
+
+        }
         BeanUtils.copyProperties(topicSubjectDto, topicSubjectDb);
-        //  TODO 异步发送消息给AI审核
-        topicSubjectDb.setStatus(StatusEnums.AUDITING.getCode());
         topicSubjectMapper.updateById(topicSubjectDb);
         // 插入到关系表中
         TopicCategorySubject topicCategorySubject = new TopicCategorySubject();
@@ -341,6 +364,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
     public String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException {
         // 获取当前用户登录名称
         String username = SecurityUtils.getCurrentName();
+        Long currentId = SecurityUtils.getCurrentId();
         // 读取数据
         List<TopicSubjectExcel> excelVoList = EasyExcel.read(multipartFile.getInputStream())
                 // 映射数据
@@ -389,7 +413,27 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
                     TopicSubject topicSubjectDb = new TopicSubject();
                     BeanUtils.copyProperties(topicSubjectExcel, topicSubjectDb);
                     topicSubjectDb.setCreateBy(username);
-                    topicSubjectMapper.insert(topicSubjectDb);
+                    // 判断是否为开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicSubjectDb.setStatus(StatusEnums.NORMAL.getCode());
+                        topicSubjectMapper.insert(topicSubjectDb);
+                    } else {
+                        // 不是开发者需要审核
+                        topicSubjectDb.setStatus(StatusEnums.AUDITING.getCode());
+                        topicSubjectMapper.insert(topicSubjectDb);
+                        // 封装发送消息数据
+                        TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
+                        topicAuditSubject.setSubjectName(topicSubjectDb.getSubjectName());
+                        topicAuditSubject.setCategoryName(topicSubjectExcel.getCategoryName());
+                        topicAuditSubject.setId(topicSubjectDb.getId());
+                        topicAuditSubject.setAccount(SecurityUtils.getCurrentName());
+                        topicAuditSubject.setSubjectDesc(topicSubjectDb.getSubjectDesc());
+                        topicAuditSubject.setUserId(currentId);
+                        String topicAuditSubjectJson = JSON.toJSONString(topicAuditSubject);
+                        log.info("发送消息{}", topicAuditSubjectJson);
+                        rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
+                    }
                     TopicCategory topicCategory = topicCategoryMapper.selectOne(new LambdaQueryWrapper<TopicCategory>()
                             .eq(TopicCategory::getCategoryName, topicSubjectExcel.getCategoryName()));
                     // 插入到关联表
@@ -403,6 +447,29 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
                     successNum++;
                     successMsg.append("<br/>").append(successNum).append("-题目专题：").append(topicSubjectDb.getSubjectName()).append("-导入成功");
                 } else if (updateSupport) {
+                    // 判断是否为开发者
+                    if (currentId == 1L) {
+                        // 是开发者不需要审核
+                        topicSubject.setStatus(StatusEnums.NORMAL.getCode());
+                    } else {
+                        // 不是开发者判断当前要修改的名称和数据库的名称是否一样
+                        if (!topicSubjectExcel.getSubjectName().equals(topicSubject.getSubjectName())
+                                || !topicSubjectExcel.getSubjectDesc().equals(topicSubject.getSubjectDesc())
+                        ) {
+                            // 不是同一个名开始审核
+                            // 封装发送消息数据
+                            TopicAuditSubject topicAuditSubject = new TopicAuditSubject();
+                            topicAuditSubject.setSubjectName(topicSubjectExcel.getSubjectName());
+                            topicAuditSubject.setCategoryName(topicSubjectExcel.getCategoryName());
+                            topicAuditSubject.setId(topicSubject.getId());
+                            topicAuditSubject.setAccount(SecurityUtils.getCurrentName());
+                            topicAuditSubject.setUserId(currentId);
+                            topicAuditSubject.setSubjectDesc(topicSubjectExcel.getSubjectDesc());
+                            String topicAuditSubjectJson = JSON.toJSONString(topicAuditSubject);
+                            log.info("发送消息{}", topicAuditSubjectJson);
+                            rabbitService.sendMessage(RabbitConstant.SUBJECT_AUDIT_EXCHANGE, RabbitConstant.SUBJECT_AUDIT_ROUTING_KEY_NAME, topicAuditSubjectJson);
+                        }
+                    }
                     // 更新
                     BeanUtils.copyProperties(topicSubjectExcel, topicSubject);
                     topicSubjectMapper.updateById(topicSubject);
