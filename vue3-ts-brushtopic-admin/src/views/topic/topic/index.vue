@@ -41,6 +41,9 @@ const getTopicTopicList = async () => {
   tableData.value = res.data.rows
   tableLoading.value = false
 }
+// 获取当前用户身份
+const identity = userStore.userInfo.identity
+console.log('身份', identity);
 
 // 数量
 const total = ref(0);
@@ -134,11 +137,11 @@ const columns = [
     width: 120,
   },
   {
-    title: '创建人',
-    dataIndex: 'createBy',
-    key: 'createBy',
+    title: '失败原因',
+    dataIndex: 'failMsg',
+    key: 'failMsg',
     align: 'center',
-    width: 120,
+    width: 150,
   },
   {
     title: '创建时间',
@@ -163,6 +166,17 @@ const columns = [
     width: 200
   }
 ]
+
+// 如果不是会员，则添加“创建人”列
+if (identity !== 1) {
+  columns.splice(12, 0, {
+    title: '创建人',
+    dataIndex: 'createBy',
+    key: 'createBy',
+    align: 'center',
+    width: 120,
+  });
+}
 // 搜索
 const handleQuery = () => {
   if (createTimeDateRange.value && createTimeDateRange.value.length > 0) {
@@ -561,6 +575,14 @@ onMounted(() => {
             <template #title>{{ record?.aiAnswer }}</template>
             <!-- 超出部分显示为 tooltip截取20个字符 -->
             {{ record.aiAnswer != null ? record?.aiAnswer.slice(0, 20) : '' }}
+          </a-tooltip>
+        </template>
+        <!-- 分割原因 -->
+        <template v-if="column.key === 'failMsg'">
+          <a-tooltip>
+            <template #title>{{ record?.failMsg }}</template>
+            <!-- 超出部分显示为 tooltip截取20个字符 -->
+            {{ record?.failMsg?.slice(0, 20) }}
           </a-tooltip>
         </template>
       </template>

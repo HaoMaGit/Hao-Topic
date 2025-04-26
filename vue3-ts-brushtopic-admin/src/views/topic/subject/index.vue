@@ -592,7 +592,7 @@ onMounted(() => {
           <a-tooltip>
             <template #title>{{ record?.failMsg }}</template>
             <!-- 超出部分显示为 tooltip截取20个字符 -->
-            {{ record?.failMsg?.slice(0, 7) }}
+            {{ record?.failMsg?.slice(0, 20) }}
           </a-tooltip>
         </template>
       </template>

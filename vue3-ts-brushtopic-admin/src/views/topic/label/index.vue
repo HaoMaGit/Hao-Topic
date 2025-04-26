@@ -38,6 +38,10 @@ const getTopicLabelList = async () => {
   tableData.value = res.data.rows
   tableLoading.value = false
 }
+// 获取当前用户身份
+const identity = userStore.userInfo.identity
+console.log('身份', identity);
+
 // 数量
 const total = ref(0);
 // 时间
@@ -80,9 +84,9 @@ const columns = [
     width: 120,
   },
   {
-    title: '创建人',
-    dataIndex: 'createBy',
-    key: 'createBy',
+    title: '失败原因',
+    dataIndex: 'failMsg',
+    key: 'failMsg',
     align: 'center',
     width: 150,
   },
@@ -91,14 +95,14 @@ const columns = [
     dataIndex: 'createTime',
     key: 'createTime',
     align: 'center',
-    width: 170,
+    width: 160,
   },
   {
     title: '修改时间',
     dataIndex: 'updateTime',
     key: 'updateTime',
     align: 'center',
-    width: 170,
+    width: 160,
   },
   {
     title: '操作',
@@ -107,6 +111,17 @@ const columns = [
     align: 'center',
   }
 ]
+
+// 如果不是会员，则添加“创建人”列
+if (identity !== 1) {
+  columns.splice(5, 0, {
+    title: '创建人',
+    dataIndex: 'createBy',
+    key: 'createBy',
+    align: 'center',
+    width: 150,
+  });
+}
 // 搜索
 const handleQuery = () => {
   if (createTimeDateRange.value && createTimeDateRange.value.length > 0) {
@@ -410,6 +425,14 @@ onMounted(() => {
         </template>
         <template v-if="column.key === 'status'">
           <span>{{ statusMap[record.status] }}</span>
+        </template>
+        <!-- 分割原因 -->
+        <template v-if="column.key === 'failMsg'">
+          <a-tooltip>
+            <template #title>{{ record?.failMsg }}</template>
+            <!-- 超出部分显示为 tooltip截取20个字符 -->
+            {{ record?.failMsg?.slice(0, 7) }}
+          </a-tooltip>
         </template>
       </template>
     </a-table>
