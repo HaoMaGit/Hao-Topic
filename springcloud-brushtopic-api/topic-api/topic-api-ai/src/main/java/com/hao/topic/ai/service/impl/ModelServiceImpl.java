@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
+import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.properties.TtsProperties;
@@ -22,8 +23,9 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.dto.topic.TopicAuditCategory;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
-import com.hao.topic.model.dto.topic.TopicCategoryDto;
+import com.hao.topic.model.entity.ai.AiAuditLog;
 import com.hao.topic.model.entity.ai.AiHistory;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
@@ -70,6 +72,9 @@ public class ModelServiceImpl implements ModelService {
 
     @Autowired
     private TopicFeignClient topicFeignClient;
+
+    @Autowired
+    private AiAuditLogMapper aiAuditLogMapper;
 
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
@@ -434,11 +439,11 @@ public class ModelServiceImpl implements ModelService {
     /**
      * 审核分类名称是否合法
      *
-     * @param topicCategoryDto
+     * @param topicAuditCategory
      */
-    public void auditCategory(TopicCategoryDto topicCategoryDto) {
+    public void auditCategory(TopicAuditCategory topicAuditCategory) {
         // 获取分类名称
-        String categoryName = topicCategoryDto.getCategoryName();
+        String categoryName = topicAuditCategory.getCategoryName();
         // 封装提示词
         String prompt = PromptConstant.AUDIT_CATEGORY + "\n" +
                 "分类名称: 【" + categoryName + "】";
@@ -447,6 +452,7 @@ public class ModelServiceImpl implements ModelService {
         // 解析结果
         log.info("AI返回结果: {}", content);
         TopicCategory topicCategory = new TopicCategory();
+        StringBuilder resultContent = new StringBuilder();
         try {
             // 转换结果
             JSONObject jsonObject = JSON.parseObject(content);
@@ -458,13 +464,15 @@ public class ModelServiceImpl implements ModelService {
             if (jsonObject != null) {
                 reason = jsonObject.getString("reason");
             }
-            topicCategory.setId(topicCategoryDto.getId());
+            topicCategory.setId(topicAuditCategory.getId());
             if (result) {
                 log.info("审核通过: {}", reason);
+                resultContent.append(resultContent.append(reason));
                 // 处理审核通过的逻辑
                 topicCategory.setStatus(StatusEnums.NORMAL.getCode());
             } else {
                 log.warn("审核未通过: {}", reason);
+                resultContent.append(resultContent.append(reason));
                 // 处理审核未通过的逻辑
                 // 失败原因
                 topicCategory.setFailMsg(reason);
@@ -475,10 +483,12 @@ public class ModelServiceImpl implements ModelService {
             // 处理解析失败的情况
             topicCategory.setStatus(StatusEnums.AUDIT_FAIL.getCode());
             topicCategory.setFailMsg("解析AI返回结果失败");
+            resultContent.append(resultContent.append("解析AI返回结果失败"));
         }
         // 调用远程服务的接口实现状态修改
         topicFeignClient.audit(topicCategory);
-        // TODO 记录日志
+        // 记录日志
+        recordAuditLog(resultContent.toString(), topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
     }
 
     /**
@@ -492,8 +502,24 @@ public class ModelServiceImpl implements ModelService {
                     .call()
                     .content();
         } catch (Exception e) {
-            // TODO 记录日志
-            throw new TopicException(ResultCodeEnum.AI_ERROR);
+            // 记录日志
+            AiAuditLog aiAuditLog = new AiAuditLog();
+            aiAuditLog.setAccount(SecurityUtils.getCurrentName());
+            aiAuditLog.setContent("AI回复异常");
+            aiAuditLog.setUserId(SecurityUtils.getCurrentId());
+            aiAuditLogMapper.insert(aiAuditLog);
+            throw new TopicException(ResultCodeEnum.FAIL);
         }
+    }
+
+    /**
+     * 记录审核的日志
+     */
+    public void recordAuditLog(String content, String account, Long userId) {
+        AiAuditLog aiAuditLog = new AiAuditLog();
+        aiAuditLog.setAccount(account);
+        aiAuditLog.setContent(content);
+        aiAuditLog.setUserId(userId);
+        aiAuditLogMapper.insert(aiAuditLog);
     }
 }

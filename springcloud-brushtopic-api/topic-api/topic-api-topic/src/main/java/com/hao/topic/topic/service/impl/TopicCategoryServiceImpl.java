@@ -11,6 +11,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
+import com.hao.topic.model.dto.topic.TopicAuditCategory;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
@@ -129,8 +130,15 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             topicCategory.setStatus(StatusEnums.AUDITING.getCode());
             topicCategoryMapper.insert(topicCategory);
             topicCategoryDto.setId(topicCategory.getId());
+            // 封装审核消息
+            TopicAuditCategory topicAuditCategory = new TopicAuditCategory();
+            BeanUtils.copyProperties(topicCategoryDto, topicAuditCategory);
+            // 设置账户
+            topicAuditCategory.setAccount(username);
+            // 设置id
+            topicAuditCategory.setUserId(currentId);
             // 转换json
-            String jsonString = JSON.toJSONString(topicCategoryDto);
+            String jsonString = JSON.toJSONString(topicAuditCategory);
             log.info("发送的消息：{}", jsonString);
             // 异步发送消息调用ai审核
             rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
@@ -163,8 +171,15 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             } else {
                 // 不是开发者需要审核一下分类名称
                 topicCategory.setStatus(StatusEnums.AUDITING.getCode());
+                // 封装审核消息
+                TopicAuditCategory topicAuditCategory = new TopicAuditCategory();
+                BeanUtils.copyProperties(topicCategoryDto, topicAuditCategory);
+                // 设置账户
+                topicAuditCategory.setAccount(SecurityUtils.getCurrentName());
+                // 设置id
+                topicAuditCategory.setUserId(currentId);
                 // 转换json
-                String jsonString = JSON.toJSONString(topicCategoryDto);
+                String jsonString = JSON.toJSONString(topicAuditCategory);
                 log.info("发送的消息：{}", jsonString);
                 // 异步发送消息给ai审核
                 rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
@@ -292,8 +307,15 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                         TopicCategoryDto topicCategoryDto = new TopicCategoryDto();
                         topicCategoryDto.setCategoryName(topicCategoryExcel.getCategoryName());
                         topicCategoryDto.setId(topicCategoryDb.getId());
+                        // 封装审核消息
+                        TopicAuditCategory topicAuditCategory = new TopicAuditCategory();
+                        BeanUtils.copyProperties(topicCategoryDto, topicAuditCategory);
+                        // 设置账户
+                        topicAuditCategory.setAccount(SecurityUtils.getCurrentName());
+                        // 设置id
+                        topicAuditCategory.setUserId(currentId);
                         // 转换字符串
-                        String jsonString = JSON.toJSONString(topicCategoryDto);
+                        String jsonString = JSON.toJSONString(topicAuditCategory);
                         log.info("发送消息{}", jsonString);
                         // 异步调用发送消息给ai审核
                         rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);
@@ -316,8 +338,15 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
                             TopicCategoryDto topicCategoryDto = new TopicCategoryDto();
                             topicCategoryDto.setCategoryName(topicCategory.getCategoryName());
                             topicCategoryDto.setId(topicCategory.getId());
+                            // 封装审核消息
+                            TopicAuditCategory topicAuditCategory = new TopicAuditCategory();
+                            BeanUtils.copyProperties(topicCategoryDto, topicAuditCategory);
+                            // 设置账户
+                            topicAuditCategory.setAccount(SecurityUtils.getCurrentName());
+                            // 设置id
+                            topicAuditCategory.setUserId(currentId);
                             // 转换字符串
-                            String jsonString = JSON.toJSONString(topicCategoryDto);
+                            String jsonString = JSON.toJSONString(topicAuditCategory);
                             log.info("发送消息{}", jsonString);
                             // 异步调用发送消息给ai审核
                             rabbitService.sendMessage(RabbitConstant.CATEGORY_AUDIT_EXCHANGE, RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME, jsonString);

@@ -1,8 +1,11 @@
 package com.hao.topic.ai.receiver;
 
 import com.alibaba.fastjson2.JSON;
+import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.api.utils.constant.RabbitConstant;
+import com.hao.topic.api.utils.mq.RabbitService;
+import com.hao.topic.model.dto.topic.TopicAuditCategory;
 import com.hao.topic.model.dto.topic.TopicAuditSubject;
 import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.rabbitmq.client.Channel;
@@ -29,6 +32,9 @@ public class AuditReceiver {
     @Autowired
     private ModelService modelService;
 
+
+
+
     /**
      * 接收生产者题目分类发送审核的信息
      *
@@ -40,15 +46,21 @@ public class AuditReceiver {
             bindings = @QueueBinding(value = @Queue(value = RabbitConstant.CATEGORY_AUDIT_QUEUE_NAME),// 存储消息队列
                     exchange = @Exchange(value = RabbitConstant.CATEGORY_AUDIT_EXCHANGE),// 转发消息的交换机
                     key = {RabbitConstant.CATEGORY_AUDIT_ROUTING_KEY_NAME}))// 路由key
-    public void auditCategory(String topicAuditCategoryJson, Message message, Channel channel) throws IOException {
+    public void auditCategory(String topicAuditCategoryJson, Message message, Channel channel) {
         log.info("接收到分类审核消息{}", topicAuditCategoryJson);
         // 转换json
-        TopicCategoryDto topicCategoryDto = JSON.parseObject(topicAuditCategoryJson, TopicCategoryDto.class);
-        // 开始审核
-        modelService.auditCategory(topicCategoryDto);
-        // 手动确认该消息 通过唯一标识已被消费
-        // 参数1：标号用于消息确认 记载 消息重试等
-        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        TopicAuditCategory topicAuditCategory = JSON.parseObject(topicAuditCategoryJson, TopicAuditCategory.class);
+        try {
+            // 开始审核
+            modelService.auditCategory(topicAuditCategory);
+            // 手动确认该消息 通过唯一标识已被消费
+            // 参数1：标号用于消息确认 记载 消息重试等
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            log.error("接收到分类审核消息失败{}", topicAuditCategoryJson);
+            modelService.recordAuditLog("MQ收到消息失败", topicAuditCategory.getAccount(), topicAuditCategory.getUserId());
+        }
+
     }
 
     /**
