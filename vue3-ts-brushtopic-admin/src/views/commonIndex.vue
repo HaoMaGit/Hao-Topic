@@ -3,6 +3,8 @@ import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
 import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
+import { getVirtulDataByYear, getYearDateRange, getDynamicDateRange } from '@/utils/date';
+import { getWaterBallSVG } from '@/utils/customer';
 
 // 用户身份计算
 const getUserIdentity = () => {
@@ -33,27 +35,6 @@ const categoryData = [
   { name: '单调23栈', value: 50 },
 ];
 
-// 自定义水球图样式
-function getWaterBallSVG(percent: number, color = '#4da6ff', size = 100) {
-  const h = size;
-  const w = size;
-  const waterHeight = h * (1 - percent / 100);
-  const waveY = waterHeight;
-  const wave = `M0,${waveY} Q${w / 4},${waveY - 8} ${w / 2},${waveY} T${w},${waveY} L${w},${h} L0,${h} Z`;
-  // 使用clipPath裁剪水波到圆形区域
-  const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <clipPath id="clipCircle">
-        <circle cx="${w / 2}" cy="${h / 2}" r="${w / 2 - 2}" />
-      </clipPath>
-    </defs>
-    <circle cx="${w / 2}" cy="${h / 2}" r="${w / 2 - 2}" fill="#ebebeb" stroke="${color}" stroke-width="0"/>
-    <g clip-path="url(#clipCircle)">
-      <path d="${wave}" fill="${color}" fill-opacity="0.5"/>
-    </g>
-  </svg>`;
-  return 'image://data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svg)));
-}
 // 初始化气泡图
 const initBubbleChart = () => {
   const myChart = echarts.init(categoryChart.value);
@@ -128,39 +109,6 @@ const initBubbleChart = () => {
 
 // 日历热力图
 const contributionChart = ref(null)
-// 动态生成日期范围（以今天为起点生成过去12个月）
-function getDynamicDateRange() {
-  const today = new Date();
-
-  // 起始日期 = 去年同一天
-  const startDate = new Date(today);
-  startDate.setFullYear(today.getFullYear() - 1);
-
-  // 结束日期 = 今天
-  const endDate = new Date(today);
-
-  // 处理闰年2月29日特殊情况
-  if (
-    startDate.getMonth() === 1 &&
-    startDate.getDate() === 29 &&
-    !isLeapYear(startDate.getFullYear())
-  ) {
-    startDate.setDate(28);
-  }
-
-  return {
-    start: startDate.getTime(),
-    end: endDate.getTime(),
-    startStr: echarts.format.formatTime('yyyy-MM-dd', startDate),
-    endStr: echarts.format.formatTime('yyyy-MM-dd', endDate)
-  };
-}
-
-// 闰年判断工具函数
-function isLeapYear(year: number) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
 // 生成动态数据
 function getVirtulData() {
   const { start, end } = getDynamicDateRange();
@@ -184,7 +132,7 @@ function getVirtulData() {
 
   return data;
 }
-// 初始化日历热力图
+// 初始化的日历热力图
 const initContributionChart = () => {
   const myChart = echarts.init(contributionChart.value);
   const { startStr, endStr } = getDynamicDateRange();
@@ -244,26 +192,16 @@ const initContributionChart = () => {
   });
 };
 
-// 年份选择相关
+// 当前年份
 const currentYear = new Date().getFullYear();
+// 年份选择
 const yearOptions = ref([
   currentYear,
   currentYear - 1,
   currentYear - 2
 ]);
+// 当前选择年份
 const selectedYear = ref(currentYear);
-
-// 根据年份生成日期范围
-function getYearDateRange(year: number) {
-  const startDate = new Date(year, 0, 1); // 1月1日
-  const endDate = new Date(year, 11, 31); // 12月31日
-  return {
-    start: startDate.getTime(),
-    end: endDate.getTime(),
-    startStr: echarts.format.formatTime('yyyy-MM-dd', startDate),
-    endStr: echarts.format.formatTime('yyyy-MM-dd', endDate)
-  };
-}
 // 初始化和更新日历热力图
 let myChart: any = null;
 function renderContributionChart(year: number) {
@@ -321,19 +259,6 @@ function renderContributionChart(year: number) {
   });
 }
 
-// 生成指定年份的数据
-function getVirtulDataByYear(year: number) {
-  const { start, end } = getYearDateRange(year);
-  const dayTime = 3600 * 24 * 1000;
-  const data = [];
-  for (let time = start; time <= end; time += dayTime) {
-    data.push([
-      echarts.format.formatTime('yyyy-MM-dd', time),
-      Math.floor(Math.random() * 5)
-    ]);
-  }
-  return data;
-}
 
 // 监听年份变化，切换图表
 watch(selectedYear, (val) => {
