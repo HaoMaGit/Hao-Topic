@@ -1,11 +1,11 @@
 <script setup lang="ts">
-
-
+// import { useUserStore } from '@/stores/modules/user';
+// const userStore = useUserStore()
 
 
 </script>
 <template>
-  <div class="">
+  <div class="admin-body">
 
   </div>
 </template>
