@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
-import { onMounted, ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 
 // 用户身份计算
@@ -29,6 +29,8 @@ const categoryData = [
   { name: '双指针', value: 65 },
   { name: '并查集', value: 45 },
   { name: '单调栈', value: 50 },
+  { name: '单调1栈', value: 50 },
+  { name: '单调23栈', value: 50 },
 ];
 
 // 自定义水球图样式
@@ -98,7 +100,7 @@ const initBubbleChart = () => {
         rich: {
           b: {
             color: '#4da6ff',
-            fontSize: 12,
+            fontSize: 11,
             textBorderColor: 'transparent',
             textBorderWidth: 0,
           },
@@ -108,7 +110,7 @@ const initBubbleChart = () => {
         name: cat.name,
         value: cat.value,
         symbol: getWaterBallSVG(cat.value),
-        symbolSize: cat.value * 1.1, // value越大，球越大
+        symbolSize: cat.value * 1.05, // value越大，球越大
         draggable: true,
       }))
     }]
@@ -126,49 +128,94 @@ const initBubbleChart = () => {
 
 // 日历热力图
 const contributionChart = ref(null)
-// 生成模拟数据（可替换为后端真实数据）
-function getVirtulData(year: number) {
-  const date = +echarts.number.parseDate(year + '-01-01');
-  const end = +echarts.number.parseDate((year + 1) + '-01-01');
+// 动态生成日期范围（以今天为起点生成过去12个月）
+function getDynamicDateRange() {
+  const today = new Date();
+
+  // 起始日期 = 去年同一天
+  const startDate = new Date(today);
+  startDate.setFullYear(today.getFullYear() - 1);
+
+  // 结束日期 = 今天
+  const endDate = new Date(today);
+
+  // 处理闰年2月29日特殊情况
+  if (
+    startDate.getMonth() === 1 &&
+    startDate.getDate() === 29 &&
+    !isLeapYear(startDate.getFullYear())
+  ) {
+    startDate.setDate(28);
+  }
+
+  return {
+    start: startDate.getTime(),
+    end: endDate.getTime(),
+    startStr: echarts.format.formatTime('yyyy-MM-dd', startDate),
+    endStr: echarts.format.formatTime('yyyy-MM-dd', endDate)
+  };
+}
+
+// 闰年判断工具函数
+function isLeapYear(year: number) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+// 生成动态数据
+function getVirtulData() {
+  const { start, end } = getDynamicDateRange();
   const dayTime = 3600 * 24 * 1000;
   const data = [];
-  for (let time = date; time < end; time += dayTime) {
+
+  for (let time = start; time <= end; time += dayTime) {
     data.push([
       echarts.format.formatTime('yyyy-MM-dd', time),
-      Math.floor(Math.random() * 5) // 0~4，代表当天的活跃度
+      Math.floor(Math.random() * 100)
     ]);
   }
+
+  // 数据验证日志
+  console.log('数据时间范围:',
+    echarts.format.formatTime('yyyy-MM-dd', start),
+    '→',
+    echarts.format.formatTime('yyyy-MM-dd', end),
+    '总数:', data.length
+  );
+
   return data;
 }
 // 初始化日历热力图
 const initContributionChart = () => {
   const myChart = echarts.init(contributionChart.value);
-  const year = new Date().getFullYear();
+  const { startStr, endStr } = getDynamicDateRange();
+  console.log(startStr, endStr);
+
   const option = {
     // 鼠标悬停
     tooltip: {
       formatter: function (params: any) {
-        return `${params.value[0]}<br/>贡献：${params.value[1]}`;
+        return `${params.value[1]}次刷题：${params.value[0]}`;
       }
     },
     visualMap: {
-      min: 0,
-      max: 4,
       type: 'piecewise',
       orient: 'horizontal',
       left: 'center',
-      top: 20,
-      inRange: {
-        color: ['#e0f0ff', '#b3d8ff', '#80bfff', '#4da6ff', '#1677ff'] // 渐变色数组
-      },
-      show: false // 不显示图例
+      pieces: [
+        { min: 0, max: 10, color: '#e0f0ff', label: '0-10' },
+        { min: 11, max: 16, color: '#b3d8ff', label: '8-16' },
+        { min: 16, max: 24, color: '#80bfff', label: '16-24' },
+        { min: 24, max: 32, color: '#4da6ff', label: '24-32' },
+        { min: 32, max: 45, color: '#1677ff', label: '32-40' }
+      ],
+      show: true
     },
     calendar: {
-      top: 60,
+      top: 25,
       left: 30,
       right: 30,
-      cellSize: ['auto', 18],
-      range: year,
+      cellSize: [18, 18],        // 固定单元格大小
+      range: [startStr, endStr], // 动态设置范围
       itemStyle: {
         borderWidth: 1,
         borderColor: '#fff'
@@ -187,7 +234,7 @@ const initContributionChart = () => {
     series: [{
       type: 'heatmap',
       coordinateSystem: 'calendar',
-      data: getVirtulData(year)
+      data: getVirtulData()
     }]
   };
   myChart.setOption(option);
@@ -196,6 +243,106 @@ const initContributionChart = () => {
     myChart.resize();
   });
 };
+
+// 年份选择相关
+const currentYear = new Date().getFullYear();
+const yearOptions = ref([
+  currentYear,
+  currentYear - 1,
+  currentYear - 2
+]);
+const selectedYear = ref(currentYear);
+
+// 根据年份生成日期范围
+function getYearDateRange(year: number) {
+  const startDate = new Date(year, 0, 1); // 1月1日
+  const endDate = new Date(year, 11, 31); // 12月31日
+  return {
+    start: startDate.getTime(),
+    end: endDate.getTime(),
+    startStr: echarts.format.formatTime('yyyy-MM-dd', startDate),
+    endStr: echarts.format.formatTime('yyyy-MM-dd', endDate)
+  };
+}
+// 初始化和更新日历热力图
+let myChart: any = null;
+function renderContributionChart(year: number) {
+  if (!myChart) {
+    myChart = echarts.init(contributionChart.value);
+  }
+  const { startStr, endStr } = getYearDateRange(year);
+  const option = {
+    tooltip: {
+      formatter: function (params: any) {
+        return `${params.value[1]}次刷题：${params.value[0]}`;
+      }
+    },
+    visualMap: {
+      min: 0,
+      max: 4,
+      type: 'piecewise',
+      orient: 'horizontal',
+      left: 'center',
+      inRange: {
+        color: ['#e0f0ff', '#b3d8ff', '#80bfff', '#4da6ff', '#1677ff']
+      },
+      show: true
+    },
+    calendar: {
+      top: 25,
+      left: 30,
+      right: 30,
+      cellSize: [18, 18],
+      range: [startStr, endStr],
+      itemStyle: {
+        borderWidth: 1,
+        borderColor: '#fff'
+      },
+      yearLabel: { show: false },
+      monthLabel: {
+        nameMap: 'cn',
+        color: '#888'
+      },
+      dayLabel: {
+        firstDay: 1,
+        nameMap: 'cn',
+        color: '#888'
+      }
+    },
+    series: [{
+      type: 'heatmap',
+      coordinateSystem: 'calendar',
+      data: getVirtulDataByYear(year)
+    }]
+  };
+  myChart.setOption(option);
+  window.addEventListener('resize', () => {
+    myChart.resize();
+  });
+}
+
+// 生成指定年份的数据
+function getVirtulDataByYear(year: number) {
+  const { start, end } = getYearDateRange(year);
+  const dayTime = 3600 * 24 * 1000;
+  const data = [];
+  for (let time = start; time <= end; time += dayTime) {
+    data.push([
+      echarts.format.formatTime('yyyy-MM-dd', time),
+      Math.floor(Math.random() * 5)
+    ]);
+  }
+  return data;
+}
+
+// 监听年份变化，切换图表
+watch(selectedYear, (val) => {
+  if (val !== currentYear) {
+    renderContributionChart(val);
+  } else {
+    initContributionChart()
+  }
+});
 
 // 组件挂载后初始化图表
 onMounted(() => {
@@ -238,39 +385,8 @@ onMounted(() => {
               </div>
             </a-col>
             <!-- 用户数据统计 -->
-            <a-col :span="16">
+            <a-col :span="16" class="user-data-col">
               <a-row :gutter="[16, 16]">
-                <a-col :span="12">
-                  <a-statistic title="最长连续刷题" :value="10" suffix="天" class="stat-item">
-                    <template #prefix>
-                      <CalendarOutlined />
-                    </template>
-                  </a-statistic>
-                </a-col>
-                <a-col :span="12">
-                  <a-statistic title="最近连续刷题" :value="20" suffix="天" class="stat-item">
-                    <template #prefix>
-                      <HourglassOutlined />
-                    </template>
-                  </a-statistic>
-                </a-col>
-                <a-col :span="12">
-                  <a-statistic title="已刷题目" :value="30" class="stat-item">
-                    <template #prefix>
-                      <CheckCircleOutlined />
-                    </template>
-                    <template #suffix>
-                      <span>/300题</span>
-                    </template>
-                  </a-statistic>
-                </a-col>
-                <a-col :span="12">
-                  <a-statistic title="AI陪背次数" :value="40" suffix="次" class="stat-item">
-                    <template #prefix>
-                      <RobotOutlined />
-                    </template>
-                  </a-statistic>
-                </a-col>
                 <a-col :span="12">
                   <a-statistic title="已刷题次数" :value="1230" class=" stat-item">
                     <template #prefix>
@@ -297,6 +413,37 @@ onMounted(() => {
                     </template>
                   </a-statistic>
                 </a-col>
+                <a-col :span="12">
+                  <a-statistic title="已刷题目" :value="30" class="stat-item">
+                    <template #prefix>
+                      <CheckCircleOutlined />
+                    </template>
+                    <template #suffix>
+                      <span>/300题</span>
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :span="12">
+                  <a-statistic title="AI陪背次数" :value="40" suffix="次" class="stat-item">
+                    <template #prefix>
+                      <RobotOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :span="12">
+                  <a-statistic title="最长连续刷题" :value="10" suffix="天" class="stat-item">
+                    <template #prefix>
+                      <CalendarOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :span="12">
+                  <a-statistic title="最近连续刷题" :value="20" suffix="天" class="stat-item">
+                    <template #prefix>
+                      <HourglassOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
               </a-row>
             </a-col>
           </a-row>
@@ -312,7 +459,20 @@ onMounted(() => {
     <!-- 下部分仿gitee贡献度 -->
     <div class="bottom-section">
       <a-card :bordered="false">
+        <div class="header-row">
+          <!-- 标题 -->
+          <div class="chart-title">刷题次数</div>
+          <!-- 年份选择前2年的 -->
+          <div class="year-select">
+            <a-select v-model:value="selectedYear">
+              <a-select-option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</a-select-option>
+            </a-select>
+          </div>
+        </div>
+        <!-- 日历热力图 -->
         <div ref="contributionChart" class="contribution-chart"></div>
+        <!-- 底部描述 -->
+        <div class="footer-description">每一次点击面试题就会统计刷题次数</div>
       </a-card>
     </div>
   </div>
@@ -367,6 +527,32 @@ onMounted(() => {
 .common-index {
   .bottom-section {
     margin-top: 20px;
+
+    .header-row {
+      display: flex;
+      justify-content: space-between; // 左右对齐
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .chart-title {
+      font-size: 19px;
+      font-weight: bold;
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+      color: #464646;
+      text-align: left; // 标题靠左
+    }
+
+    .year-select {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .footer-description {
+      font-size: 14px;
+      color: #8c92A4;
+    }
   }
 }
 
@@ -374,12 +560,16 @@ onMounted(() => {
 
 .category-chart {
   width: 100%;
-  height: 254px;
+  height: 286px;
 
 }
 
 .contribution-chart {
   width: 100%;
   height: 200px;
+}
+
+.user-data-col {
+  padding-bottom: 33px;
 }
 </style>
