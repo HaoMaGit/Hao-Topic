@@ -1,5 +1,5 @@
 // 自定义水球图样式
-export function getWaterBallSVG(percent: number, color = '#4da6ff', size = 100) {
+export function getWaterBallSVG(percent: number, color = '#4592ff', size = 100) {
   const h = size;
   const w = size;
   const waterHeight = h * (1 - percent / 100);
@@ -14,7 +14,7 @@ export function getWaterBallSVG(percent: number, color = '#4da6ff', size = 100) 
     </defs>
     <circle cx="${w / 2}" cy="${h / 2}" r="${w / 2 - 2}" fill="#ebebeb" stroke="${color}" stroke-width="0"/>
     <g clip-path="url(#clipCircle)">
-      <path d="${wave}" fill="${color}" fill-opacity="0.5"/>
+      <path d="${wave}" fill="${color}" fill-opacity="1"/>
     </g>
   </svg>`;
   return 'image://data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svg)));

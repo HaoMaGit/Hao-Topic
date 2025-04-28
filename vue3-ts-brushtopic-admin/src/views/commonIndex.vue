@@ -28,7 +28,7 @@ const categoryData = [
   { name: '短阵', value: 50 },
   { name: '堆（优先队列）', value: 70 },
   { name: '栈', value: 55 },
-  { name: '双指针', value: 65 },
+  { name: '双指针', value: 15 },
   { name: '并查集', value: 45 },
   { name: '单调栈', value: 50 },
   { name: '单调1栈', value: 50 },
@@ -80,10 +80,9 @@ const initBubbleChart = () => {
         verticalAlign: 'center',
         rich: {
           b: {
-            color: '#4da6ff',
+            color: '#fff',
             fontSize: 11,
-            textBorderColor: 'transparent',
-            textBorderWidth: 0,
+            fontWeight: 'bold',
           },
         },
       },
