@@ -1,8 +1,95 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
+import { ref, onMounted } from 'vue'
+import * as echarts from 'echarts';
 
+// 分类实例
+const categoryChart = ref(null)
+const categoryData = [
+  { name: '哈希表', value: 60 },
+  { name: '数组', value: 80 },
+  { name: '动态规划', value: 90 },
+  { name: '队列', value: 40 },
+  { name: '短阵', value: 50 },
+  { name: '堆（优先队列）', value: 70 },
+  { name: '栈', value: 55 },
+  { name: '双指针', value: 65 },
+  { name: '并查集', value: 45 },
+  { name: '单调栈', value: 50 },
+  { name: '单调1栈', value: 50 },
+  { name: '单调23栈', value: 50 },
+];
+// 初始化气泡图
+const initBubbleChart = () => {
+  const myChart = echarts.init(categoryChart.value);
+  const option = {
+    animationDurationUpdate: function (idx: number) {
+      // 越往后的数据延迟越大
+      return idx * 100;
+    },
+    animationEasingUpdate: 'bounceIn',
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      force: {
+        repulsion: 100,
+        edgeLength: 10,
+      },
+      label: {
+        show: true,
+        formatter: [
+          '{c|{c}}',
+          '{b|{b}}',
+        ].join('\n'),
+        fontWeight: '400',
+        fontSize: 12,
+        color: '#1a1a1a',
+        position: 'inside',
+        rich: {
+          b: {
+            fontSize: 12,
+            color: '#fff',
+            padding: [0, 0, 2, 0],
+            align: 'center',
+            width: 60
+          },
+          c: {
+            fontSize: 14,
+            color: '#fff',
+            fontWeight: 'bold',
+            align: 'center',
+            width: 60
+          }
+        }
+      },
+      itemStyle: {
+        color: '#1677ff',  // 设置球的颜色
+        opacity: 0.8,      // 设置透明度
+        borderWidth: 1,    // 添加边框
+        borderColor: '#fff'
+      },
+      data: categoryData.map((cat) => ({
+        name: cat.name,
+        value: cat.value,
+        symbolSize: cat.value * 1.05, // value越大，球越大
+        draggable: true,
+      }))
+    }]
+  };
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  myChart.setOption(option);
 
+  // 在resize事件处理中增加布局重置
+  window.addEventListener('resize', () => {
+    myChart.resize();
+  });
+};
+
+onMounted(() => {
+  initBubbleChart();
+})
 </script>
 <template>
   <div class="admin-body">
@@ -157,5 +244,11 @@ const userStore = useUserStore()
     color: #cf1322;
     font-size: 14px;
   }
+}
+
+.category-chart {
+  width: 100%;
+  height: 286px;
+
 }
 </style>
