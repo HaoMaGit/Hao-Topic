@@ -205,10 +205,202 @@ const initProblemTrendChart = () => {
   });
 }
 
+// 用户增长趋势图
+const userGrowthChart = ref(null);
+const initUserGrowthChart = () => {
+  const myChart = echarts.init(userGrowthChart.value);
+  const option = {
+    backgroundColor: '#fff',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#1677ff'
+        }
+      }
+    },
+    grid: {
+      top: '10%',
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      axisLine: {
+        lineStyle: {
+          color: '#E0E6F1'
+        }
+      },
+      axisLabel: {
+        color: '#666'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: {
+        show: false
+      },
+      axisTick: {
+        show: false
+      },
+      axisLabel: {
+        color: '#666'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#E0E6F1',
+          type: 'dashed'
+        }
+      }
+    },
+    series: [
+      {
+        name: '用户增长',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        showSymbol: true,
+        lineStyle: {
+          width: 3,
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#1677ff' },
+            { offset: 1, color: '#4096ff' }
+          ])
+        },
+        itemStyle: {
+          color: '#1677ff',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(22, 119, 255, 0.3)' },
+            { offset: 1, color: 'rgba(22, 119, 255, 0)' }
+          ])
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        data: [120, 132, 101, 134, 90, 230, 210]
+      }
+    ]
+  };
+  myChart.setOption(option);
+
+  // 在resize事件处理中增加布局重置
+  window.addEventListener('resize', () => {
+    myChart.resize();
+  });
+}
+
+// ai调用趋势图
+const aiCallChart = ref(null);
+const initAiCallChart = () => {
+  const myChart = echarts.init(aiCallChart.value);
+  const option = {
+    backgroundColor: '#fff',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#1677ff'
+        }
+      }
+    },
+    grid: {
+      top: '10%',
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      axisLine: {
+        lineStyle: {
+          color: '#E0E6F1'
+        }
+      },
+      axisLabel: {
+        color: '#666'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: {
+        show: false
+      },
+      axisTick: {
+        show: false
+      },
+      axisLabel: {
+        color: '#666'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#E0E6F1',
+          type: 'dashed'
+        }
+      }
+    },
+    series: [
+      {
+        name: '用户增长',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        showSymbol: true,
+        lineStyle: {
+          width: 3,
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#1677ff' },
+            { offset: 1, color: '#4096ff' }
+          ])
+        },
+        itemStyle: {
+          color: '#1677ff',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(22, 119, 255, 0.3)' },
+            { offset: 1, color: 'rgba(22, 119, 255, 0)' }
+          ])
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        data: [120, 132, 101, 134, 90, 230, 210]
+      }
+    ]
+  };
+  myChart.setOption(option);
+
+  // 在resize事件处理中增加布局重置
+  window.addEventListener('resize', () => {
+    myChart.resize();
+  });
+}
+
 onMounted(() => {
   initBubbleChart();
-  initProblemTrendChart()
-})
+  initProblemTrendChart();
+  initUserGrowthChart();
+  initAiCallChart()
+});
 </script>
 <template>
   <div class="admin-body">
@@ -326,7 +518,21 @@ onMounted(() => {
       </a-card>
     </div>
     <!-- 底部部分 -->
-    <div class="bottom-section"></div>
+    <div class="bottom-section">
+      <!-- 分为左右 -->
+      <a-card :bordered="false" class="bottom-section-container">
+        <a-row>
+          <a-col :span="12">
+            <div class="chart-title">用户增长趋势图</div>
+            <div ref="userGrowthChart" class="user-growth"></div>
+          </a-col>
+          <a-col :span="12">
+            <div class="chart-title">AI调用次数趋势图</div>
+            <div ref="aiCallChart" class="ai-call"></div>
+          </a-col>
+        </a-row>
+      </a-card>
+    </div>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -382,6 +588,7 @@ onMounted(() => {
 
 .middle-section {
   margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .chart-title {
@@ -398,12 +605,32 @@ onMounted(() => {
   display: inline-block;
   width: 4px;
   height: 18px;
-  background: linear-gradient(to bottom, #1677ff, #4096ff);
+  background: #1677ff;
   margin-right: 10px;
   border-radius: 2px;
 }
 
 .topic-trend {
+  width: 100%;
+  height: 350px;
+}
+
+.bottom-section {
+  width: 100%;
+  display: flex;
+
+  .bottom-section-container {
+    width: 100%;
+
+  }
+}
+
+.user-growth {
+  width: 100%;
+  height: 350px;
+}
+
+.ai-call {
   width: 100%;
   height: 350px;
 }
