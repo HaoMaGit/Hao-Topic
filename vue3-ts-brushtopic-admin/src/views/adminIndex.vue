@@ -87,8 +87,127 @@ const initBubbleChart = () => {
   });
 };
 
+// 刷题趋势图实例
+const topicTrendChart = ref(null);
+const initProblemTrendChart = () => {
+  const myChart = echarts.init(topicTrendChart.value);
+  const option = {
+    backgroundColor: '#fff',
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: ['刷题人数', '题目数量'],
+      right: '5%',
+      top: '2%'
+    },
+    grid: {
+      top: '10%',
+      left: '3%',
+      right: '4%',
+      bottom: '8%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+      axisLine: {
+        lineStyle: {
+          color: '#E0E6F1'
+        }
+      },
+      axisLabel: {
+        color: '#666'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: {
+        show: false
+      },
+      axisTick: {
+        show: false
+      },
+      axisLabel: {
+        color: '#666'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#E0E6F1',
+          type: 'dashed'
+        }
+      }
+    },
+    series: [
+      {
+        name: '刷题人数',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        showSymbol: false,
+        lineStyle: {
+          width: 3,
+          color: '#1677ff'
+        },
+        itemStyle: {
+          color: '#1677ff',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(22, 119, 255, 0.3)' },
+            { offset: 1, color: 'rgba(22, 119, 255, 0)' }
+          ])
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        data: [10, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330]
+      },
+      {
+        name: '题目数量',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        showSymbol: false,
+        lineStyle: {
+          width: 3,
+          color: '#4096ff'
+        },
+        itemStyle: {
+          color: '#4096ff',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(64, 150, 255, 0.3)' },
+            { offset: 1, color: 'rgba(64, 150, 255, 0)' }
+          ])
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        data: [220, 182, 191, 34, 290, 330, 310, 320, 301, 334, 390, 430]
+      }
+    ]
+  };
+
+  myChart.setOption(option);
+
+  // 在resize事件处理中增加布局重置
+  window.addEventListener('resize', () => {
+    myChart.resize();
+  });
+}
+
 onMounted(() => {
   initBubbleChart();
+  initProblemTrendChart()
 })
 </script>
 <template>
@@ -128,7 +247,7 @@ onMounted(() => {
             <a-col :span="16" class="user-data-col">
               <a-row :gutter="[16, 16]">
                 <a-col :span="12">
-                  <a-statistic title="今日刷题总数" :value="1230" class=" stat-item">
+                  <a-statistic title="今日刷题总数" :value="1230" class="stat-item">
                     <template #prefix>
                       <CodeOutlined />
                     </template>
@@ -199,6 +318,15 @@ onMounted(() => {
         </a-card>
       </a-col>
     </a-row>
+    <!-- 中间部分刷题趋势图 -->
+    <div class="middle-section">
+      <a-card :bordered="false">
+        <div class="chart-title">刷题趋势图</div>
+        <div ref="topicTrendChart" class="topic-trend"></div>
+      </a-card>
+    </div>
+    <!-- 底部部分 -->
+    <div class="bottom-section"></div>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -250,5 +378,33 @@ onMounted(() => {
   width: 100%;
   height: 286px;
 
+}
+
+.middle-section {
+  margin-top: 20px;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+}
+
+.chart-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(to bottom, #1677ff, #4096ff);
+  margin-right: 10px;
+  border-radius: 2px;
+}
+
+.topic-trend {
+  width: 100%;
+  height: 350px;
 }
 </style>
