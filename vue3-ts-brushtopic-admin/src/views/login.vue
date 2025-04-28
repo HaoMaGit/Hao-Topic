@@ -43,7 +43,7 @@ const formRule = ref({
   ]
 })
 
-
+const loginLoading = ref(false)
 // 登录
 const login = () => {
   if (!adminRef.value) return // 确保表单实例存在
@@ -53,8 +53,10 @@ const login = () => {
     // @ts-expect-error
     adminRef.value.validate().then(async (valid) => {
       if (valid) {
+        loginLoading.value = true
         // 发起请求
-        userStore.login(formData.value)
+        await userStore.login(formData.value)
+        loginLoading.value = false
         if (formData.value.remember) {
           // 记住密码
           window.localStorage.setItem("userPassword", JSON.stringify({
@@ -139,7 +141,8 @@ onMounted(() => {
               <a-checkbox v-model:checked="formData.remember" class="check">记住密码</a-checkbox>
             </a-form-item>
             <a-form-item>
-              <a-button type="primary" block size="large" @click="login">登录</a-button>
+              <a-button v-if="!loginLoading" type="primary" block size="large" @click="login()">登录</a-button>
+              <a-spin v-else tip="正在登录并加载数据中...."></a-spin>
             </a-form-item>
           </a-form>
         </div>
