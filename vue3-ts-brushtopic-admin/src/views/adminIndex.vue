@@ -146,10 +146,11 @@ const initProblemTrendChart = () => {
         smooth: true,
         symbol: 'circle',
         symbolSize: 8,
-        showSymbol: false,
+        showSymbol: true, // 显示标记
         lineStyle: {
           width: 3,
-          color: '#1677ff'
+          color: '#1677ff',
+          type: 'dashed' // 使用虚线
         },
         itemStyle: {
           color: '#1677ff',
@@ -171,9 +172,9 @@ const initProblemTrendChart = () => {
         name: '题目数量',
         type: 'line',
         smooth: true,
-        symbol: 'circle',
+        symbol: 'triangle', // 使用不同的标记形状
         symbolSize: 8,
-        showSymbol: false,
+        showSymbol: true,
         lineStyle: {
           width: 3,
           color: '#4096ff'
@@ -487,7 +488,7 @@ onMounted(() => {
                 <a-col :span="12">
                   <a-statistic title="收录专题数量" :value="40" suffix="个" class="stat-item">
                     <template #prefix>
-                      <FolderOutlined />
+                      <BookOutlined />
                     </template>
                   </a-statistic>
                 </a-col>
