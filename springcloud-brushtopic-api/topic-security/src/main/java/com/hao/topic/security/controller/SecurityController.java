@@ -5,6 +5,7 @@ import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
+import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
@@ -171,6 +172,14 @@ public class SecurityController {
     @PostMapping("/import")
     String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport) {
         return sysUserService.importExcel(excelVoList, updateSupport);
+    }
+
+    /**
+     * 获取用户详细信息
+     */
+    @GetMapping("/info/{id}")
+    public SysUser getUserInfo(@PathVariable Long id) {
+        return sysUserService.getById(id);
     }
 
 }

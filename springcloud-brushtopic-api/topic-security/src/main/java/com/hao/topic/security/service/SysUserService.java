@@ -8,6 +8,7 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
+import com.hao.topic.common.utils.ServletUtils;
 import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
@@ -97,6 +98,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         UserInfoVo userInfoVo = new UserInfoVo();
         userInfoVo.setAccount(sysUser.getAccount());
         userInfoVo.setAvatar(sysUser.getAvatar());
+        userInfoVo.setId(sysUser.getId());
 
         // 根据用户id查询用户与角色的关系表
         SysUserRole sysUserRole = sysUserRoleMapper.selectOne(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, sysUser.getId()));
