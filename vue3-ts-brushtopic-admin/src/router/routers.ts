@@ -128,6 +128,22 @@ export const constantRoute = [
     }
     ]
   },
+  // 个人中心页面
+  {
+    path: '/profile',
+    component: () => import('@/layout/index.vue'),
+    redirect: '/profile/index',
+    meta: {
+      title: '个人中心',
+    },
+    children: [{
+      path: '/profile/index',
+      meta: {
+        title: '个人中心',
+      },
+      component: () => import('@/views/profile/index.vue'),
+    }]
+  },
   // 404页面
   {
     path: '/404',

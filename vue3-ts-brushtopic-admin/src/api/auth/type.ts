@@ -11,6 +11,7 @@ export interface UserResponse {
   account: string,
   avatar: string,
   identity: number | null,
+  id: number | null,
   menuList: MenuType[]
 }
 

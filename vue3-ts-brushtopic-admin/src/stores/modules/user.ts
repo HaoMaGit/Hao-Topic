@@ -17,7 +17,8 @@ export const useUserStore = defineStore('user', () => {
     account: '',
     avatar: '',
     identity: null,
-    menuList: []
+    menuList: [],
+    id: null
   });
   // token
   const token = ref<string | null>(null)
@@ -65,7 +66,8 @@ export const useUserStore = defineStore('user', () => {
       account: '',
       avatar: '',
       identity: null,
-      menuList: []
+      menuList: [],
+      id: null
     }
     token.value = null
     window.localStorage.removeItem("user")
@@ -76,7 +78,9 @@ export const useUserStore = defineStore('user', () => {
       account: '',
       avatar: '',
       identity: null,
-      menuList: []
+      menuList: [],
+      id: null
+
     }
     token.value = null
     router.push('/login')

@@ -202,7 +202,7 @@ const handleErrorImg = (event: any) => {
       </span>
       <template #overlay>
         <a-menu>
-          <a-menu-item>个人中心</a-menu-item>
+          <a-menu-item @click="$router.push('/profile')">个人中心</a-menu-item>
           <a-menu-item
             @click="userStore.clearUserInfo(), $router.push('/login'), message.success('退出登录')">退出登录</a-menu-item>
         </a-menu>

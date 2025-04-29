@@ -41,3 +41,10 @@ export const apiGetUserInfo = (token: string | null): Promise<CommonResultType<U
   })
 }
 
+// 获取用户信息
+export function apiGetUserInfoDetail(id: number | null) {
+  return request({
+    url: prefix + 'info/' + id,
+    method: 'get'
+  })
+}
