@@ -1,6 +1,5 @@
 // 进行axios二次封装:使用请求与响应拦截器
 import axios from 'axios'
-import { Toast } from 'antd-mobile'
 //第一步:利用axios对象的create方法,去创建axios实例(其他的配置:基础路径、超时的时间)
 const request = axios.create({
   //基础路径
@@ -29,10 +28,10 @@ request.interceptors.response.use(
     if (status === 401) {
       //token过期
       //跳转到登录页面
-      Toast.show({
-        icon: 'fail',
-        content: '登录过期 请重新登录',
-      })
+      // Toast.show({
+      //   icon: 'fail',
+      //   content: '登录过期 请重新登录',
+      // })
       // 清除用户信息
       uni.removeStorageSync('userInfo')
       // 跳转
@@ -43,11 +42,12 @@ request.interceptors.response.use(
       }, 1500)
       return
     }
+
     //提示错误信息
-    Toast.show({
+    /* Toast.show({
       icon: 'fail',
       content: '登录失败请重新登录',
-    })
+    }) */
     return Promise.reject(error)
   },
 )

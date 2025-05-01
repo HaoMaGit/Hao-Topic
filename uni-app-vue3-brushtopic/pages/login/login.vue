@@ -1,6 +1,8 @@
 <script setup>
 import {
-	ref, reactive
+	ref,
+	reactive,
+	onUnmounted
 } from 'vue'
 // 登录方式 0账号登录  1邮箱登录 
 const loginWay = ref(0)
@@ -11,7 +13,7 @@ const isRegister = ref(false)
 const loginForm = reactive({
 	account: '',
 	password: '',
-	email: ''
+	email: '',
 })
 
 // 注册表单
@@ -24,6 +26,12 @@ const registerForm = reactive({
 })
 
 // 忘记密码表单
+const forgetForm = reactive({
+	email: '',
+	code: '',
+	password: '',
+	newPassword: ''
+})
 
 
 const totalSecond = ref(60) // 总秒数
@@ -48,7 +56,7 @@ const getCode = () => {
 		// const res = await getCode({
 		// 	phone: formData.value.phoneNumber
 		// })
-		toast('验证码已发送')
+		// toast('验证码已发送')
 		// let codeTimer = setTimeout(() => {
 		// 	formData.value.code = res.data
 		// }, 2000)
@@ -102,15 +110,16 @@ onUnmounted(() => {
 						v-model="registerForm.account"></uv-input>
 					<uv-input class="input" maxlength="8" shape="circle" placeholder="给自己起个独特的昵称"
 						v-model="registerForm.nickname"></uv-input>
-					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="registerForm.email"></uv-input>
-					<uv-input class="input" type="number" shape="circle" placeholder="请输入邮箱验证码" v-model="registerForm.code"
-						maxlength="6">
+					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="registerForm.email">
 						<!-- vue3模式下必须使用v-slot:suffix -->
 						<template v-slot:suffix>
 							<text @click="getCode()">
-								{{ second === totalSecond ? '获取验证码' :
-									`重新获取${second}秒` }}</text>
+								{{ second === totalSecond ? '发送验证码' :
+									`重新发送${second}秒` }}</text>
 						</template>
+					</uv-input>
+					<uv-input class="input" type="number" shape="circle" placeholder="请输入邮箱验证码" v-model="registerForm.code"
+						maxlength="6">
 					</uv-input>
 					<uv-input class="input" type="password" shape="circle" placeholder="请输入登录密码"
 						v-model="registerForm.password"></uv-input>
