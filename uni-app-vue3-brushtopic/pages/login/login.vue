@@ -91,7 +91,7 @@ const backLogin = () => {
 			<!-- Logo区域 -->
 			<view class="logo-area">
 				<image src="/static/images/logo.png" mode="aspectFit" class="logo-img"></image>
-				<text class="slogan">让学习更智能，让进步更高效</text>
+				<text class="slogan">AI陪你刷题，刷题不枯燥</text>
 			</view>
 
 			<!-- 登录表单 -->
@@ -260,7 +260,7 @@ const backLogin = () => {
 		}
 
 		.slogan {
-			font-size: 28rpx;
+			font-size: 30rpx;
 			color: #666;
 		}
 	}
