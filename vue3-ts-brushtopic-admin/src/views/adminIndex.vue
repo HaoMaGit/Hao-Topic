@@ -3,7 +3,9 @@ import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
 import { ref, watch, onMounted } from 'vue'
 import * as echarts from 'echarts';
-
+// 导入 settingStore
+import { useSettingStore } from '@/stores/modules/setting';
+const settingStore = useSettingStore();
 // 分类实例
 const categoryChart = ref(null)
 const categoryData = [
@@ -86,9 +88,7 @@ const initBubbleChart = () => {
     myChart.resize();
   });
 };
-// 导入 settingStore
-import { useSettingStore } from '@/stores/modules/setting';
-const settingStore = useSettingStore();
+
 // 刷题趋势图实例
 const topicTrendChart = ref(null);
 const initProblemTrendChart = () => {
