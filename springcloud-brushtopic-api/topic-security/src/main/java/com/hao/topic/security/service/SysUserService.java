@@ -435,7 +435,11 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         }
         sysUserDb.setNickname(userDto.getNickname());
         sysUserDb.setEmail(userDto.getEmail());
-        sysUserMapper.updateById(sysUserDb);
+        try {
+            sysUserMapper.updateById(sysUserDb);
+        }catch (Exception e){
+            throw new TopicException(ResultCodeEnum.USER_NICKNAME_EXIST);
+        }
     }
 
     /**

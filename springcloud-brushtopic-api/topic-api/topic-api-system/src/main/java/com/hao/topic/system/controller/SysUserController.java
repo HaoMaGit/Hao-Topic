@@ -88,7 +88,7 @@ public class SysUserController {
      * @return
      */
     @PostMapping("/avatar")
-    @PreAuthorize("hasAuthority('admin')")
+    @PreAuthorize("hasAuthority('admin') || hasAuthority('member')")
     public Result upload(@RequestParam("avatar") MultipartFile file) {
         // 上传文件
         String url = minioHelper.uploadFile(file, "avatar");

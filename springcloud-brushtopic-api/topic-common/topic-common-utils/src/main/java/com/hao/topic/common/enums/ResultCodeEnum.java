@@ -78,6 +78,7 @@ public enum ResultCodeEnum {
 
     USER_NOT_EXIST(99938, "用户不存在"),
     USER_PASSWORD_ERROR(99939, "用户密码错误"),
+    USER_NICKNAME_EXIST(99940, "用户昵称已存在"),
 
     SERVICE_ERROR(2012, "服务异常"),
 
