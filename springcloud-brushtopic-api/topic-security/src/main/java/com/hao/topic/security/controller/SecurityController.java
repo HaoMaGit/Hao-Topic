@@ -205,4 +205,14 @@ public class SecurityController {
         return Result.success();
     }
 
+    /**
+     * 修改用户密码
+     */
+    @PutMapping("/updatePassword")
+    public Result updatePassword(@RequestBody UserDto userDto) {
+        // 修改密码
+        sysUserService.updatePassword(userDto);
+        return Result.success();
+    }
+
 }
