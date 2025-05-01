@@ -18,15 +18,34 @@
             </div>
           </div>
           <div class="user-info">
-            <h1>{{ userInfo.account }}</h1>
-            <div class="nickname" v-if="userInfo.nickname">昵称：{{ userInfo.nickname }}</div>
-            <p class="user-email" v-if="userInfo.email">{{ userInfo.email }}</p>
+            <div class="user">
+              <UserOutlined /> 账户：<span class="desc">{{ userInfo.account }}</span>
+            </div>
+            <div class="user" v-if="userInfo.nickname">
+              <SmileOutlined /> 昵称：<span class="desc">{{ userInfo.nickname }}</span>
+            </div>
+            <div class="user" v-if="userInfo.email">
+              <MailOutlined /> 邮箱：<span class="desc">{{ userInfo.email }}</span>
+            </div>
             <!-- 账号注册时间 -->
-            <p class="user-since" v-if="userInfo.createTime">账号注册时间: {{ userInfo.createTime }}</p>
-            <p class="user-since" v-if="userInfo.memberTime">会员注册时间: {{ userInfo.memberTime }}</p>
-            <a-tag :color="userInfo.status === 0 ? 'success' : 'error'">
-              {{ userInfo.status === 0 ? '正常' : '停用' }}
-            </a-tag>
+            <div class="user" v-if="userInfo.createTime">
+              <CalendarOutlined />
+              账号注册时间: <span class="desc">{{ userInfo.createTime }}</span>
+            </div>
+            <div class="user" v-if="userInfo.memberTime">
+              <StarOutlined />
+              会员注册时间: <span class="desc">{{ userInfo.memberTime }}</span>
+            </div>
+            <div class="user">
+              <SafetyCertificateOutlined />
+              <!-- 空格 -->
+              账号状态：
+              <a-tag :color="userInfo.status === 0 ? '#1677ff' : 'error'">
+                <CheckCircleOutlined v-if="userInfo.status === 0" />
+                <CloseCircleOutlined v-else />
+                {{ userInfo.status === 0 ? '正常' : '停用' }}
+              </a-tag>
+            </div>
           </div>
         </a-card>
       </a-col>
@@ -291,22 +310,18 @@ onMounted(() => {
 
 .user-info {
   margin-top: 10px;
-}
-
-.user-email {
-  color: rgba(0, 0, 0, 0.45);
-  margin-bottom: 8px;
-}
-
-.user-since {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
-  margin-bottom: 8px;
-}
-
-.nickname {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
   font-size: 14px;
   color: #666;
-  margin-bottom: 8px;
+}
+
+.user {
+  margin-bottom: 15px;
+}
+
+.desc {
+  color: black;
 }
 </style>
