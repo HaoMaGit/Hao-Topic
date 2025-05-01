@@ -67,6 +67,16 @@ const getCode = () => {
 onUnmounted(() => {
 	clearInterval(timer)
 })
+
+// 返回登录
+const backLogin = () => {
+	isRegister.value = false
+	isForget.value = false
+	totalSecond.value = 60
+	second.value = totalSecond.value
+	clearInterval(timer)
+	timer = null
+}
 </script>
 <template>
 	<view class="login-content">
@@ -104,7 +114,7 @@ onUnmounted(() => {
 			<view class="register-form" v-if="isRegister">
 				<view class="form-title">
 					<text class="title">加入AI刷题</text>
-					<text class="back" @click="isRegister = false">返回登录</text>
+					<text class="back" @click="backLogin">返回登录</text>
 				</view>
 				<view class="input-group">
 					<uv-input class="input" maxlength="8" shape="circle" placeholder="创建你的专属账户 (注册后不可更改)"
@@ -132,7 +142,7 @@ onUnmounted(() => {
 			<view class="forget-form" v-if="isForget">
 				<view class="form-title">
 					<text class="title">重置密码</text>
-					<text class="back" @click="isForget = false">返回登录</text>
+					<text class="back" @click="backLogin">返回登录</text>
 				</view>
 				<view class="input-group">
 					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="forgetForm.email">
