@@ -1,9 +1,41 @@
 // 项目提供scss全局变量
 
+// 定义亮色和暗色主题变量
+:root {
+  // 基础背景色
+  --base-background: #f6f7fb;
+  --base-content-background: #f9fafb;
+  --base-menu-background: #fff;
+  --base-tabbar-background: #fff;
+  --base-table-background: #fff;
+  --base-webkit-background: #f2f3f4;
+  --base-webkit-track: #fff;
+  --base-personal-color: black;
+  --base-login-background: #fff;
+}
+
+// 暗黑模式变量
+.dark {
+  --base-background: #001529;
+  --base-content-background: #001529;
+  --base-menu-background: #001529;
+  --base-tabbar-background: #001529;
+  --base-table-background: #001529;
+  --base-webkit-background: #001529;
+  --base-webkit-track: #001529;
+  --base-personal-color: white;
+  --base-login-background: #141414;
+}
+
+// 背景色
+$base-background: var(--base-background);
+// 登录页背景色
+$base-login-background: var(--base-login-background);
+
 // 左侧的菜单的宽度
 $base-menu-width: 190px;
 // 左侧菜单的背景颜色
-$base-menu-background: #fff;
+$base-menu-background: var(--base-menu-background);
 // 左侧菜单最小宽度
 $base-menu-min-width: 80px;
 
@@ -14,22 +46,23 @@ $base-menu-logo-height: 55px;
 $base-tabbar-height: 55px;
 
 // 内容区域颜色
-$base-content-background: #f9fafb;
-
+$base-content-background: var(--base-content-background);
 
 // 菜单选中的字体颜色
 $base-menu-active-color: #fff;
 // 菜单选中的背景颜色
 $base-menu-active-background: #1677ff;
 
-// 顶部导航的高度
 // 顶部导航的颜色
-$base-tabbar-background: #52a6fd;
+$base-tabbar-background: var(--base-tabbar-background);
+
+// 字体颜色
+$base-personal-color: var(--base-personal-color);
 
 // 滚动条背景色
-$base-webkit-background: #f2f3f4;
+$base-webkit-background: var(--base-webkit-background);
 // 滚动条整体颜色
-$base-webkit-track: #fff;
+$base-webkit-track: var(--base-webkit-track);
 // 滚动条宽度
 $base-webkit-scrollbar: 4px;
 // 滚动条高度
@@ -37,4 +70,4 @@ $base-webkit-height: 4px;
 // 滚动条圆角
 $base-webkit-radius: 10px;
 // 自定义表格
-$base-table-backgroud: #fff;
+$base-table-backgroud: var(--base-table-background);

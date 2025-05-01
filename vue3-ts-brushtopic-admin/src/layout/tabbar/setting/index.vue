@@ -97,19 +97,10 @@ const viewSetting = () => {
 const defaultTheme = ref({
   themeColor: '#1677ff',
   isDark: false,
-  fold: false
+  fold: false,
+  isCompact: false,
 })
 
-// // 切换为暗黑模式
-// const changeDark = () => {
-//   // 获取到根节点
-//   const html = document.documentElement
-//   if (settingStore.isDark) {
-//     html.className = 'dark'
-//   } else {
-//     html.className = ''
-//   }
-// }
 
 // 点击了保存配置在存储到本地仓库中
 const saveTheme = () => {
@@ -117,7 +108,8 @@ const saveTheme = () => {
   localStorage.setItem("settingTheme", JSON.stringify({
     fold: settingStore.fold,
     isDark: settingStore.isDark,
-    themeColor: settingStore.themeColor
+    themeColor: settingStore.themeColor,
+    isCompact: settingStore.isCompact,
   }))
   message.success("保存配置成功")
 }
@@ -130,6 +122,7 @@ const resetTheme = () => {
   settingStore.themeColor = defaultTheme.value.themeColor
   settingStore.isDark = defaultTheme.value.isDark
   settingStore.fold = defaultTheme.value.fold
+  settingStore.isCompact = defaultTheme.value.isCompact
   message.info("重置配置成功")
 }
 
@@ -147,16 +140,13 @@ const handleErrorImg = (event: any) => {
     </a-form-item>
     <a-form-item label="暗黑模式">
       <!-- 自定义切换暗黑模式的图标 -->
-      <!-- <el-switch :active-action-icon="Moon" :inactive-action-icon="Sunny" @change="changeDark"
-        v-model="settingStore.isDark" active-color="#13ce66" inactive-color="#ff4949"></el-switch> -->
       <a-switch v-model:checked="settingStore.isDark">
-        <!-- TODO 后续图标更换 -->
-        <!-- <template #checkedChildren>
-          <MoonOutlined />
+        <template #checkedChildren>
+          <BulbFilled />
         </template>
-<template #unCheckedChildren>
-          <SunOutlined />
-        </template> -->
+        <template #unCheckedChildren>
+          <BulbOutlined />
+        </template>
       </a-switch>
     </a-form-item>
     <a-form-item label="折叠菜单">
@@ -166,6 +156,16 @@ const handleErrorImg = (event: any) => {
         </template>
         <template #unCheckedChildren>
           <MenuFoldOutlined />
+        </template>
+      </a-switch>
+    </a-form-item>
+    <a-form-item label="紧凑模式">
+      <a-switch v-model:checked="settingStore.isCompact">
+        <template #checkedChildren>
+          <NodeCollapseOutlined />
+        </template>
+        <template #unCheckedChildren>
+          <NodeExpandOutlined />
         </template>
       </a-switch>
     </a-form-item>
@@ -231,7 +231,7 @@ const handleErrorImg = (event: any) => {
     </template>
     <!-- 下拉菜单：个人中心 退出登录 -->
     <a-dropdown class="dropdown">
-      <span>
+      <span class="name">
         {{ userStore.userInfo?.nickname || userStore.userInfo?.account }}
         <DownOutlined />
       </span>
@@ -273,30 +273,6 @@ const handleErrorImg = (event: any) => {
     }
   }
 
-  // .bell-content {
-  //   margin-top: 10px;
-
-  //   .infinite-list {
-  //     height: 300px;
-  //     padding: 0;
-  //     margin: 0;
-  //     list-style: none;
-  //   }
-
-  //   .infinite-list .infinite-list-item {
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: center;
-  //     height: 50px;
-  //     background: var(--el-color-primary-light-9);
-  //     color: var(--el-color-primary);
-  //     margin-bottom: 4px;
-  //   }
-
-  //   .infinite-list .infinite-list-item+.list-item {
-  //     margin-top: 10px;
-  //   }
-  // }
 
   .bell-bottom {
     height: 28px;
@@ -312,6 +288,9 @@ const handleErrorImg = (event: any) => {
   }
 }
 
+.name {
+  color: #8c8c8c;
+}
 
 .bell-content {
   margin-top: 10px;
@@ -369,7 +348,7 @@ const handleErrorImg = (event: any) => {
 
   .notification-message {
     font-size: 13px;
-    color: #333;
+    color: $base-personal-color;
     line-height: 1.5;
     word-break: break-all;
   }

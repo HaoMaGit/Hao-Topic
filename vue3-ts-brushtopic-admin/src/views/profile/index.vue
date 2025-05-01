@@ -287,7 +287,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .profile-container {
   padding: 24px;
 }
@@ -323,6 +323,6 @@ onMounted(() => {
 }
 
 .desc {
-  color: black;
+  color: $base-personal-color;
 }
 </style>

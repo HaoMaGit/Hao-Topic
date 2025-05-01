@@ -71,7 +71,7 @@ import Tabbar from './tabbar/index.vue'
     top: 0px;
     left: $base-menu-width;
     transition: all 0.3s;
-    border-bottom: 1px solid #dcdfe6;
+    border-bottom: 1px solid $base-tabbar-background;
 
     &.fold {
       width: calc(100vw - $base-menu-min-width);

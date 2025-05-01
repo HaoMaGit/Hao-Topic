@@ -159,7 +159,7 @@ onMounted(() => {
 .login-body {
   width: 100%;
   height: 100vh;
-  background-color: #f6f7fb;
+  background-color: $base-background;
 
   .login-box {
     width: 100%;
@@ -177,7 +177,7 @@ onMounted(() => {
 
     .login-right {
       margin: 35px 0 0 90px;
-      background-color: #fff; // 保留一个背景色定义
+      background-color: $base-login-background; // 保留一个背景色定义
       text-align: center;
       padding: 30px;
       width: 410px;
@@ -193,8 +193,11 @@ onMounted(() => {
       }
 
       .title {
+
         h1 {
           font-size: 20px;
+          color: $base-personal-color;
+
         }
       }
 

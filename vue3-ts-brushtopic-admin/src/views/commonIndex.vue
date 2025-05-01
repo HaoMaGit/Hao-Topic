@@ -155,7 +155,10 @@ const initContributionChart = () => {
         { min: 24, max: 32, color: '#4da6ff', label: '24-32' },
         { min: 32, max: 45, color: '#1677ff', label: '32-40' }
       ],
-      show: true
+      show: true,
+      textStyle: {
+        color: '#8c8c8c' // 设置为你想要的颜色，如红色
+      }
     },
     calendar: {
       top: 25,
@@ -223,7 +226,10 @@ function renderContributionChart(year: number) {
       inRange: {
         color: ['#e0f0ff', '#b3d8ff', '#80bfff', '#4da6ff', '#1677ff']
       },
-      show: true
+      show: true,
+      textStyle: {
+        color: '#8c8c8c' // 设置为你想要的颜色，如红色
+      }
     },
     calendar: {
       top: 25,

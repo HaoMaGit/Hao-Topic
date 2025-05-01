@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import * as echarts from 'echarts';
 
 // 分类实例
@@ -86,20 +86,25 @@ const initBubbleChart = () => {
     myChart.resize();
   });
 };
-
+// 导入 settingStore
+import { useSettingStore } from '@/stores/modules/setting';
+const settingStore = useSettingStore();
 // 刷题趋势图实例
 const topicTrendChart = ref(null);
 const initProblemTrendChart = () => {
   const myChart = echarts.init(topicTrendChart.value);
   const option = {
-    backgroundColor: '#fff',
+    backgroundColor: settingStore.isDark ? '#141414' : '#fff',
     tooltip: {
       trigger: 'axis'
     },
     legend: {
       data: ['刷题人数', '题目数量'],
       right: '5%',
-      top: '2%'
+      top: '2%',
+      textStyle: {
+        color: '#8c8c8c'
+      }
     },
     grid: {
       top: '10%',
@@ -211,7 +216,8 @@ const userGrowthChart = ref(null);
 const initUserGrowthChart = () => {
   const myChart = echarts.init(userGrowthChart.value);
   const option = {
-    backgroundColor: '#fff',
+    backgroundColor: settingStore.isDark ? '#141414' : '#fff',
+
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -306,7 +312,7 @@ const aiCallChart = ref(null);
 const initAiCallChart = () => {
   const myChart = echarts.init(aiCallChart.value);
   const option = {
-    backgroundColor: '#fff',
+    backgroundColor: settingStore.isDark ? '#141414' : '#fff',
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -395,7 +401,13 @@ const initAiCallChart = () => {
     myChart.resize();
   });
 }
-
+// 监听暗黑模式变化
+watch(() => settingStore.isDark, () => {
+  // 重新渲染图表
+  initAiCallChart()
+  initProblemTrendChart();
+  initUserGrowthChart();
+});
 onMounted(() => {
   initBubbleChart();
   initProblemTrendChart();
@@ -596,7 +608,7 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 15px;
-  color: #1a1a1a;
+  color: $base-personal-color;
   display: flex;
   align-items: center;
 }
@@ -627,11 +639,13 @@ onMounted(() => {
 }
 
 .user-growth {
+
   width: 100%;
   height: 350px;
 }
 
 .ai-call {
+
   width: 100%;
   height: 350px;
 }

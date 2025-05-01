@@ -20,7 +20,7 @@ import Breadcrumb from '@/layout/tabbar/breadcrumb/index.vue'
   height: 100%;
   display: flex;
   justify-content: space-between;
-  background-color: #fff !important;
+  background-color: $base-tabbar-background !important;
 
   .tabbar-left {
     display: flex;
