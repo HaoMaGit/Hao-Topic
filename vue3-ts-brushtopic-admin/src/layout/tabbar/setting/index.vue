@@ -34,7 +34,28 @@ const fullScreen = () => {
     document.exitFullscreen()
   }
 }
+// 通知数据
+const notifications = ref([
+  {
+    type: 'member',
+    typeText: '会员充值',
+    message: '张三充值了会员',
+    time: '10分钟前',
+    read: false
+  },
+  {
+    type: 'feedback',
+    typeText: '意见反馈',
+    message: '张三发起意见反馈：这个题目添加不上去',
+    time: '30分钟前',
+    read: false
+  },
+]);
 
+// 点击了已读
+const markAsRead = (index: number) => {
+  notifications.value[index].read = true
+}
 
 // 查看通知
 const viewBell = () => {
@@ -167,17 +188,31 @@ const handleErrorImg = (event: any) => {
           <!-- 顶部标题和清除通知 -->
           <div class="bell-top">
             <span class="tz">通知</span>
-            <span class="clear" @click="clearBell">清空</span>
+            <span class="clear" v-if="notifications.length > 0" @click="clearBell">清空</span>
           </div>
           <!-- 内容区域是通知信息 -->
           <div class="bell-content">
-            <ul class="infinite-list" style="overflow: auto">
-              <li v-for="i in 10" :key="i" class="infinite-list-item">{{ i }}</li>
-            </ul>
+            <div v-if="notifications.length > 0" class="notification-list">
+              <div v-for="(item, index) in notifications" :key="index" class="notification-item">
+                <div class="notification-content">
+                  <div class="notification-title">
+                    <span class="notification-type" :class="item.type">{{ item.typeText }}</span>
+                    <span class="notification-time">{{ item.time }}</span>
+                  </div>
+                  <div class="notification-message">{{ item.message }}</div>
+                </div>
+                <div class="notification-actions">
+                  <a-button type="link" size="small" @click="markAsRead(index)" v-if="!item.read">
+                    已读
+                  </a-button>
+                </div>
+              </div>
+            </div>
+            <a-empty v-else description="暂无通知" />
           </div>
           <!-- 底部关闭通知 -->
-          <div class="bell-bottom">
-            <a-link type="primary">已读</a-link>
+          <div class="bell-bottom" v-if="notifications.length > 0">
+            <a-link type="primary">全部已读</a-link>
           </div>
         </div>
       </template>
@@ -220,7 +255,7 @@ const handleErrorImg = (event: any) => {
 }
 
 .bell-box {
-  width: 250px;
+  width: 300px;
 
   .bell-top {
     display: flex;
@@ -238,30 +273,30 @@ const handleErrorImg = (event: any) => {
     }
   }
 
-  .bell-content {
-    margin-top: 10px;
+  // .bell-content {
+  //   margin-top: 10px;
 
-    .infinite-list {
-      height: 300px;
-      padding: 0;
-      margin: 0;
-      list-style: none;
-    }
+  //   .infinite-list {
+  //     height: 300px;
+  //     padding: 0;
+  //     margin: 0;
+  //     list-style: none;
+  //   }
 
-    .infinite-list .infinite-list-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 50px;
-      background: var(--el-color-primary-light-9);
-      color: var(--el-color-primary);
-      margin-bottom: 4px;
-    }
+  //   .infinite-list .infinite-list-item {
+  //     display: flex;
+  //     align-items: center;
+  //     justify-content: center;
+  //     height: 50px;
+  //     background: var(--el-color-primary-light-9);
+  //     color: var(--el-color-primary);
+  //     margin-bottom: 4px;
+  //   }
 
-    .infinite-list .infinite-list-item+.list-item {
-      margin-top: 10px;
-    }
-  }
+  //   .infinite-list .infinite-list-item+.list-item {
+  //     margin-top: 10px;
+  //   }
+  // }
 
   .bell-bottom {
     height: 28px;
@@ -269,8 +304,81 @@ const handleErrorImg = (event: any) => {
     display: flex;
     align-items: end;
     justify-content: center;
+
+    &:hover {
+      cursor: pointer;
+      color: #1677ff;
+    }
   }
 }
+
+
+.bell-content {
+  margin-top: 10px;
+
+  .notification-list {
+    height: 300px;
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+  }
+
+  .notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: all 0.3s;
+
+  }
+
+  .notification-content {
+    flex: 1;
+  }
+
+  .notification-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .notification-type {
+    font-weight: 500;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 4px;
+
+    &.feedback {
+      background-color: #e6f7ff;
+      color: #1677ff;
+    }
+
+    &.member {
+      background-color: #fff3e0;
+      color: #fa8c16;
+    }
+
+  }
+
+  .notification-time {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .notification-message {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+    word-break: break-all;
+  }
+
+  .notification-actions {
+    margin-left: 8px;
+  }
+}
+
 
 .user-avatar {
   width: 28px;
