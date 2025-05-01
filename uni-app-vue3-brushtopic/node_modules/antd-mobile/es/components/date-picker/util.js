@@ -1,1 +1,0 @@
-export const TILL_NOW = 'TILL_NOW';

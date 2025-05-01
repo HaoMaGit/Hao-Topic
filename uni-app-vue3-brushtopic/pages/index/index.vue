@@ -4,7 +4,7 @@
 		<view class="content-top">
 			<view class="user-identity">
 				<!-- 限制8个字 -->
-				<h2 class="welcome">AI用户，下午好！</h2>
+				<h2 class="welcome">AI收到顶顶订单用户，下午好！</h2>
 				<!-- H5环境 -->
 				<!-- #ifdef h5 -->
 				<view class="identity">
@@ -66,135 +66,135 @@
 </template>
 
 <script setup>
-	import Java from '../../common/image/java.png'
-	import {
-		ref
-	} from 'vue'
-	const avatarList = ref([{
-		url: Java
-	}])
-	// 点击了排名
-	const tapRanking = () => {
-		uni.navigateTo({
-			url: '/pages/index/ranking/ranking'
-		})
-	}
+import Java from '../../common/image/java.png'
+import {
+	ref
+} from 'vue'
+const avatarList = ref([{
+	url: Java
+}])
+// 点击了排名
+const tapRanking = () => {
+	uni.navigateTo({
+		url: '/pages/index/ranking/ranking'
+	})
+}
 </script>
 
 <style lang="scss" scoped>
-	.content {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+.content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+
+	.content-center {
+		padding-top: 30rpx;
 		width: 100%;
 		height: 100%;
 
-		.content-center {
-			padding-top: 30rpx;
-			width: 100%;
-			height: 100%;
+		.title-box {
+			padding-left: 30rpx;
+			display: flex;
+			align-items: center;
+			color: #404040;
 
-			.title-box {
-				padding-left: 30rpx;
-				display: flex;
-				align-items: center;
-				color: #404040;
-
-				.title-text {
-					font-weight: 520;
-					margin-left: 5rpx;
-				}
-			}
-
-			.list-box {
-				margin-top: 20rpx;
-
-				.chat-custom-right {
-					flex: 1;
-					/* #ifndef APP-NVUE */
-					display: flex;
-					/* #endif */
-					flex-direction: column;
-					justify-content: space-between;
-					align-items: flex-end;
-				}
-
-				.chat-custom-text {
-					font-size: 12px;
-					// color: #eca68c;
-					color: #999;
-				}
-
-				.list {
-					height: 120rpx;
-				}
+			.title-text {
+				font-weight: 520;
+				margin-left: 5rpx;
 			}
 		}
 
-		.content-top {
-			border-radius: 0 0 10rpx 5rpx;
-			padding-top: 80rpx;
-			width: 100%;
-			height: 260rpx;
-			background: linear-gradient(135deg, #272727, #4a4a4a, #6d6d6d, #909090, #b3b3b3, #d6d6d6, #f9f9f9);
-			// background: linear-gradient(135deg, #c7e9fb, #a6defa, #80d4f9, #5bc9f8, #35bef7);
+		.list-box {
+			margin-top: 20rpx;
 
-			.content-db {
+			.chat-custom-right {
+				flex: 1;
+				/* #ifndef APP-NVUE */
 				display: flex;
+				/* #endif */
+				flex-direction: column;
 				justify-content: space-between;
-				font-style: italic;
-				color: #846547;
-				font-size: 30rpx;
-				font-weight: bold;
-				margin-left: 35rpx;
-				width: 680rpx;
-				margin-top: 56rpx;
-				height: 70rpx;
-				border-radius: 12rpx 12rpx 0 0;
-				// background: linear-gradient(135deg, #f6d365, #fda085);
-				background: linear-gradient(to right, #f0ceb7, #f4d9c5);
-
-				.text-box {
-					padding-left: 38rpx;
-					padding-top: 18rpx;
-				}
+				align-items: flex-end;
 			}
 
-			.content-bottom {
-				padding-left: 70rpx;
-				margin-top: 10rpx;
-				display: flex;
-				align-items: center;
-				color: #dedede;
-				font-size: 30rpx;
+			.chat-custom-text {
+				font-size: 12px;
+				// color: #eca68c;
+				color: #999;
 			}
 
-
-			.user-identity {
-				padding-left: 70rpx;
-				display: flex;
-				align-items: center;
-
-				.welcome {
-					font-size: 56rpx;
-					color: #dedede;
-
-				}
-
-				.identity {
-					margin-top: 10rpx;
-					text-align: center;
-					width: 110rpx;
-					height: 36rpx;
-					font-size: 24rpx;
-					border-radius: 50rpx;
-					color: #4a4a4a;
-					/* 使用线性渐变 */
-					background-color: #fbe9dd;
-					font-weight: 520;
-				}
+			.list {
+				height: 120rpx;
 			}
 		}
 	}
+
+	.content-top {
+		border-radius: 0 0 10rpx 5rpx;
+		padding-top: 80rpx;
+		width: 100%;
+		height: 260rpx;
+		background: linear-gradient(135deg, #272727, #4a4a4a, #6d6d6d, #909090, #b3b3b3, #d6d6d6, #f9f9f9);
+		// background: linear-gradient(135deg, #c7e9fb, #a6defa, #80d4f9, #5bc9f8, #35bef7);
+
+		.content-db {
+			display: flex;
+			justify-content: space-between;
+			font-style: italic;
+			color: #846547;
+			font-size: 30rpx;
+			font-weight: bold;
+			margin-left: 35rpx;
+			width: 680rpx;
+			margin-top: 56rpx;
+			height: 70rpx;
+			border-radius: 12rpx 12rpx 0 0;
+			// background: linear-gradient(135deg, #f6d365, #fda085);
+			background: linear-gradient(to right, #f0ceb7, #f4d9c5);
+
+			.text-box {
+				padding-left: 38rpx;
+				padding-top: 18rpx;
+			}
+		}
+
+		.content-bottom {
+			padding-left: 70rpx;
+			margin-top: 10rpx;
+			display: flex;
+			align-items: center;
+			color: #dedede;
+			font-size: 30rpx;
+		}
+
+
+		.user-identity {
+			padding-left: 70rpx;
+			display: flex;
+			align-items: center;
+
+			.welcome {
+				font-size: 45rpx;
+				color: #dedede;
+
+			}
+
+			.identity {
+				margin-top: 10rpx;
+				text-align: center;
+				width: 110rpx;
+				height: 36rpx;
+				font-size: 24rpx;
+				border-radius: 50rpx;
+				color: #4a4a4a;
+				/* 使用线性渐变 */
+				background-color: #fbe9dd;
+				font-weight: 520;
+			}
+		}
+	}
+}
 </style>

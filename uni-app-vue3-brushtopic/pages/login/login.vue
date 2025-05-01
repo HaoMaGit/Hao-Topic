@@ -1,225 +1,384 @@
 <script setup>
-	import {
-		onUnmounted,
-		ref
-	} from 'vue'
-	import {
-		toast
-	} from '../../uni_modules/uv-ui-tools/libs/function';
-	// 登录方式 0账号登录 1手机登录 2邮箱登录 
-	const loginWay = ref(0)
-	const phoneValue = ref('') // 手机号
-	const qqValue = ref('') // qq
-	const userValue = ref('') // 账户
-	const password = ref('') // 密码
-	const totalSecond = ref(60) // 总秒数
-	const second = ref(60) // 倒计时的秒数
-	const forgetPopup = ref() // 忘记密码弹出层
-	// 输入的验证码
-	const codeValue = ref('')
-	let timer = null // 定时器 id
-	// 获取验证码
-	const getCode = () => {
-		// 如果定时器不存在并且秒数等于总秒数，则开启倒计时
-		if (!timer && second.value === totalSecond.value) {
-			console.log('开始倒计时');
-			// 开启倒计时
-			timer = setInterval(() => {
-				second.value--;
-				// 如果归0了停止定时器
-				if (second.value <= 0) {
-					clearInterval(timer);
-					timer = null; // 重置定时器 id
-					second.value = totalSecond.value; // 归位
-				}
-			}, 1000);
-			// 发送请求，获取验证码
-			// const res = await getCode({
-			// 	phone: formData.value.phoneNumber
-			// })
-			toast('验证码已发送')
-			// let codeTimer = setTimeout(() => {
-			// 	formData.value.code = res.data
-			// }, 2000)
-		}
+import {
+	ref, reactive
+} from 'vue'
+// 登录方式 0账号登录  1邮箱登录 
+const loginWay = ref(0)
+// 是否点击了注册
+const isRegister = ref(false)
+
+// 登录表单
+const loginForm = reactive({
+	account: '',
+	password: '',
+	email: ''
+})
+
+// 注册表单
+const registerForm = reactive({
+	account: '',
+	nickname: '',
+	email: '',
+	password: '',
+	code: ''
+})
+
+// 忘记密码表单
+
+
+const totalSecond = ref(60) // 总秒数
+const second = ref(60) // 倒计时的秒数
+let timer = null // 定时器 id
+// 获取验证码
+const getCode = () => {
+	// 如果定时器不存在并且秒数等于总秒数，则开启倒计时
+	if (!timer && second.value === totalSecond.value) {
+		console.log('开始倒计时');
+		// 开启倒计时
+		timer = setInterval(() => {
+			second.value--;
+			// 如果归0了停止定时器
+			if (second.value <= 0) {
+				clearInterval(timer);
+				timer = null; // 重置定时器 id
+				second.value = totalSecond.value; // 归位
+			}
+		}, 1000);
+		// 发送请求，获取验证码
+		// const res = await getCode({
+		// 	phone: formData.value.phoneNumber
+		// })
+		toast('验证码已发送')
+		// let codeTimer = setTimeout(() => {
+		// 	formData.value.code = res.data
+		// }, 2000)
 	}
-	// 页面销毁清除定时器
-	onUnmounted(() => {
-		clearInterval(timer)
-	})
-	// 点击了关闭
-	const ceshi = () => {
-		console.log('点击了关闭');
-	}
+}
+// 页面销毁清除定时器
+onUnmounted(() => {
+	clearInterval(timer)
+})
 </script>
 <template>
 	<view class="login-content">
-		<!-- 忘记密码弹出层 -->
-		<uni-popup :mask-click="false" ref="forgetPopup" style="text-align: center;" background-color="#fff"
-			type="bottom" border-radius="10px 10px 0 0">
-			<view class="title-box" style="margin-top: 18rpx;color: #bbb;margin-bottom: 20rpx;">
-				<text style="font-size: 25rpx;">忘记密码</text>
-			</view>
-			<uni-list>
-				<uni-list-item title="手机号验证" clickable></uni-list-item>
-				<uni-list-item title="邮箱验证" clickable></uni-list-item>
-				<view class="placeholder" style="width: 100%;height: 25rpx;background-color: #f7f7f7;"></view>
-				<uni-list-item title="取消" @click="forgetPopup.close()" clickable></uni-list-item>
-			</uni-list>
-		</uni-popup>
-		<!-- 内部容器 -->
+		<!-- 背景动画元素 -->
+		<view class="bg-animation">
+			<view class="circle"></view>
+			<view class="circle"></view>
+		</view>
+
+		<!-- 主体内容 -->
 		<view class="content-box">
-			<h3 class="welcome">{{ loginWay === 1 ? '手机快捷登录' : (loginWay === 2 ? 'QQ邮箱登录' : '欢迎登录') }}</h3>
-			<text class="register">未注册账号将自动注册</text>
-			<!-- 输入框 -->
+			<!-- Logo区域 -->
+			<view class="logo-area">
+				<image src="/static/images/logo.png" mode="aspectFit" class="logo-img"></image>
+				<text class="slogan">让学习更智能，让进步更高效</text>
+			</view>
+
+			<!-- 登录表单 -->
 			<view class="input-box">
-				<text class="hint">{{ loginWay === 1 ? '手机号' : (loginWay === 2 ? '邮箱' : '账号') }}</text>
-				<uv-input v-if="loginWay === 0" placeholder="请输入手机号或者邮箱" v-model="userValue"
-					style="margin-bottom: 28rpx;margin-top: 15rpx;"></uv-input>
-				<uv-input v-if="loginWay === 1" placeholder="请输入手机号" v-model="phoneValue"
-					style="margin-bottom: 28rpx;margin-top: 15rpx;"></uv-input>
-				<uv-input v-if="loginWay === 2" placeholder="请输入邮箱" v-model="qqValue"
-					style="margin-bottom: 28rpx;margin-top: 15rpx;"></uv-input>
-
-				<text class="hint">{{loginWay !== 1 ? '密码' : '验证码'}}</text>
-				<uv-input v-if="loginWay !== 1" placeholder="请输入密码" v-model="phoneValue"
-					style="margin-bottom: 28rpx;margin-top: 15rpx;"></uv-input>
-				<uv-input v-if="loginWay === 1" placeholder="请输入短信验证码" style="margin-top: 15rpx;" v-model="codeValue"
-					maxlength="6">
-					<!-- vue3模式下必须使用v-slot:suffix -->
-					<template v-slot:suffix>
-						<text :class="{'code-style': true, 'get-style' : phoneValue?.length === 11}" @click="getCode()">
-							{{ second === totalSecond ? '获取验证码' :
-          `重新获取${second}秒` }}</text>
-					</template>
-				</uv-input>
-
-				<!-- 登录按钮 -->
-				<view class="loginBtn">
-					<text class="login">登陆</text>
-				</view>
-				<!-- 忘记密码区域 -->
-				<view class="forget-box">
-					<text class="forget" @click="forgetPopup.open()">忘记密码？</text>
-					<text class="forget" v-if="loginWay !== 0" @click="loginWay = 0">账号登录</text>
+				<uv-input class="input" v-if="loginWay === 0" shape="circle" placeholder="请输入账户名称"
+					v-model="loginForm.account"></uv-input>
+				<uv-input class="input" v-else shape="circle" placeholder="请输入邮箱" v-model="loginForm.email"></uv-input>
+				<uv-input class="input" type="password" shape="circle" placeholder="请输入密码"
+					v-model="loginForm.password"></uv-input>
+				<button class="login-btn" hover-class="btn-hover">开始刷题</button>
+				<view class="action-row">
+					<text>忘记密码</text>
+					<text @click="loginWay = loginWay === 0 ? 1 : 0">
+						{{ loginWay === 0 ? '邮箱登录' : '账户登录' }}
+					</text>
 				</view>
 			</view>
-			<!-- 底部第三方登录手机或者邮箱登录 -->
-			<view class="icon-box">
-				<!-- 手机号登录 -->
-				<view class="phone-login-box" @click="loginWay = 1">
-					<image style="width: 55rpx;height: 55rpx;" src="../../common/image/phone.png" mode="aspectFill">
-					</image>
+
+			<!-- 注册表单 -->
+			<view class="register-form" v-if="isRegister">
+				<view class="form-title">
+					<text class="title">加入AI刷题</text>
+					<text class="back" @click="isRegister = false">返回登录</text>
 				</view>
-				<!-- qq邮箱登录 -->
-				<view class="qq-login-box" @click="loginWay = 2">
-					<image class="image-style" src="../../common/image/QQ.png" mode="aspectFill"></image>
+				<view class="input-group">
+					<uv-input class="input" maxlength="8" shape="circle" placeholder="创建你的专属账户 (注册后不可更改)"
+						v-model="registerForm.account"></uv-input>
+					<uv-input class="input" maxlength="8" shape="circle" placeholder="给自己起个独特的昵称"
+						v-model="registerForm.nickname"></uv-input>
+					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="registerForm.email"></uv-input>
+					<uv-input class="input" type="number" shape="circle" placeholder="请输入邮箱验证码" v-model="registerForm.code"
+						maxlength="6">
+						<!-- vue3模式下必须使用v-slot:suffix -->
+						<template v-slot:suffix>
+							<text @click="getCode()">
+								{{ second === totalSecond ? '获取验证码' :
+									`重新获取${second}秒` }}</text>
+						</template>
+					</uv-input>
+					<uv-input class="input" type="password" shape="circle" placeholder="请输入登录密码"
+						v-model="registerForm.password"></uv-input>
 				</view>
+				<button class="register-submit-btn" hover-class="btn-hover">开启AI刷题之旅</button>
+			</view>
+
+			<!-- 忘记密码 -->
+
+			<!-- 底部显示一个注册 -->
+			<view class="register-box">
+				<text>还没有刷题过？</text>
+				<text class="register-btn" @click="isRegister = true">立即注册</text>
 			</view>
 		</view>
 	</view>
 </template>
+
 <style lang="scss" scoped>
-	.login-content {
+.login-content {
+	min-height: 100vh;
+	background: linear-gradient(to bottom, #f0f7ff, #ffffff);
+	position: relative;
+	overflow: hidden;
+
+	.bg-animation {
+		position: absolute;
 		width: 100%;
-		height: 90vh;
-		padding: 80rpx;
+		height: 100%;
+		z-index: 1;
 
-		.content-box {
-			margin-top: 100rpx;
-			width: 100%;
-			height: 50vh;
+		.circle {
+			position: absolute;
+			border-radius: 50%;
+			background: linear-gradient(45deg, rgba(22, 119, 255, 0.1), rgba(22, 119, 255, 0.05));
 
-			.welcome {
-				font-size: 58rpx;
-				font-weight: bold;
-				color: #042f58;
-				margin-bottom: 10rpx;
+			&:nth-child(1) {
+				width: 300rpx;
+				height: 300rpx;
+				top: -100rpx;
+				left: -100rpx;
+				animation: float 8s infinite;
 			}
 
-			.register {
-				font-size: 30rpx;
-				color: #c5c5cd;
-				font-weight: 520;
-			}
-
-			.icon-box {
-				position: relative;
-				width: 78%;
-				height: 10%;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				position: absolute;
-				left: 50%;
-				transform: translateX(-50%);
-				/* 调整左位置，使其真正居中 */
-				bottom: 5%;
-
-				.phone-login-box,
-				.qq-login-box {
-					width: 90rpx;
-					height: 90rpx;
-					border-radius: 50%;
-					background-color: #afafaf;
-					opacity: 0.3;
-					text-align: center;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-				}
-
-				.image-style {
-					width: 66rpx;
-					height: 66rpx;
-				}
-
-				/* 给其中一个元素添加右边距以创建间距 */
-				.phone-login-box {
-					margin-right: 60rpx;
-					/* 根据需要调整间距大小 */
-				}
-
-			}
-
-			.input-box {
-				width: 78%;
-				margin-top: 38rpx;
-
-				.forget-box {
-					display: flex;
-					align-items: center;
-					justify-content: space-between;
-					margin-top: 12rpx;
-					color: #bbb;
-				}
-
-				.hint {
-					color: #bbb;
-				}
-
-				.code-style {
-					font-size: 26rpx;
-					color: #bbbbbb;
-				}
-
-				.get-style {
-					color: black;
-				}
-
-				.loginBtn {
-					text-align: center;
-					line-height: 75rpx;
-					width: 100%;
-					height: 75rpx;
-					border-radius: 12rpx;
-					margin-top: 38rpx;
-					cursor: pointer;
-					background-color: #3c9cff;
-					color: #fff;
-
-				}
+			&:nth-child(2) {
+				width: 200rpx;
+				height: 200rpx;
+				bottom: -50rpx;
+				right: -50rpx;
+				animation: float 6s infinite reverse;
 			}
 		}
 	}
+
+	.content-box {
+		position: relative;
+		z-index: 2;
+		padding: 60rpx 40rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between; // 修改这里
+		height: calc(100vh - 140rpx); // 修改这里
+
+		.register-box {
+			margin-top: auto;
+			padding-bottom: 50rpx;
+			text-align: center;
+
+			text {
+				font-size: 30rpx;
+				color: #666;
+			}
+
+			.register-btn {
+				color: #1677ff;
+				margin-left: 10rpx;
+				font-weight: 500;
+			}
+		}
+	}
+
+	.logo-area {
+		text-align: center;
+		padding-top: 300rpx;
+
+		.logo-img {
+			position: absolute;
+			width: 600rpx;
+			height: 600rpx;
+			left: 50%;
+			top: -80rpx; // 向上偏移
+			transform: translateX(-50%);
+			object-fit: cover;
+			z-index: 0; // 确保图片在文字后面
+		}
+
+
+
+		.welcome {
+			font-size: 46rpx;
+			font-weight: bold;
+			color: #1677ff;
+			margin-bottom: 20rpx;
+			display: block;
+		}
+
+		.slogan {
+			font-size: 28rpx;
+			color: #666;
+		}
+	}
+
+	.input-box {
+		margin-top: 60rpx;
+
+		.input {
+			height: 60rpx;
+			background-color: #fff;
+			margin-top: 15px;
+		}
+
+		.login-btn {
+			background: #1677ff;
+			color: #fff;
+			height: 90rpx;
+			line-height: 90rpx;
+			border-radius: 45rpx;
+			font-size: 32rpx;
+			margin-top: 46rpx;
+			box-shadow: 0 8rpx 20rpx rgba(22, 119, 255, 0.3);
+			transition: all 0.3s;
+		}
+
+		.btn-hover {
+			transform: translateY(2rpx);
+			box-shadow: 0 4rpx 10rpx rgba(22, 119, 255, 0.2);
+		}
+
+		.action-row {
+			display: flex;
+			justify-content: space-between;
+			margin-top: 30rpx;
+			padding: 0 20rpx;
+
+			text {
+				color: #1677ff;
+				font-size: 30rpx;
+			}
+		}
+	}
+
+	.other-login {
+		margin-top: 100rpx;
+		text-align: center;
+
+		.divider {
+			position: relative;
+			margin-bottom: 40rpx;
+
+			&::before,
+			&::after {
+				content: '';
+				position: absolute;
+				top: 50%;
+				width: 20%;
+				height: 1rpx;
+				background: #e5e5e5;
+			}
+
+			&::before {
+				left: 20%;
+			}
+
+			&::after {
+				right: 20%;
+			}
+
+			text {
+				color: #999;
+				font-size: 24rpx;
+				background: #f0f7ff;
+				padding: 0 30rpx;
+			}
+		}
+
+		.qq-login {
+			display: inline-block;
+			padding: 20rpx;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.8);
+			box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+
+			image {
+				width: 60rpx;
+				height: 60rpx;
+			}
+		}
+	}
+}
+
+@keyframes float {
+
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-20rpx);
+	}
+}
+
+
+
+.register-form {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background: linear-gradient(to bottom, #f0f7ff, #ffffff);
+	z-index: 100;
+	padding: 60rpx 40rpx;
+	box-sizing: border-box;
+
+	.form-title {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 60rpx;
+
+		.title {
+			font-size: 40rpx;
+			font-weight: bold;
+			color: #1677ff;
+		}
+
+		.back {
+			color: #666;
+			font-size: 28rpx;
+		}
+	}
+
+	.input-group {
+
+
+		.input {
+			height: 60rpx;
+			background-color: #fff;
+			margin-bottom: 30rpx;
+		}
+	}
+
+	.register-submit-btn {
+		background: #1677ff;
+		color: #fff;
+		height: 90rpx;
+		line-height: 90rpx;
+		border-radius: 45rpx;
+		font-size: 32rpx;
+		margin-top: 60rpx;
+		box-shadow: 0 8rpx 20rpx rgba(22, 119, 255, 0.3);
+		transition: all 0.3s;
+
+		&.btn-hover {
+			transform: translateY(2rpx);
+			box-shadow: 0 4rpx 10rpx rgba(22, 119, 255, 0.2);
+		}
+	}
+}
 </style>
