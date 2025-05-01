@@ -4,20 +4,7 @@
 		<view class="content-top">
 			<view class="user-identity">
 				<!-- 限制8个字 -->
-				<h2 class="welcome">AI收到顶顶订单用户，下午好！</h2>
-				<!-- H5环境 -->
-				<!-- #ifdef h5 -->
-				<view class="identity">
-					<!-- vip -->
-					<text>普通会员</text>
-				</view>
-				<!-- #endif -->
-				<!-- #ifdef APP-PLUS -->
-				<!-- App环境 -->
-				<view class="identity">
-					<text>普通会员</text>
-				</view>
-				<!-- #endif -->
+				<h2 class="welcome">AI订单用户，下午好！</h2>
 			</view>
 			<!-- 统计刷题区域 -->
 			<view class="content-bottom">
@@ -136,9 +123,11 @@ const tapRanking = () => {
 		border-radius: 0 0 10rpx 5rpx;
 		padding-top: 80rpx;
 		width: 100%;
-		height: 260rpx;
+		height: 250rpx;
 		background: linear-gradient(135deg, #272727, #4a4a4a, #6d6d6d, #909090, #b3b3b3, #d6d6d6, #f9f9f9);
-		// background: linear-gradient(135deg, #c7e9fb, #a6defa, #80d4f9, #5bc9f8, #35bef7);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 
 		.content-db {
 			display: flex;
@@ -163,7 +152,6 @@ const tapRanking = () => {
 
 		.content-bottom {
 			padding-left: 70rpx;
-			margin-top: 10rpx;
 			display: flex;
 			align-items: center;
 			color: #dedede;
@@ -182,18 +170,7 @@ const tapRanking = () => {
 
 			}
 
-			.identity {
-				margin-top: 10rpx;
-				text-align: center;
-				width: 110rpx;
-				height: 36rpx;
-				font-size: 24rpx;
-				border-radius: 50rpx;
-				color: #4a4a4a;
-				/* 使用线性渐变 */
-				background-color: #fbe9dd;
-				font-weight: 520;
-			}
+
 		}
 	}
 }
