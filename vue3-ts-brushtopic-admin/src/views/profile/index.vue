@@ -11,7 +11,7 @@
               </template>
             </a-avatar>
             <div class="avatar-upload">
-              <a-upload :maxCount="1" v-model:file-list="fileList" name="avatar" style="opacity: 0;"
+              <a-upload ::maxCount="1" v-model:file-list="fileList" name="avatar" style="opacity: 0;"
                 list-type="picture-card" :show-upload-list="false" :headers="headers" :action="uploadUrl"
                 :before-upload="beforeUpload" @change="handleChange">
               </a-upload>

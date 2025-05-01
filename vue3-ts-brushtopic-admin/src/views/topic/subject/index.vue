@@ -609,7 +609,7 @@ onMounted(() => {
             placeholder="请输入专题描述" />
         </a-form-item>
         <a-form-item label="图像" name="imageUrl">
-          <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
+          <a-upload :maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
             class="avatar-uploader" :show-upload-list="false" :headers="upload.headers" :action="uploadUrl"
             :before-upload="beforeUpload" @change="handleChange">
             <img v-if="formData.imageUrl" :src="formData.imageUrl" alt="avatar" class="avatar" />
@@ -637,7 +637,7 @@ onMounted(() => {
     <a-modal @cancel="handleCancel" :footer="null"
       bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
       v-model:open="upload.open" title="导入题目专题数据">
-      <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
+      <a-upload-dragger :maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
         :multiple="true" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :before-upload="handleBeforeUpload" @change="handleUploadChange">
         <p class="ant-upload-drag-icon">

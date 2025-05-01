@@ -457,7 +457,7 @@ onMounted(() => {
     <a-modal @cancel="handleCancel" :footer="null"
       bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
       v-model:open="upload.open" title="导入题目分类数据">
-      <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
+      <a-upload-dragger :maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
         :multiple="true" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :before-upload="handleBeforeUpload" @change="handleUploadChange">
         <p class="ant-upload-drag-icon">

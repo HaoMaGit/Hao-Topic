@@ -579,7 +579,7 @@ onMounted(() => {
           <a-input placeholder="请输入账户名称" v-model:value="formData.account"></a-input>
         </a-form-item>
         <a-form-item label="头像" name="avatar">
-          <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
+          <a-upload :maxCount="1" v-model:file-list="fileList" name="avatar" list-type="picture-card"
             class="avatar-uploader" :show-upload-list="false" :headers="headers" :action="uploadUrl"
             :before-upload="beforeUpload" @change="handleChange">
             <img v-if="formData.avatar" :src="formData.avatar" alt="avatar" class="avatar" />
@@ -617,7 +617,7 @@ onMounted(() => {
     <a-modal @cancel="handleCancel" :footer="null"
       bodyStyle="display: flex; flex-direction: column; align-items: center; text-align: center;"
       v-model:open="upload.open" title="导入用户数据">
-      <a-upload-dragger maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
+      <a-upload-dragger :maxCount="1" style="width: 100%;" v-model:fileList="upload.uploadFileList" name="file"
         :multiple="true" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :before-upload="handleBeforeUpload" @change="handleUploadChange">
         <p class="ant-upload-drag-icon">
