@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "修改密码",
+  "usingComponents": {
+    "uv-button": "../../../uni_modules/uv-button/components/uv-button/uv-button"
+  }
+}

@@ -1,0 +1,55 @@
+.adm-action-sheet-popup > .adm-popup-body {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  overflow: hidden;
+}
+.adm-action-sheet-extra {
+  display: flex;
+  justify-content: center;
+  color: var(--adm-color-weak);
+  font-size: var(--adm-font-size-7);
+  padding: 18px 12px;
+  border-bottom: 1px solid var(--adm-color-border);
+}
+.adm-action-sheet-button-list {
+  border-bottom: 1px solid var(--adm-color-border);
+}
+.adm-action-sheet-button-item-wrapper {
+  border-bottom: 1px solid var(--adm-color-border);
+}
+.adm-action-sheet-button-item-wrapper:last-child {
+  border-bottom: none;
+}
+.adm-action-sheet-button-item {
+  text-align: center;
+  display: block;
+  background-color: var(--adm-color-background);
+  padding: 16px;
+}
+.adm-action-sheet-button-item:active {
+  background-color: var(--adm-color-border);
+}
+.adm-action-sheet-button-item-disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.4;
+}
+.adm-action-sheet-button-item-name {
+  color: var(--adm-color-text);
+  font-size: var(--adm-font-size-10);
+}
+.adm-action-sheet-button-item-description {
+  font-size: var(--adm-font-size-6);
+  color: var(--adm-color-weak);
+  padding-top: 4px;
+}
+.adm-action-sheet-button-item-danger .adm-action-sheet-button-item-name {
+  color: var(--adm-color-danger);
+}
+.adm-action-sheet-button-item-bold .adm-action-sheet-button-item-name {
+  font-weight: bold;
+}
+.adm-action-sheet-cancel {
+  background-color: var(--adm-color-fill-content);
+  padding-top: 8px;
+}

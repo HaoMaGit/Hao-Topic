@@ -1,0 +1,13 @@
+.adm-toast-mask .adm-toast-main {
+  font-size: 30px;
+}
+
+.adm-toast-loading.adm-toast-loading {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 16px;
+}
+
+.adm-toast-loading.adm-toast-loading .adm-spin-loading-fill {
+  stroke: #ffffff;
+}

@@ -1,0 +1,33 @@
+.adm-progress-bar {
+  --track-width: var(--adm-progress-bar-track-width, 16px);
+  --track-color: var(--adm-progress-bar-track-color, var(--adm-color-border));
+  --fill-color: var(--adm-progress-bar-fill-color, var(--adm-color-primary));
+  --text-width: var(--adm-progress-bar-text-width, 80px);
+  display: flex;
+  align-items: center;
+}
+
+.adm-progress-bar-trail {
+  flex: auto;
+  background: var(--track-color);
+  overflow: hidden;
+  height: var(--track-width);
+}
+
+.adm-progress-bar-fill {
+  transition: width 0.3s;
+  background: var(--fill-color);
+  height: var(--track-width);
+}
+
+.adm-progress-bar-text {
+  flex: none;
+  width: calc(var(--text-width) + 16px);
+  padding-left: 16px;
+  color: var(--adm-color-weak);
+}
+
+.adm-progress-bar-rounded .adm-progress-bar-trail,
+.adm-progress-bar-rounded .adm-progress-bar-fill {
+  border-radius: var(--track-width);
+}

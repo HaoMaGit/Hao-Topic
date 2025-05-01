@@ -40,7 +40,7 @@ request.interceptors.response.use(
 
     if (status === 401) {
       //token过期
-      //跳转到登录页面
+      // 跳转到登录页面
       message.error('登录过期 请重新登录')
       router.push('/login')
       userStore.clearUserInfo()

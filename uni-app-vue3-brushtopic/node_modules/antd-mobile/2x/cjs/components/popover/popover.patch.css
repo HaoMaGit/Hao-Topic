@@ -1,0 +1,25 @@
+.adm-popover {
+  z-index: 1030;
+  color: #333333;
+}
+
+.adm-popover.adm-popover-dark {
+  color: #ffffff;
+}
+
+.adm-popover.adm-popover-dark .adm-popover-inner {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.adm-popover-inner {
+  background-color: #ffffff;
+  font-size: 30px;
+}
+
+.adm-popover-inner-content {
+  padding: 16px 24px;
+}
+
+.adm-popover-arrow {
+  display: none !important;
+}

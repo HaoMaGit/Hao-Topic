@@ -1,0 +1,10 @@
+.adm-image {
+  width: auto;
+  height: auto;
+}
+.adm-image-tip {
+  background-color: #f5f5f5;
+}
+.adm-image-tip > svg {
+  color: #999999;
+}

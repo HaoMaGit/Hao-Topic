@@ -1,0 +1,31 @@
+.adm-popover-menu.adm-popover .adm-popover-inner-content {
+  padding: 0 !important;
+}
+
+.adm-popover-menu-item-text {
+  border-top: solid 2px #eeeeee;
+}
+
+.adm-popover-menu-item:active:not(.adm-popover-menu-item-disabled) {
+  background-color: #eeeeee;
+}
+
+.adm-popover-menu-item:active:not(.adm-popover-menu-item-disabled)::after {
+  border-bottom: solid 2px #eeeeee;
+}
+
+.adm-popover.adm-popover-dark.adm-popover-menu.adm-popover-menu .adm-popover-menu-item-text {
+  border-color: #333333;
+}
+
+.adm-popover.adm-popover-dark.adm-popover-menu.adm-popover-menu .adm-popover-menu-item:active:not(.adm-popover-menu-item-disabled) {
+  background-color: #333333;
+}
+
+.adm-popover.adm-popover-dark.adm-popover-menu.adm-popover-menu .adm-popover-menu-item:active:not(.adm-popover-menu-item-disabled)::after {
+  border-color: #333333;
+}
+
+.adm-popover.adm-popover-dark.adm-popover-menu.adm-popover-menu .adm-popover-inner.adm-popover-inner.adm-popover-inner {
+  background-color: rgba(0, 0, 0, 0.9);
+}

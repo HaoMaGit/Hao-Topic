@@ -1,0 +1,29 @@
+.adm-error-block-image {
+  height: 200px;
+  width: auto;
+}
+
+.adm-error-block-description {
+  font-size: var(--adm-font-size-4);
+}
+
+.adm-error-block-description-title {
+  font-size: var(--adm-font-size-7);
+}
+
+.adm-error-block-full-page {
+  padding-top: calc(50vh - 400px);
+}
+
+.adm-error-block-full-page .adm-error-block-image {
+  height: 400px;
+  width: auto;
+}
+
+.adm-error-block-full-page .adm-error-block-description {
+  font-size: var(--adm-font-size-main);
+}
+
+.adm-error-block-full-page .adm-error-block-description-title {
+  color: #333333;
+}

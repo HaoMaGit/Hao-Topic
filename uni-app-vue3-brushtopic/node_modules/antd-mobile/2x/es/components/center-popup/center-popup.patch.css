@@ -1,0 +1,13 @@
+.adm-center-popup {
+  z-index: 1000;
+}
+
+.adm-center-popup-wrap {
+  min-width: 560px;
+  max-width: 75vw;
+}
+
+.adm-center-popup-body {
+  background-color: #ffffff;
+  border-radius: 16px;
+}

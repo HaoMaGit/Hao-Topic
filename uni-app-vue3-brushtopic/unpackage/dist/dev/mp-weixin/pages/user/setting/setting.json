@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "设置",
+  "usingComponents": {
+    "uni-popup-dialog": "../../../uni_modules/uni-popup/components/uni-popup-dialog/uni-popup-dialog",
+    "uni-popup": "../../../uni_modules/uni-popup/components/uni-popup/uni-popup",
+    "uni-icons": "../../../uni_modules/uni-icons/components/uni-icons/uni-icons",
+    "uni-file-picker": "../../../uni_modules/uni-file-picker/components/uni-file-picker/uni-file-picker",
+    "uv-button": "../../../uni_modules/uv-button/components/uv-button/uv-button"
+  }
+}

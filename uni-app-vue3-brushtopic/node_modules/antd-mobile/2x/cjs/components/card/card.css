@@ -1,0 +1,29 @@
+.adm-card {
+  background: var(--adm-color-background);
+  border-radius: var(--adm-card-border-radius, 16px);
+  padding: 0 var(--adm-card-padding-inline, 24px);
+}
+
+.adm-card-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--adm-card-header-gap, 16px);
+  box-sizing: border-box;
+  padding: var(--adm-card-header-padding-block, 24px) 0;
+}
+
+.adm-card-header:not(:last-child) {
+  border-bottom: solid var(--adm-card-header-border-width, 1px) var(--adm-card-header-border-color, var(--adm-color-border));
+}
+
+.adm-card-header-title {
+  font-size: var(--adm-font-size-7);
+  line-height: 1.4;
+  font-weight: bold;
+}
+
+.adm-card-body {
+  padding: var(--adm-card-body-padding-block, 24px) 0;
+}

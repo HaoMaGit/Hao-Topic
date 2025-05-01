@@ -1,0 +1,29 @@
+.adm-tabs-header {
+  border-bottom: solid 2px #eeeeee;
+}
+
+.adm-tabs-tab {
+  font-size: 34px;
+}
+
+.adm-tabs-tab-active {
+  color: #1677ff;
+}
+
+.adm-tabs-tab-line {
+  height: 4px;
+  background: #1677ff;
+  border-radius: 4px;
+}
+
+.adm-tabs-content {
+  padding: 24px;
+}
+
+.adm-tabs-header-mask-left {
+  background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0));
+}
+
+.adm-tabs-header-mask-right {
+  background: linear-gradient(to left, #ffffff, rgba(255, 255, 255, 0));
+}

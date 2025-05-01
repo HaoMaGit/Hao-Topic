@@ -1,0 +1,27 @@
+.adm-form {
+  --border-inner: solid 1px var(--adm-border-color);
+  --border-top: solid 1px var(--adm-border-color);
+  --border-bottom: solid 1px var(--adm-border-color);
+  --prefix-width: 6.8em;
+  ---border-inner: var(--border-inner);
+  ---border-top: var(--border-top);
+  ---border-bottom: var(--border-bottom);
+  ---prefix-width: var(--prefix-width);
+}
+.adm-form .adm-list.adm-list {
+  --padding-left: 16px;
+  --padding-right: 12px;
+  --border-inner: var(---border-inner);
+  --border-top: var(---border-top);
+  --border-bottom: var(---border-bottom);
+}
+.adm-form .adm-form-footer {
+  padding: 20px 12px;
+}
+.adm-form .adm-form-item-horizontal.adm-list-item {
+  --prefix-width: var(---prefix-width);
+}
+.adm-form-list-operation {
+  text-align: center;
+  color: var(--adm-color-primary);
+}

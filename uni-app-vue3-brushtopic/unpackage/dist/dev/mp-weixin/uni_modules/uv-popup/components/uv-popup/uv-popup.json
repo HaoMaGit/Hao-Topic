@@ -1,0 +1,10 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uv-overlay": "../../../uv-overlay/components/uv-overlay/uv-overlay",
+    "uv-status-bar": "../../../uv-status-bar/components/uv-status-bar/uv-status-bar",
+    "uv-safe-bottom": "../../../uv-safe-bottom/components/uv-safe-bottom/uv-safe-bottom",
+    "uv-icon": "../../../uv-icon/components/uv-icon/uv-icon",
+    "uv-transition": "../../../uv-transition/components/uv-transition/uv-transition"
+  }
+}

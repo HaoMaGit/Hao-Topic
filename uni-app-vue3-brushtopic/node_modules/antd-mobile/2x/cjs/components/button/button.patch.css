@@ -1,0 +1,106 @@
+.adm-button {
+  color: #333333;
+  background-color: #ffffff;
+  font-size: 34px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #eeeeee;
+  border-radius: 8px;
+}
+
+.adm-button::before {
+  transform: translate(-2px, -2px);
+  border: 2px solid #000;
+  border-radius: 8px;
+}
+
+.adm-button-default.adm-button-fill-outline {
+  background-color: transparent;
+  border-color: #333333;
+}
+
+.adm-button-default.adm-button-fill-none {
+  background-color: transparent;
+  border-width: 0;
+}
+
+.adm-button:not(.adm-button-default) {
+  color: #ffffff;
+}
+
+.adm-button:not(.adm-button-default).adm-button-fill-outline {
+  background-color: transparent;
+}
+
+.adm-button:not(.adm-button-default).adm-button-fill-none {
+  background-color: transparent;
+  border-width: 0;
+}
+
+.adm-button-primary {
+  background-color: #1677ff;
+  border-color: #1677ff;
+}
+
+.adm-button-primary.adm-button-fill-outline,
+.adm-button-primary.adm-button-fill-none {
+  color: #1677ff;
+}
+
+.adm-button-success {
+  background-color: #00b578;
+  border-color: #00b578;
+}
+
+.adm-button-success.adm-button-fill-outline,
+.adm-button-success.adm-button-fill-none {
+  color: #00b578;
+}
+
+.adm-button-danger {
+  background-color: #ff3141;
+  border-color: #ff3141;
+}
+
+.adm-button-danger.adm-button-fill-outline,
+.adm-button-danger.adm-button-fill-none {
+  color: #ff3141;
+}
+
+.adm-button-warning {
+  background-color: #ff8f1f;
+  border-color: #ff8f1f;
+}
+
+.adm-button-warning.adm-button-fill-outline,
+.adm-button-warning.adm-button-fill-none {
+  color: #ff8f1f;
+}
+
+.adm-button.adm-button-mini {
+  font-size: 26px;
+}
+
+.adm-button.adm-button-small {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 30px;
+}
+
+.adm-button.adm-button-large {
+  padding-top: 22px;
+  padding-bottom: 22px;
+  font-size: 36px;
+}
+
+.adm-button.adm-button-shape-rounded {
+  border-radius: 2000px;
+}
+
+.adm-button.adm-button-shape-rounded::before {
+  border-radius: 2000px;
+}
+
+.adm-button.adm-button-shape-rectangular {
+  border-radius: 0;
+}

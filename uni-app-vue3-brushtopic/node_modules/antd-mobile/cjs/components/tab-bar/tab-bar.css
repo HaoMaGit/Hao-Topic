@@ -1,0 +1,44 @@
+.adm-tab-bar-wrap {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 48px;
+}
+.adm-tab-bar-item {
+  flex: 1;
+  color: var(--adm-color-text-secondary);
+  white-space: nowrap;
+  padding: 4px 8px;
+  width: -webkit-min-content;
+  width: min-content;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.adm-tab-bar-item-icon {
+  font-size: 24px;
+  height: 24px;
+  line-height: 1;
+}
+.adm-tab-bar-item-title {
+  font-size: var(--adm-font-size-2);
+  line-height: 15px;
+}
+.adm-tab-bar-item-title-with-icon {
+  margin-top: 2px;
+}
+.adm-tab-bar-item-active {
+  color: var(--adm-color-primary);
+}
+.adm-tab-bar-icon-badge {
+  --top: 6px;
+}
+.adm-tab-bar-title-badge {
+  --right: -2px;
+  --top: -2px;
+}

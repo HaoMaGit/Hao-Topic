@@ -1,0 +1,13 @@
+.adm-space-vertical > .adm-space-item {
+  margin-bottom: 8px;
+}
+.adm-space-horizontal > .adm-space-item {
+  margin-right: 8px;
+}
+.adm-space-horizontal.adm-space-wrap {
+  flex-wrap: wrap;
+  margin-bottom: -8px;
+}
+.adm-space-horizontal.adm-space-wrap > .adm-space-item {
+  padding-bottom: 8px;
+}

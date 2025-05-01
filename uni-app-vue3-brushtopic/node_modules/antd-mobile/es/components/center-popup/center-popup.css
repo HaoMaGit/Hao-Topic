@@ -1,0 +1,36 @@
+.adm-center-popup {
+  --background-color: var(--adm-center-popup-background-color, var(--adm-color-background));
+  --border-radius: var(--adm-center-popup-border-radius, 8px);
+  --max-width: var(--adm-center-popup-max-width, 75vw);
+  --min-width: var(--adm-center-popup-min-width, 280px);
+  --z-index: var(--adm-center-popup-z-index, 1000);
+  position: fixed;
+  z-index: var(--z-index);
+}
+.adm-center-popup .adm-center-popup-mask {
+  z-index: 0;
+}
+.adm-center-popup-wrap {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  min-width: var(--min-width);
+  max-width: var(--max-width);
+  transform: translate(-50%, -50%);
+}
+.adm-center-popup-body {
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+}
+.adm-center-popup-close {
+  position: absolute;
+  z-index: 100;
+  right: 8px;
+  top: 8px;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 18px;
+  color: var(--adm-color-weak);
+}

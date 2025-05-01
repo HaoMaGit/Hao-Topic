@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uv-transition": "../../../uv-transition/components/uv-transition/uv-transition"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "ai",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "uni-list-chat": "../../uni_modules/uni-list/components/uni-list-chat/uni-list-chat",
+    "uv-input": "../../uni_modules/uv-input/components/uv-input/uv-input",
+    "uni-icons": "../../uni_modules/uni-icons/components/uni-icons/uni-icons"
+  }
+}

@@ -1,0 +1,118 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "uni-app",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/category/category",
+			"style": {
+				"navigationBarTitleText": "题库",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/ai/ai",
+			"style": {
+				"navigationBarTitleText": "ai",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/user/user",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/user/setting/setting",
+			"style": {
+				"navigationBarTitleText": "设置"
+			}
+		},
+		{
+			"path": "pages/user/change/change",
+			"style": {
+				"navigationBarTitleText": "修改密码"
+			}
+		},
+		{
+			"path": "pages/user/list/list",
+			"style": {
+				"navigationBarTitleText": "我的收藏"
+			}
+		},
+		{
+			"path": "pages/user/feedback/feedback",
+			"style": {
+				"navigationBarTitleText": "我的反馈"
+			}
+		},
+		{
+			"path": "pages/index/ranking/ranking",
+			"style": {
+				"navigationBarTitleText": "刷题排名"
+			}
+		},
+		{
+			"path": "pages/category/subject/subject",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/category/topic/topic",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "刷题",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#9799a5",
+		"selectedColor": "#26c4ff",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"iconPath": "static/images/home1.png",
+				"selectedIconPath": "static/images/home-1.png",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/category/category",
+				"iconPath": "static/images/category.png",
+				"selectedIconPath": "static/images/category-select.png",
+				"text": "题库"
+			},
+			{
+				"pagePath": "pages/ai/ai",
+				"iconPath": "static/images/AI.png",
+				"selectedIconPath": "static/images/AI-select.png",
+				"text": "AI"
+			},
+			{
+				"pagePath": "pages/user/user",
+				"iconPath": "static/images/user.png",
+				"selectedIconPath": "static/images/user-select.png",
+				"text": "我的"
+			}
+
+		]
+	},
+	"uniIdRouter": {}
+}

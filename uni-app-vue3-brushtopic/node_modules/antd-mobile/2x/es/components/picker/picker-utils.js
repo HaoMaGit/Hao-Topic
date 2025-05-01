@@ -1,0 +1,1 @@
+export const defaultRenderLabel = item => item.label;

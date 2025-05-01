@@ -1,0 +1,129 @@
+.adm-number-keyboard-main {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.adm-number-keyboard-main.adm-number-keyboard-main-confirmed-style .adm-number-keyboard-key-sign {
+  background-color: var(--adm-color-background);
+}
+
+.adm-number-keyboard-popup.adm-popup {
+  width: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  z-index: 1050;
+}
+
+.adm-number-keyboard-popup.adm-popup .adm-popup-body {
+  background-color: var(--adm-color-box);
+}
+
+.adm-number-keyboard-wrapper {
+  display: flex;
+}
+
+.adm-number-keyboard-header {
+  height: 68px;
+  line-height: 68px;
+  border-top: solid 2px var(--adm-color-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 24px;
+  color: var(--adm-color-weak);
+  background-color: var(--adm-color-background);
+}
+
+.adm-number-keyboard-header-close-button {
+  padding: 0 24px;
+  font-size: 32px;
+}
+
+.adm-number-keyboard-header.adm-number-keyboard-header-with-title {
+  justify-content: space-between;
+}
+
+.adm-number-keyboard-header.adm-number-keyboard-header-with-title .adm-number-keyboard-header-close-button {
+  padding-right: 0;
+}
+
+.adm-number-keyboard-footer {
+  background: var(--adm-color-white);
+}
+
+.adm-number-keyboard-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adm-number-keyboard-confirm {
+  width: 25%;
+}
+
+.adm-number-keyboard-key {
+  flex: 1 33.33%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  font-size: 44px;
+  box-sizing: border-box;
+  border: solid 2px var(--adm-color-border);
+  border-bottom: none;
+  border-left: none;
+}
+
+.adm-number-keyboard-key:nth-child(3n),
+.adm-number-keyboard-key:last-child {
+  border-right: none;
+}
+
+.adm-number-keyboard-key::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background-color: var(--adm-color-text-dark-solid);
+  border: inherit;
+  border-color: var(--adm-color-text-dark-solid);
+  border-radius: inherit;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  content: ' ';
+  box-sizing: content-box;
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-mid {
+  flex-basis: 66.67%;
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-sign:active::before {
+  opacity: 0.1;
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-extra {
+  border-left: solid 2px var(--adm-color-border);
+  border-right: none;
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-extra,
+.adm-number-keyboard-key.adm-number-keyboard-key-number {
+  background-color: var(--adm-color-background);
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-extra:active::before,
+.adm-number-keyboard-key.adm-number-keyboard-key-number:active::before {
+  opacity: 0.1;
+}
+
+.adm-number-keyboard-key.adm-number-keyboard-key-ok {
+  background-color: var(--adm-color-primary);
+  color: var(--adm-color-white);
+  height: 288px;
+  font-size: 32px;
+  border: none;
+}

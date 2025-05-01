@@ -1,0 +1,23 @@
+.adm-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.adm-card-header {
+  padding: 12px 0;
+}
+.adm-card-header:not(:last-child) {
+  border-bottom: solid 0.5px #eee;
+}
+.adm-card-header-title {
+  font-size: 15px;
+}
+.adm-card-header-icon {
+  margin-right: 8px;
+}
+.adm-card-header-extra {
+  margin-left: 8px;
+}
+.adm-card-body {
+  padding: 12px 0;
+}

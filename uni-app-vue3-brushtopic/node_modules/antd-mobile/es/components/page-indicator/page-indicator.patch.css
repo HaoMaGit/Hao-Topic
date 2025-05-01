@@ -1,0 +1,25 @@
+.adm-page-indicator-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.adm-page-indicator-dot-active {
+  border-radius: 1px;
+  background: #1677ff;
+}
+.adm-page-indicator-color-white .adm-page-indicator-dot-active.adm-page-indicator-dot-active {
+  background: #ffffff;
+}
+.adm-page-indicator-horizontal .adm-page-indicator-dot {
+  margin-right: 3px;
+}
+.adm-page-indicator-horizontal .adm-page-indicator-dot-active {
+  width: 13px;
+}
+.adm-page-indicator-vertical .adm-page-indicator-dot {
+  margin-bottom: 3px;
+}
+.adm-page-indicator-vertical .adm-page-indicator-dot-active {
+  height: 13px;
+}

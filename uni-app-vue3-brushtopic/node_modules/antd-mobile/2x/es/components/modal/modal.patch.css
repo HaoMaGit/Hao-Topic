@@ -1,0 +1,29 @@
+.adm-modal-body {
+  font-size: 28px;
+}
+
+.adm-modal-title {
+  font-size: 36px;
+}
+
+.adm-modal-content {
+  font-size: 30px;
+  color: #333333;
+}
+
+.adm-modal-close {
+  color: #999999;
+  font-size: 36px;
+}
+
+.adm-modal-footer.adm-space.adm-space-vertical > .adm-space-item.adm-space-item {
+  margin-bottom: 40px;
+}
+
+.adm-modal-footer.adm-space.adm-space-vertical > .adm-space-item.adm-space-item:last-child {
+  margin-bottom: 0;
+}
+
+.adm-modal-footer .adm-modal-button {
+  font-size: 36px;
+}

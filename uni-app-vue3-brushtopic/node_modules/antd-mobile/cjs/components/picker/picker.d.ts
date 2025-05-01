@@ -1,0 +1,57 @@
+import React from 'react';
+import type { ReactNode, CSSProperties } from 'react';
+import { PopupProps } from '../popup';
+import { NativeProps } from '../../utils/native-props';
+import { PickerColumn, PickerColumnItem, PickerValue, PickerValueExtend } from './index';
+export declare type PickerActions = {
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+};
+export declare type PickerRef = PickerActions;
+export declare type PickerProps = {
+    columns: PickerColumn[] | ((value: PickerValue[]) => PickerColumn[]);
+    value?: PickerValue[];
+    defaultValue?: PickerValue[];
+    loading?: boolean;
+    loadingContent?: ReactNode;
+    onSelect?: (value: PickerValue[], extend: PickerValueExtend) => void;
+    onConfirm?: (value: PickerValue[], extend: PickerValueExtend) => void;
+    onCancel?: () => void;
+    onClose?: () => void;
+    closeOnMaskClick?: boolean;
+    visible?: boolean;
+    title?: ReactNode;
+    confirmText?: ReactNode;
+    cancelText?: ReactNode;
+    children?: (items: (PickerColumnItem | null)[], actions: PickerActions) => ReactNode;
+    renderLabel?: (item: PickerColumnItem) => ReactNode;
+    mouseWheel?: boolean;
+    popupClassName?: string;
+    popupStyle?: CSSProperties;
+} & Pick<PopupProps, 'getContainer' | 'afterShow' | 'afterClose' | 'onClick' | 'stopPropagation' | 'forceRender' | 'destroyOnClose'> & NativeProps<'--header-button-font-size' | '--title-font-size' | '--item-font-size' | '--item-height'>;
+export declare const Picker: React.MemoExoticComponent<React.ForwardRefExoticComponent<{
+    columns: PickerColumn[] | ((value: PickerValue[]) => PickerColumn[]);
+    value?: PickerValue[] | undefined;
+    defaultValue?: PickerValue[] | undefined;
+    loading?: boolean | undefined;
+    loadingContent?: ReactNode;
+    onSelect?: ((value: PickerValue[], extend: PickerValueExtend) => void) | undefined;
+    onConfirm?: ((value: PickerValue[], extend: PickerValueExtend) => void) | undefined;
+    onCancel?: (() => void) | undefined;
+    onClose?: (() => void) | undefined;
+    closeOnMaskClick?: boolean | undefined;
+    visible?: boolean | undefined;
+    title?: ReactNode;
+    confirmText?: ReactNode;
+    cancelText?: ReactNode;
+    children?: ((items: (PickerColumnItem | null)[], actions: PickerActions) => ReactNode) | undefined;
+    renderLabel?: ((item: PickerColumnItem) => ReactNode) | undefined;
+    mouseWheel?: boolean | undefined;
+    popupClassName?: string | undefined;
+    popupStyle?: React.CSSProperties | undefined;
+} & Pick<PopupProps, "onClick" | "destroyOnClose" | "forceRender" | "getContainer" | "afterShow" | "afterClose" | "stopPropagation"> & {
+    className?: string | undefined;
+    style?: (React.CSSProperties & Partial<Record<"--header-button-font-size" | "--title-font-size" | "--item-font-size" | "--item-height", string>>) | undefined;
+    tabIndex?: number | undefined;
+} & React.AriaAttributes & React.RefAttributes<PickerActions>>>;

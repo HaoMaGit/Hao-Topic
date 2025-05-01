@@ -1,0 +1,68 @@
+.adm-popup {
+  --z-index: var(--adm-popup-z-index, 1000);
+  position: fixed;
+  z-index: var(--z-index);
+}
+
+.adm-popup-body {
+  position: fixed;
+  background-color: var(--adm-color-background);
+  z-index: calc(var(--z-index) + 10);
+}
+
+.adm-popup-body .adm-popup-close-icon {
+  position: absolute;
+  z-index: 100;
+}
+
+.adm-popup-body-position-bottom {
+  width: 100%;
+  bottom: 0;
+  left: 0;
+}
+
+.adm-popup-body-position-bottom .adm-popup-close-icon {
+  right: 16px;
+  top: 16px;
+}
+
+.adm-popup-body-position-top {
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.adm-popup-body-position-top .adm-popup-close-icon {
+  right: 16px;
+  bottom: 16px;
+}
+
+.adm-popup-body-position-left {
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.adm-popup-body-position-left .adm-popup-close-icon {
+  right: 16px;
+  top: 16px;
+}
+
+.adm-popup-body-position-right {
+  height: 100%;
+  top: 0;
+  right: 0;
+}
+
+.adm-popup-body-position-right .adm-popup-close-icon {
+  left: 16px;
+  top: 16px;
+}
+
+.adm-popup-close-icon {
+  cursor: pointer;
+  padding: 8px;
+  font-size: 36px;
+  line-height: 1;
+  color: var(--adm-color-weak);
+}

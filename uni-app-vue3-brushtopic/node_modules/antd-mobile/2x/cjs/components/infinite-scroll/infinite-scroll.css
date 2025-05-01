@@ -1,0 +1,13 @@
+.adm-infinite-scroll {
+  color: var(--adm-color-weak);
+  padding: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--adm-font-size-main);
+}
+
+.adm-infinite-scroll-failed-text {
+  display: inline-block;
+  margin-right: 16px;
+}

@@ -1,0 +1,46 @@
+.adm-rate {
+  --star-size: 48px;
+  --active-color: var(--adm-color-yellow);
+  --inactive-color: var(--adm-color-border);
+  --inactive-color-half: var(--adm-color-border);
+  display: inline-flex;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.adm-rate-box {
+  position: relative;
+}
+
+.adm-rate-star {
+  padding: 0.125em;
+  line-height: var(--star-size);
+  font-size: var(--star-size);
+  color: var(--inactive-color);
+  text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.3s;
+}
+
+.adm-rate-star-half {
+  padding-right: 0;
+  width: 50%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.adm-rate-star-active {
+  color: var(--active-color);
+}
+
+.adm-rate-star-readonly {
+  cursor: unset;
+}
+
+.adm-rate.adm-rate-half .adm-rate-star-half:not(.adm-rate-star-active) {
+  color: var(--inactive-color-half);
+}
