@@ -97,6 +97,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         UserInfoVo userInfoVo = new UserInfoVo();
         userInfoVo.setAccount(sysUser.getAccount());
         userInfoVo.setAvatar(sysUser.getAvatar());
+        userInfoVo.setNickname(sysUser.getNickname());
         userInfoVo.setId(sysUser.getId());
 
         // 根据用户id查询用户与角色的关系表
@@ -420,6 +421,24 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param userDto
      */
     public void updateNicknameAndEmail(UserDto userDto) {
-
+        // 校验
+        if (userDto.getId() == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        SysUser sysUserDb = sysUserMapper.selectById(userDto.getId());
+        if (sysUserDb == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        System.out.println("密码：" + PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword()));
+        if (!PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword())) {
+            throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
+        // 加密密码
+        String s = PasswordUtils.encodePassword(userDto.getPassword());
+        log.info("加密密码：{}", s);
+        sysUserDb.setPassword(s);
+        sysUserDb.setNickname(userDto.getNickname());
+        sysUserDb.setEmail(userDto.getEmail());
+        sysUserMapper.updateById(sysUserDb);
     }
 }

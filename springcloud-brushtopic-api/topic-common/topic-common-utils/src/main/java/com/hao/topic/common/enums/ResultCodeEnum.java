@@ -38,7 +38,6 @@ public enum ResultCodeEnum {
     IMPORT_ERROR(99913, "导入失败"),
     ADD_USER_ERROR(99914, "添加用户失败"),
     IMPORT_EXCEL_ERROR(99915, "导入数据不能为空"),
-    USER_NOT_EXIST(99908, "用户不存在"),
 
     CATEGORY_NAME_IS_NULL(99916, "题目分类名称不能为空"),
     CATEGORY_UPDATE_IS_NULL(99915, "修改题目分类失败"),
@@ -76,6 +75,9 @@ public enum ResultCodeEnum {
     // 生成ai答案失败
     TOPIC_GENERATE_ANSWER_ERROR(99936, "生成ai答案失败"),
     TOPIC_GENERATE_ANSWER_PROCESSING(99937, "HaoAi正在努力生成中"),
+
+    USER_NOT_EXIST(99938, "用户不存在"),
+    USER_PASSWORD_ERROR(99939, "用户密码错误"),
 
     SERVICE_ERROR(2012, "服务异常"),
 
