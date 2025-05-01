@@ -1,7 +1,6 @@
 package com.hao.topic.security.dto;
 
 import lombok.Data;
-import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * Description:
@@ -9,8 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable;
  * Date: 2025/5/1 14:00
  */
 @Data
-public class UserAvatarDto {
-
+public class UserDto {
     private String avatar;
     private Long id;
+    private String password;
+    private String nickname;
+    private String email;
 }

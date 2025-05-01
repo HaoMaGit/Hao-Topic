@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 public class UserInfoVo {
     private String account;
+    private String nickname;
     private String avatar;
     private Integer identity;
     private Long id;

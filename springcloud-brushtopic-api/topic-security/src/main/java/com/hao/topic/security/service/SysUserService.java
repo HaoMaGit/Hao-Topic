@@ -19,7 +19,7 @@ import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
-import com.hao.topic.security.dto.UserAvatarDto;
+import com.hao.topic.security.dto.UserDto;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import com.hao.topic.security.utils.PasswordUtils;
@@ -400,17 +400,26 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
     /**
      * 保存用户头像
      *
-     * @param userAvatarDto
+     * @param userDto
      */
-    public void saveAvatar(UserAvatarDto userAvatarDto) {
-        if (userAvatarDto.getId() == null) {
+    public void saveAvatar(UserDto userDto) {
+        if (userDto.getId() == null) {
             throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
         }
-        SysUser sysUserDb = sysUserMapper.selectById(userAvatarDto.getId());
+        SysUser sysUserDb = sysUserMapper.selectById(userDto.getId());
         if (sysUserDb == null) {
             throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
         }
-        sysUserDb.setAvatar(userAvatarDto.getAvatar());
+        sysUserDb.setAvatar(userDto.getAvatar());
         sysUserMapper.updateById(sysUserDb);
+    }
+
+    /**
+     * 修改账号昵称和邮箱
+     *
+     * @param userDto
+     */
+    public void updateNicknameAndEmail(UserDto userDto) {
+
     }
 }
