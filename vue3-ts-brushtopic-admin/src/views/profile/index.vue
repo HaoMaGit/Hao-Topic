@@ -269,8 +269,9 @@ const changePassword = () => {
     // 这里应该是调用API更新密码
     await apiUpdatePassword({
       id: userStore.userInfo.id,
-      oldPassword: passwordForm.oldPassword,
-      newPassword: passwordForm.newPassword
+      password: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword,
+      confirmPassword: passwordForm.confirmPassword
     })
     message.success('密码修改成功');
     // 退出登录
