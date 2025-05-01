@@ -8,7 +8,8 @@ import {
 const loginWay = ref(0)
 // 是否点击了注册
 const isRegister = ref(false)
-
+// 是否点击了忘记密码
+const isForget = ref(false)
 // 登录表单
 const loginForm = reactive({
 	account: '',
@@ -92,7 +93,7 @@ onUnmounted(() => {
 					v-model="loginForm.password"></uv-input>
 				<button class="login-btn" hover-class="btn-hover">开始刷题</button>
 				<view class="action-row">
-					<text>忘记密码</text>
+					<text @click="isForget = true">忘记密码</text>
 					<text @click="loginWay = loginWay === 0 ? 1 : 0">
 						{{ loginWay === 0 ? '邮箱登录' : '账户登录' }}
 					</text>
@@ -128,7 +129,29 @@ onUnmounted(() => {
 			</view>
 
 			<!-- 忘记密码 -->
-
+			<view class="forget-form" v-if="isForget">
+				<view class="form-title">
+					<text class="title">重置密码</text>
+					<text class="back" @click="isForget = false">返回登录</text>
+				</view>
+				<view class="input-group">
+					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="forgetForm.email">
+						<template v-slot:suffix>
+							<text @click="getCode()">
+								{{ second === totalSecond ? '发送验证码' : `重新发送${second}秒` }}
+							</text>
+						</template>
+					</uv-input>
+					<uv-input class="input" type="number" shape="circle" placeholder="请输入验证码" v-model="forgetForm.code"
+						maxlength="6">
+					</uv-input>
+					<uv-input class="input" type="password" shape="circle" placeholder="请输入新密码" v-model="forgetForm.password">
+					</uv-input>
+					<uv-input class="input" type="password" shape="circle" placeholder="请确认新密码" v-model="forgetForm.newPassword">
+					</uv-input>
+				</view>
+				<button class="forget-submit-btn" hover-class="btn-hover">确认修改</button>
+			</view>
 			<!-- 底部显示一个注册 -->
 			<view class="register-box">
 				<text>还没有刷题过？</text>
@@ -374,6 +397,61 @@ onUnmounted(() => {
 	}
 
 	.register-submit-btn {
+		background: #1677ff;
+		color: #fff;
+		height: 90rpx;
+		line-height: 90rpx;
+		border-radius: 45rpx;
+		font-size: 32rpx;
+		margin-top: 60rpx;
+		box-shadow: 0 8rpx 20rpx rgba(22, 119, 255, 0.3);
+		transition: all 0.3s;
+
+		&.btn-hover {
+			transform: translateY(2rpx);
+			box-shadow: 0 4rpx 10rpx rgba(22, 119, 255, 0.2);
+		}
+	}
+}
+
+.forget-form {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background: linear-gradient(to bottom, #f0f7ff, #ffffff);
+	z-index: 100;
+	padding: 60rpx 40rpx;
+	box-sizing: border-box;
+
+	.form-title {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 60rpx;
+
+		.title {
+			font-size: 40rpx;
+			font-weight: bold;
+			color: #1677ff;
+		}
+
+		.back {
+			color: #666;
+			font-size: 28rpx;
+		}
+	}
+
+	.input-group {
+		.input {
+			height: 60rpx;
+			background-color: #fff;
+			margin-bottom: 30rpx;
+		}
+	}
+
+	.forget-submit-btn {
 		background: #1677ff;
 		color: #fff;
 		height: 90rpx;
