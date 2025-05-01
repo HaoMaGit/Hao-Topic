@@ -48,3 +48,12 @@ export function apiGetUserInfoDetail(id: number | null) {
     method: 'get'
   })
 }
+
+// 根据用户id保存用户头像
+export function apiSaveUserAvatar(data: any) {
+  return request({
+    url: prefix + 'avatar',
+    method: 'put',
+    data
+  })
+}

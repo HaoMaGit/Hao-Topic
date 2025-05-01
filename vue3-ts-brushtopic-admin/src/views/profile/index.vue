@@ -11,7 +11,7 @@
               </template>
             </a-avatar>
             <div class="avatar-upload">
-              <a-upload maxCount="1" v-model:file-list="fileList" name="avatar" style="opacity: 0;"
+              <a-upload :maxCount="1" v-model:file-list="fileList" name="avatar" style="opacity: 0;"
                 list-type="picture-card" :show-upload-list="false" :headers="headers" :action="uploadUrl"
                 :before-upload="beforeUpload" @change="handleChange">
               </a-upload>
@@ -78,7 +78,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 import type { FormInstance } from 'ant-design-vue';
-import { apiGetUserInfoDetail } from '@/api/auth/index'
+import { apiGetUserInfoDetail, apiSaveUserAvatar } from '@/api/auth/index'
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useRouter } from 'vue-router';
@@ -115,7 +115,7 @@ const beforeUpload = (file: UploadProps['fileList'][number]) => {
  * 图片上传
  * @param info 
  */
-const handleChange = (info: UploadChangeParam) => {
+const handleChange = async (info: UploadChangeParam) => {
   // 判断是否上传中
   if (info.file.status === 'uploading') {
     loading.value = true;
@@ -126,6 +126,9 @@ const handleChange = (info: UploadChangeParam) => {
     userInfo.value.avatar = info.file.response.data
     // 更新缓存
     userStore.userInfo.avatar = info.file.response.data
+    userInfo.value.avatar = info.file.response.data
+    // 写入数据库
+    await apiSaveUserAvatar({ avatar: info.file.response.data, id: userStore.userInfo.id })
     loading.value = false;
     message.success('上传成功');
   }
