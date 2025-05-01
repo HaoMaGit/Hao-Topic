@@ -18,8 +18,11 @@
             </div>
           </div>
           <div class="user-info">
-            <h2>{{ userInfo.account }}</h2>
+            <h1>{{ userInfo.account }}</h1>
+            <div class="nickname" v-if="userInfo.nickname">昵称：{{ userInfo.nickname }}</div>
             <p class="user-email" v-if="userInfo.email">{{ userInfo.email }}</p>
+            <!-- 账号注册时间 -->
+            <p class="user-since" v-if="userInfo.createTime">账号注册时间: {{ userInfo.createTime }}</p>
             <p class="user-since" v-if="userInfo.memberTime">会员注册时间: {{ userInfo.memberTime }}</p>
             <a-tag :color="userInfo.status === 0 ? 'success' : 'error'">
               {{ userInfo.status === 0 ? '正常' : '停用' }}
@@ -34,11 +37,14 @@
           <a-tabs default-active-key="1">
             <a-tab-pane key="1" tab="基本信息">
               <a-form :model="formState" :rules="rules" ref="formRef" layout="vertical">
-                <a-form-item label="账户" name="account">
-                  <a-input v-model:value="formState.account" placeholder="请谨慎修改账户修改账户后会，影响到创建人记录" />
+                <a-form-item label="昵称" name="nickname">
+                  <a-input v-model:value="formState.nickname" placeholder="请谨慎修改账户昵称修改昵称后会影响展示效果" />
                 </a-form-item>
                 <a-form-item label="邮箱" name="email">
                   <a-input v-model:value="formState.email" placeholder="请输入邮箱" />
+                </a-form-item>
+                <a-form-item label="密码" name="password">
+                  <a-input-password v-model:value="formState.password" placeholder="请输入密码" />
                 </a-form-item>
                 <a-form-item>
                   <a-space :size="10">
@@ -78,7 +84,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 import type { FormInstance } from 'ant-design-vue';
-import { apiGetUserInfoDetail, apiSaveUserAvatar } from '@/api/auth/index'
+import { apiGetUserInfoDetail, apiSaveUserAvatar, apiUpdateUserInfo, apiUpdatePassword } from '@/api/auth/index'
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useRouter } from 'vue-router';
@@ -145,6 +151,8 @@ const getUserInfo = async () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     userInfo.value = res
+    formState.nickname = userInfo.value.nickname
+    formState.email = userInfo.value.email
   })
 };
 
@@ -155,7 +163,10 @@ const userInfo = ref({
   avatar: '',
   email: '',
   memberTime: '',
-  status: 0
+  nickname: '',
+  status: 0,
+  password: null,
+  createTime: ''
 });
 
 
@@ -166,8 +177,9 @@ const loading = ref<boolean>(false);
 
 // 表单数据
 const formState = reactive({
-  account: '',
-  email: ''
+  nickname: '',
+  email: '',
+  password: null
 });
 
 // 密码表单数据
@@ -183,11 +195,15 @@ const passwordFormRef = ref<FormInstance>();
 
 // 表单验证规则
 const rules = {
-  account: [{ required: true, message: '请输入账户名', trigger: 'blur' }],
+  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' },
+  { min: 2, message: '昵称长度不能少于2个字符', trigger: 'blur' },
+  { max: 10, message: '昵称长度不能超过10个字符', trigger: 'blur' }
+  ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-  ]
+  ],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 };
 
 // 密码表单验证规则
@@ -212,8 +228,14 @@ const passwordRules = {
 };
 // 提交表单
 const submitForm = () => {
-  formRef.value?.validate().then(() => {
+  formRef.value?.validate().then(async () => {
     // 调用API更新用户信息
+    await apiUpdateUserInfo({
+      id: userStore.userInfo.id,
+      nickname: formState.nickname,
+      email: formState.email,
+      password: formState.password
+    })
     message.success('个人信息更新成功');
     // 退出登录
     userStore.logout()
@@ -224,8 +246,13 @@ const submitForm = () => {
 
 // 修改密码
 const changePassword = () => {
-  passwordFormRef.value?.validate().then(() => {
+  passwordFormRef.value?.validate().then(async () => {
     // 这里应该是调用API更新密码
+    await apiUpdatePassword({
+      id: userStore.userInfo.id,
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword
+    })
     message.success('密码修改成功');
     // 退出登录
     userStore.logout()
@@ -274,6 +301,12 @@ onMounted(() => {
 .user-since {
   font-size: 12px;
   color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 8px;
+}
+
+.nickname {
+  font-size: 14px;
+  color: #666;
   margin-bottom: 8px;
 }
 </style>

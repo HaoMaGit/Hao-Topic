@@ -57,3 +57,21 @@ export function apiSaveUserAvatar(data: any) {
     data
   })
 }
+
+// 修改账号昵称和邮箱
+export function apiUpdateUserInfo(data: any) {
+  return request({
+    url: prefix + 'updateNicknameAndEmail',
+    method: 'put',
+    data
+  })
+}
+
+// 修改密码
+export function apiUpdatePassword(data: any) {
+  return request({
+    url: prefix + 'updatePassword',
+    method: 'put',
+    data
+  })
+}

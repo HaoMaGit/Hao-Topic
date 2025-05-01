@@ -112,7 +112,7 @@ onMounted(() => {
         <!-- 会员表单 -->
         <div class="form-member">
           <a-form :model="formData" ref="adminRef" :rules="formRule" layout="vertical">
-            <a-form-item label="账号" name="username">
+            <a-form-item label="账户" name="username">
               <a-input v-model:value="formData.username" placeholder="请输入手机号或者邮箱" size="large">
                 <template #prefix>
                   <UserOutlined />
