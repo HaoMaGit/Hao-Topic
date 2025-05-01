@@ -197,7 +197,7 @@ const handleErrorImg = (event: any) => {
     <!-- 下拉菜单：个人中心 退出登录 -->
     <a-dropdown class="dropdown">
       <span>
-        {{ userStore.userInfo?.account }}
+        {{ userStore.userInfo?.nickname || userStore.userInfo?.account }}
         <DownOutlined />
       </span>
       <template #overlay>

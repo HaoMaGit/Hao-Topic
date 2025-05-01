@@ -12,7 +12,8 @@ export interface UserResponse {
   avatar: string,
   identity: number | null,
   id: number | null,
-  menuList: MenuType[]
+  menuList: MenuType[],
+  nickname: string | null,
 }
 
 // 登录返回结果类型

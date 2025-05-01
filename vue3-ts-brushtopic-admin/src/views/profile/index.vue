@@ -35,7 +35,7 @@
             <a-tab-pane key="1" tab="基本信息">
               <a-form :model="formState" :rules="rules" ref="formRef" layout="vertical">
                 <a-form-item label="账户" name="account">
-                  <a-input v-model:value="formState.account" placeholder="请输入账户名" />
+                  <a-input v-model:value="formState.account" placeholder="请谨慎修改账户修改账户后会，影响到创建人记录" />
                 </a-form-item>
                 <a-form-item label="邮箱" name="email">
                   <a-input v-model:value="formState.email" placeholder="请输入邮箱" />

@@ -425,7 +425,7 @@ onMounted(() => {
                   <!-- 用户名称和身份 -->
                   <div class="username" :style="{ 'color': userStore.userInfo.identity === 1 ? '#ffd700' : '#1677ff' }">
                     {{
-                      userStore.userInfo.account
+                      userStore.userInfo.nickname || userStore.userInfo.account
                     }}</div>
                   <div class="achievements">
                     <!-- 用户成就 -->

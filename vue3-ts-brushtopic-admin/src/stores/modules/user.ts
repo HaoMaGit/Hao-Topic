@@ -17,6 +17,7 @@ export const useUserStore = defineStore('user', () => {
     account: '',
     avatar: '',
     identity: null,
+    nickname: null,
     menuList: [],
     id: null
   });
@@ -67,6 +68,7 @@ export const useUserStore = defineStore('user', () => {
       avatar: '',
       identity: null,
       menuList: [],
+      nickname: null,
       id: null
     }
     token.value = null
@@ -76,6 +78,7 @@ export const useUserStore = defineStore('user', () => {
   const logout = () => {
     userInfo.value = {
       account: '',
+      nickname: null,
       avatar: '',
       identity: null,
       menuList: [],
