@@ -10,6 +10,7 @@ import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
+import com.hao.topic.security.dto.UserAvatarDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.handler.DefaultWebFilterChain;
@@ -180,6 +183,20 @@ public class SecurityController {
     @GetMapping("/info/{id}")
     public SysUser getUserInfo(@PathVariable Long id) {
         return sysUserService.getById(id);
+    }
+
+
+    /**
+     * 保存头像
+     *
+     * @param userAvatarDto
+     * @return
+     */
+    @PutMapping("/avatar")
+    public Result saveAvatar(@RequestBody UserAvatarDto userAvatarDto) {
+        // 保存头像
+        sysUserService.saveAvatar(userAvatarDto);
+        return Result.success();
     }
 
 }

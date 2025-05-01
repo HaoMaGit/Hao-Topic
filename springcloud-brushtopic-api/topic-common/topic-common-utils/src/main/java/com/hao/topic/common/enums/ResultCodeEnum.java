@@ -38,6 +38,7 @@ public enum ResultCodeEnum {
     IMPORT_ERROR(99913, "导入失败"),
     ADD_USER_ERROR(99914, "添加用户失败"),
     IMPORT_EXCEL_ERROR(99915, "导入数据不能为空"),
+    USER_NOT_EXIST(99908, "用户不存在"),
 
     CATEGORY_NAME_IS_NULL(99916, "题目分类名称不能为空"),
     CATEGORY_UPDATE_IS_NULL(99915, "修改题目分类失败"),

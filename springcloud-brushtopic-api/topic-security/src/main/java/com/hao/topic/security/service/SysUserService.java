@@ -8,9 +8,7 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
-import com.hao.topic.common.utils.ServletUtils;
 import com.hao.topic.common.utils.StringUtils;
-import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysRole;
@@ -21,6 +19,7 @@ import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.security.dto.UserAvatarDto;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import com.hao.topic.security.utils.PasswordUtils;
@@ -398,4 +397,20 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
     }
 
 
+    /**
+     * 保存用户头像
+     *
+     * @param userAvatarDto
+     */
+    public void saveAvatar(UserAvatarDto userAvatarDto) {
+        if (userAvatarDto.getId() == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        SysUser sysUserDb = sysUserMapper.selectById(userAvatarDto.getId());
+        if (sysUserDb == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        sysUserDb.setAvatar(userAvatarDto.getAvatar());
+        sysUserMapper.updateById(sysUserDb);
+    }
 }
