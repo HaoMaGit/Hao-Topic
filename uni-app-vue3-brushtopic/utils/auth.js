@@ -1,19 +1,22 @@
-
 export const isLogin = () => {
   const user = uni.getStorageSync('h5UserInfo')
-  console.log("================>");
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]?.route || ''
+  
+  // 如果没有登录且不在登录页，则跳转到登录页
+  if (!user && currentPage !== 'pages/login/login') {
+    uni.reLaunch({
+      url: "/pages/login/login"
+    })
+    return
+  }
 
-  if (!user) {
-    //跳转进入登录页
+  // 如果已登录且在登录页，则跳转到首页
+  if (user && currentPage === 'pages/login/login') {
     uni.reLaunch({
-      url: "/pages/login/login",
-      success: () => { }
+      url: "/pages/index/index"
     })
-  } else {
-    uni.reLaunch({
-      url: "/pages/index/index",
-      success: () => { }
-    })
+    return
   }
 }
 

@@ -59,7 +59,7 @@ const uploadSuccess = async (e) => {
 		// 转换json
 		const jsonResult = JSON.parse(res.data)
 		console.log('jsonResult', jsonResult);
-		
+
 		// 保存一下头像地址
 		await apiSaveUserAvatar({
 			id: userInfo.value.id,
@@ -188,8 +188,7 @@ const dialogInputConfirm = async (value) => {
 					<view class="right">
 						<uni-file-picker @beforeUpload="beforeUpload" @select="uploadSuccess" limit="1" :del-icon="false"
 							disable-preview :imageStyles="imageStyles" file-mediatype="image">
-							<uv-avatar v-if="!userInfo.avatar" size="55" :text="text" fontSize="18" randomBgColor></uv-avatar>
-							<uv-avatar v-else size="55" :src="userInfo.avatar"></uv-avatar>
+							<uv-avatar size="55" :src="userInfo.avatar"></uv-avatar>
 						</uni-file-picker>
 					</view>
 				</view>
