@@ -21,7 +21,9 @@ import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.security.constant.EmailConstant;
 import com.hao.topic.security.constant.JwtConstant;
+import com.hao.topic.security.dto.ResetPasswordDto;
 import com.hao.topic.security.dto.LoginTypeDto;
 import com.hao.topic.security.dto.UserDto;
 import com.hao.topic.security.mapper.SysUserMapper;
@@ -39,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -634,5 +635,36 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         } catch (Exception e) {
             throw new TopicException(ResultCodeEnum.USER_EMAIL_SEND_ERROR);
         }
+    }
+
+    /**
+     * 重置密码
+     *
+     * @param resetPasswordDto
+     */
+    public void resetPassword(ResetPasswordDto resetPasswordDto) {
+        // 根据邮箱查询
+        LambdaQueryWrapper<SysUser> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserLambdaQueryWrapper.eq(SysUser::getEmail, resetPasswordDto.getEmail());
+        SysUser sysUser = sysUserMapper.selectOne(sysUserLambdaQueryWrapper);
+        if (sysUser == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        // 用户存在校验验证码
+        Object o = redisTemplate.opsForValue().get(EmailConstant.EMAIL_CODE.getValue() + ":" + resetPasswordDto.getEmail());
+        if (o == null) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_ERROR);
+        }
+        String code = o.toString();
+        // 开始比较
+        if (!code.equals(resetPasswordDto.getCode())) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_INPUT_ERROR);
+        }
+        // 判断两次密码是否一致
+        if (!resetPasswordDto.getNewPassword().equals(resetPasswordDto.getPassword())) {
+            throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
+        sysUser.setPassword(PasswordUtils.encodePassword(resetPasswordDto.getNewPassword()));
+        sysUserMapper.updateById(sysUser);
     }
 }

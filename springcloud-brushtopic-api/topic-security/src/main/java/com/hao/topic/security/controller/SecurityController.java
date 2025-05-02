@@ -8,6 +8,7 @@ import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.security.dto.ResetPasswordDto;
 import com.hao.topic.security.dto.LoginRequestDto;
 import com.hao.topic.security.dto.LoginTypeDto;
 import com.hao.topic.security.dto.UserDto;
@@ -16,9 +17,7 @@ import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.server.WebFilterExchange;
@@ -236,6 +235,15 @@ public class SecurityController {
     public Result sendEmail(String email) {
         // 发送qq邮箱验证码
         sysUserService.sendVerificationEmail(email);
+        return Result.success();
+    }
+
+    /**
+     * 忘记密码
+     */
+    @PutMapping("/resetPassword")
+    public Result resetPassword(@RequestBody @Validated ResetPasswordDto resetPasswordDto) {
+        sysUserService.resetPassword(resetPasswordDto);
         return Result.success();
     }
 
