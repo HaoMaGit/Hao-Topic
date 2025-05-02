@@ -28,7 +28,7 @@ public interface SystemFeignClient {
     public List<SysMenuVo> userMenu(@PathVariable Long roleId);
 
     /**
-     * 根据角色i查询角色信息
+     * 根据角色id查询角色信息
      *
      * @param id
      * @return
@@ -37,7 +37,7 @@ public interface SystemFeignClient {
     public SysRole getById(@PathVariable Long id);
 
     /**
-     * 根据角色权限key查询用户角色细腻系
+     * 根据角色权限key查询用户角色信息
      */
     @GetMapping("/system/role/key/{role}")
     public SysRole getByRoleKey(@PathVariable String role);

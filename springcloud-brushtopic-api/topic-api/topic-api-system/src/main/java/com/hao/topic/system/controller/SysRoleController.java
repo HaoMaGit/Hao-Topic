@@ -108,5 +108,13 @@ public class SysRoleController {
         return Result.success(sysMenuVoList);
     }
 
-
+    /**
+     * 根据角色identify查询角色信息
+     */
+    @GetMapping("/identify/{identify}")
+    public SysRole getByRoleIdentify(@PathVariable Long identify) {
+        LambdaQueryWrapper<SysRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleLambdaQueryWrapper.eq(SysRole::getIdentify, identify);
+        return sysRoleService.getOne(sysRoleLambdaQueryWrapper);
+    }
 }
