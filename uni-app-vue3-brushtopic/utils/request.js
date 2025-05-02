@@ -13,7 +13,6 @@ const request = axios.create({
 request.interceptors.request.use((config) => {
   // 获取token
   const userInfo = uni.getStorageSync('h5UserInfo')
-  console.log("==============>", userInfo);
   if (userInfo) {
     const json =  JSON.parse(userInfo)
     config.headers.Authorization = uni.getStorageSync(json.account + 'token')

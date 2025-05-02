@@ -3,7 +3,9 @@ import { isLogin } from '@/utils/auth'
 export default {
 	onLaunch: function () {
 		console.log('App Launch')
-		isLogin()
+		setTimeout(() => {
+			isLogin()
+		}, 100)
 	},
 	onShow: function () {
 		console.log('App Show')
