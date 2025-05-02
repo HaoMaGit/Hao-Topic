@@ -444,9 +444,10 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (sysUserDb == null) {
             throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
         }
-        System.out.println("密码：" + PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword()));
-        if (!PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword())) {
-            throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        if (!userDto.getPassword().equals(sysUserDb.getPassword())) {
+            if (!PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword())) {
+                throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+            }
         }
         // 查询用户昵称是否存在了
         LambdaQueryWrapper<SysUser> eq = new LambdaQueryWrapper<SysUser>().eq(SysUser::getNickname, userDto.getNickname());
