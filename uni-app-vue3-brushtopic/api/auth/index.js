@@ -63,3 +63,12 @@ export const apiSendEmail = (email) => {
     params: { email },
   })
 }
+
+// 重置密码
+export const apiResetPassword = (data) => {
+  return request({
+    url: prefix + "resetPassword",
+    method: "put",
+    data,
+  })
+}

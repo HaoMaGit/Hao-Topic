@@ -6,7 +6,7 @@ import {
 	onMounted,
 	onBeforeMount
 } from 'vue'
-import { apiLogin, apiSendEmail } from '@/api/auth'
+import { apiLogin, apiSendEmail, apiResetPassword } from '@/api/auth'
 
 
 
@@ -89,7 +89,7 @@ onUnmounted(() => {
 const backLogin = () => {
 	isRegister.value = false
 	isForget.value = false
-	totalSecond.value = 60
+	totalSecond.value = 120
 	second.value = totalSecond.value
 	clearInterval(timer)
 	timer = null
@@ -180,6 +180,28 @@ const handleForget = () => {
 	loginForm.email = ''
 	loginForm.password = ''
 }
+
+
+// 重置密码
+const handleForgetSubmit = async () => {
+	// 校验参数
+	if (!forgetForm.code || !forgetForm.password || !forgetForm.newPassword || email.value === '') {
+		return uni.showToast({
+			title: '请输入完整信息',
+			icon: 'none'
+		})
+	}
+	// 开始修改
+	await apiResetPassword({
+		...forgetForm,
+		email: email.value
+	})
+	uni.showToast({
+		title: '密码重置成功',
+		icon: 'success'
+	})
+	backLogin()
+}
 </script>
 <template>
 	<view class="login-content">
@@ -238,8 +260,7 @@ const handleForget = () => {
 									`重新发送${second}秒` }}</text>
 						</template>
 					</uv-input>
-					<uv-input class="input" type="number" shape="circle" placeholder="请输入验证码" v-model="registerForm.code"
-						maxlength="6">
+					<uv-input class="input" shape="circle" placeholder="请输入验证码" v-model="registerForm.code" maxlength="6">
 					</uv-input>
 					<uv-input class="input" :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入登录密码"
 						v-model="registerForm.password">
@@ -267,8 +288,7 @@ const handleForget = () => {
 							</text>
 						</template>
 					</uv-input>
-					<uv-input class="input" type="number" shape="circle" placeholder="请输入验证码" v-model="forgetForm.code"
-						maxlength="6">
+					<uv-input class="input" shape="circle" placeholder="请输入验证码" v-model="forgetForm.code" maxlength="6">
 					</uv-input>
 					<uv-input class="input" :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入新密码"
 						v-model="forgetForm.password">
@@ -287,7 +307,7 @@ const handleForget = () => {
 						</template>
 					</uv-input>
 				</view>
-				<button class="forget-submit-btn" hover-class="btn-hover">确认修改</button>
+				<button class="forget-submit-btn" hover-class="btn-hover" @click="handleForgetSubmit">确认修改</button>
 			</view>
 			<!-- 底部显示一个注册 -->
 			<view class="register-box">
