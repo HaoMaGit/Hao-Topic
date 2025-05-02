@@ -61,6 +61,13 @@ export const constantRoute = [
         meta: {
           title: '角色管理',
         },
+      },
+      {
+        path: '/system/feedback',
+        component: () => import('@/views/system/feedback/index.vue'),
+        meta: {
+          title: '反馈管理',
+        },
       }
     ]
   },
