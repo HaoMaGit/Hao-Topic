@@ -40,9 +40,7 @@ const forgetForm = reactive({
 })
 
 
-const totalSecond = ref(120) // 总秒数
-const second = ref(120) // 倒计时的秒数
-let timer = null // 定时器 id
+
 // 获取验证码
 const getCode = async () => {
 	// 校验参数
@@ -59,40 +57,18 @@ const getCode = async () => {
 			icon: 'none'
 		})
 	}
-	// 如果定时器不存在并且秒数等于总秒数，则开启倒计时
-	if (!timer && second.value === totalSecond.value) {
-		console.log('开始倒计时');
-		// 开启倒计时
-		timer = setInterval(() => {
-			second.value--;
-			// 如果归0了停止定时器
-			if (second.value <= 0) {
-				clearInterval(timer);
-				timer = null; // 重置定时器 id
-				second.value = totalSecond.value; // 归位
-			}
-		}, 1000);
-		// 发送邮件
-		await apiSendEmail(email.value)
-		uni.showToast({
-			title: '邮件已发送',
-			icon: 'success'
-		})
-	}
+	// 发送邮件
+	await apiSendEmail(email.value)
+	uni.showToast({
+		title: '邮件已发送5分钟内有效',
+		icon: 'success'
+	})
 }
-// 页面销毁清除定时器
-onUnmounted(() => {
-	clearInterval(timer)
-})
 
 // 返回登录
 const backLogin = () => {
 	isRegister.value = false
 	isForget.value = false
-	totalSecond.value = 120
-	second.value = totalSecond.value
-	clearInterval(timer)
-	timer = null
 	// 重置表单
 	registerForm.account = ''
 	registerForm.nickname = ''
@@ -256,8 +232,7 @@ const handleForgetSubmit = async () => {
 						<!-- vue3模式下必须使用v-slot:suffix -->
 						<template v-slot:suffix>
 							<text @click="getCode()">
-								{{ second === totalSecond ? '发送验证码' :
-									`重新发送${second}秒` }}</text>
+								发送验证码</text>
 						</template>
 					</uv-input>
 					<uv-input class="input" shape="circle" placeholder="请输入验证码" v-model="registerForm.code" maxlength="6">
@@ -284,7 +259,7 @@ const handleForgetSubmit = async () => {
 					<uv-input class="input" shape="circle" placeholder="请输入QQ邮箱" v-model="email">
 						<template v-slot:suffix>
 							<text @click="getCode()">
-								{{ second === totalSecond ? '发送验证码' : `重新发送${second}秒` }}
+								发送验证码
 							</text>
 						</template>
 					</uv-input>
