@@ -82,6 +82,16 @@ const backLogin = () => {
 	second.value = totalSecond.value
 	clearInterval(timer)
 	timer = null
+	// 重置表单
+	registerForm.account = ''
+	registerForm.nickname = ''
+	registerForm.email = ''
+	registerForm.password = ''
+	registerForm.code = ''
+	forgetForm.email = ''
+	forgetForm.code = ''
+	forgetForm.password = ''
+	forgetForm.newPassword = ''
 }
 
 // 开始登录
@@ -141,15 +151,25 @@ const handleLogin = async () => {
 
 // 恢复默认值
 const clearDefault = () => {
-	loginForm.value = {
-		account: '',
-		password: '',
-		email: '',
-	}
+	loginForm.account = ''
+	loginForm.email = ''
+	loginForm.password = ''
 	loginWay.value = loginWay.value === 0 ? 1 : 0
 }
 
+// 是否显示密码
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+const showOldPassword = ref(false)
 
+
+// 点击了忘记密码
+const handleForget = () => {
+	isForget.value = true
+	loginForm.account = ''
+	loginForm.email = ''
+	loginForm.password = ''
+}
 </script>
 <template>
 	<view class="login-content">
@@ -172,11 +192,17 @@ const clearDefault = () => {
 				<uv-input class="input" v-if="loginWay === 0" shape="circle" placeholder="请输入账户名称"
 					v-model="loginForm.account"></uv-input>
 				<uv-input class="input" v-else shape="circle" placeholder="请输入邮箱" v-model="loginForm.email"></uv-input>
-				<uv-input class="input" type="password" shape="circle" placeholder="请输入密码"
-					v-model="loginForm.password"></uv-input>
+				<uv-input class="input" :type="showOldPassword ? 'text' : 'password'" shape="circle" placeholder="请输入密码"
+					v-model="loginForm.password">
+					<!-- 图标 -->
+					<template v-slot:suffix>
+						<uni-icons :type="showOldPassword ? 'eye-filled' : 'eye-slash-filled'" size="20" color="#999"
+							@click="showOldPassword = !showOldPassword"></uni-icons>
+					</template>
+				</uv-input>
 				<button @click="handleLogin" class="login-btn" hover-class="btn-hover">开始刷题</button>
 				<view class="action-row">
-					<text @click="isForget = true">忘记密码</text>
+					<text @click="handleForget()">忘记密码</text>
 					<text @click="clearDefault()">
 						{{ loginWay === 0 ? '邮箱登录' : '账户登录' }}
 					</text>
@@ -205,8 +231,13 @@ const clearDefault = () => {
 					<uv-input class="input" type="number" shape="circle" placeholder="请输入邮箱验证码" v-model="registerForm.code"
 						maxlength="6">
 					</uv-input>
-					<uv-input class="input" type="password" shape="circle" placeholder="请输入登录密码"
-						v-model="registerForm.password"></uv-input>
+					<uv-input class="input"  :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入登录密码" v-model="registerForm.password">
+						<!-- 图标 -->
+						<template v-slot:suffix>
+							<uni-icons :type="showNewPassword ? 'eye-filled' : 'eye-slash-filled'" size="20" color="#999"
+								@click="showNewPassword = !showNewPassword"></uni-icons>
+						</template>
+					</uv-input>
 				</view>
 				<button class="register-submit-btn" hover-class="btn-hover">开启AI刷题之旅</button>
 			</view>
@@ -228,9 +259,21 @@ const clearDefault = () => {
 					<uv-input class="input" type="number" shape="circle" placeholder="请输入验证码" v-model="forgetForm.code"
 						maxlength="6">
 					</uv-input>
-					<uv-input class="input" type="password" shape="circle" placeholder="请输入新密码" v-model="forgetForm.password">
+					<uv-input class="input" :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入新密码"
+						v-model="forgetForm.password">
+						<!-- 图标 -->
+						<template v-slot:suffix>
+							<uni-icons :type="showNewPassword ? 'eye-filled' : 'eye-slash-filled'" size="20" color="#999"
+								@click="showNewPassword = !showNewPassword"></uni-icons>
+						</template>
 					</uv-input>
-					<uv-input class="input" type="password" shape="circle" placeholder="请确认新密码" v-model="forgetForm.newPassword">
+					<uv-input class="input" :type="showConfirmPassword ? 'text' : 'password'" shape="circle" placeholder="请确认新密码"
+						v-model="forgetForm.newPassword">
+						<!-- 图标 -->
+						<template v-slot:suffix>
+							<uni-icons :type="showConfirmPassword ? 'eye-filled' : 'eye-slash-filled'" size="20" color="#999"
+								@click="showConfirmPassword = !showConfirmPassword"></uni-icons>
+						</template>
 					</uv-input>
 				</view>
 				<button class="forget-submit-btn" hover-class="btn-hover">确认修改</button>
