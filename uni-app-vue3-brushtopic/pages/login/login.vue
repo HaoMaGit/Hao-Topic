@@ -6,8 +6,8 @@ import {
 	onMounted,
 	onBeforeMount
 } from 'vue'
-import { apiLogin } from '@/api/auth'
-import { isLogin } from '@/utils/auth'
+import { apiLogin, apiSendEmail } from '@/api/auth'
+
 
 
 // 登录方式 0账号登录  1邮箱登录 
@@ -27,25 +27,38 @@ const loginForm = reactive({
 const registerForm = reactive({
 	account: '',
 	nickname: '',
-	email: '',
 	password: '',
 	code: ''
 })
-
+// 邮箱
+const email = ref(null)
 // 忘记密码表单
 const forgetForm = reactive({
-	email: '',
 	code: '',
 	password: '',
 	newPassword: ''
 })
 
 
-const totalSecond = ref(60) // 总秒数
-const second = ref(60) // 倒计时的秒数
+const totalSecond = ref(120) // 总秒数
+const second = ref(120) // 倒计时的秒数
 let timer = null // 定时器 id
 // 获取验证码
-const getCode = () => {
+const getCode = async () => {
+	// 校验参数
+	if (!email.value) {
+		return uni.showToast({
+			title: '请输入QQ邮箱',
+			icon: 'none'
+		})
+	}
+	// 判断是否为qq邮箱
+	if (!/^[a-zA-Z0-9_-]+@qq.com$/.test(email.value)) {
+		return uni.showToast({
+			title: '请输入正确QQ邮箱',
+			icon: 'none'
+		})
+	}
 	// 如果定时器不存在并且秒数等于总秒数，则开启倒计时
 	if (!timer && second.value === totalSecond.value) {
 		console.log('开始倒计时');
@@ -59,14 +72,12 @@ const getCode = () => {
 				second.value = totalSecond.value; // 归位
 			}
 		}, 1000);
-		// 发送请求，获取验证码
-		// const res = await getCode({
-		// 	phone: formData.value.phoneNumber
-		// })
-		// toast('验证码已发送')
-		// let codeTimer = setTimeout(() => {
-		// 	formData.value.code = res.data
-		// }, 2000)
+		// 发送邮件
+		await apiSendEmail(email.value)
+		uni.showToast({
+			title: '邮件已发送',
+			icon: 'success'
+		})
 	}
 }
 // 页面销毁清除定时器
@@ -85,13 +96,12 @@ const backLogin = () => {
 	// 重置表单
 	registerForm.account = ''
 	registerForm.nickname = ''
-	registerForm.email = ''
 	registerForm.password = ''
 	registerForm.code = ''
-	forgetForm.email = ''
 	forgetForm.code = ''
 	forgetForm.password = ''
 	forgetForm.newPassword = ''
+	email.value = null
 }
 
 // 开始登录
@@ -191,7 +201,7 @@ const handleForget = () => {
 			<view class="input-box">
 				<uv-input class="input" v-if="loginWay === 0" shape="circle" placeholder="请输入账户名称"
 					v-model="loginForm.account"></uv-input>
-				<uv-input class="input" v-else shape="circle" placeholder="请输入邮箱" v-model="loginForm.email"></uv-input>
+				<uv-input class="input" v-else shape="circle" placeholder="请输入QQ邮箱" v-model="loginForm.email"></uv-input>
 				<uv-input class="input" :type="showOldPassword ? 'text' : 'password'" shape="circle" placeholder="请输入密码"
 					v-model="loginForm.password">
 					<!-- 图标 -->
@@ -204,7 +214,7 @@ const handleForget = () => {
 				<view class="action-row">
 					<text @click="handleForget()">忘记密码</text>
 					<text @click="clearDefault()">
-						{{ loginWay === 0 ? '邮箱登录' : '账户登录' }}
+						{{ loginWay === 0 ? 'QQ邮箱登录' : '账户登录' }}
 					</text>
 				</view>
 			</view>
@@ -220,7 +230,7 @@ const handleForget = () => {
 						v-model="registerForm.account"></uv-input>
 					<uv-input class="input" maxlength="8" shape="circle" placeholder="给自己起个独特的昵称"
 						v-model="registerForm.nickname"></uv-input>
-					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="registerForm.email">
+					<uv-input class="input" shape="circle" placeholder="请输入QQ邮箱" v-model="email">
 						<!-- vue3模式下必须使用v-slot:suffix -->
 						<template v-slot:suffix>
 							<text @click="getCode()">
@@ -228,10 +238,11 @@ const handleForget = () => {
 									`重新发送${second}秒` }}</text>
 						</template>
 					</uv-input>
-					<uv-input class="input" type="number" shape="circle" placeholder="请输入邮箱验证码" v-model="registerForm.code"
+					<uv-input class="input" type="number" shape="circle" placeholder="请输入验证码" v-model="registerForm.code"
 						maxlength="6">
 					</uv-input>
-					<uv-input class="input"  :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入登录密码" v-model="registerForm.password">
+					<uv-input class="input" :type="showNewPassword ? 'text' : 'password'" shape="circle" placeholder="请输入登录密码"
+						v-model="registerForm.password">
 						<!-- 图标 -->
 						<template v-slot:suffix>
 							<uni-icons :type="showNewPassword ? 'eye-filled' : 'eye-slash-filled'" size="20" color="#999"
@@ -249,7 +260,7 @@ const handleForget = () => {
 					<text class="back" @click="backLogin">返回登录</text>
 				</view>
 				<view class="input-group">
-					<uv-input class="input" shape="circle" placeholder="请输入邮箱" v-model="forgetForm.email">
+					<uv-input class="input" shape="circle" placeholder="请输入QQ邮箱" v-model="email">
 						<template v-slot:suffix>
 							<text @click="getCode()">
 								{{ second === totalSecond ? '发送验证码' : `重新发送${second}秒` }}

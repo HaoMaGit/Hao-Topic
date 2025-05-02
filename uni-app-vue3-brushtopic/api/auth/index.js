@@ -54,3 +54,12 @@ export const apiLogout = () => {
     method: "post",
   })
 }
+
+// 发送邮件
+export const apiSendEmail = (email) => {
+  return request({
+    url: prefix + "sendEmail",
+    method: "get",
+    params: { email },
+  })
+}
