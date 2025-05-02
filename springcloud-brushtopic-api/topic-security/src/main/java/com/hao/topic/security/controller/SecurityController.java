@@ -9,6 +9,7 @@ import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.LoginRequestDto;
+import com.hao.topic.security.dto.LoginTypeDto;
 import com.hao.topic.security.dto.UserDto;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
@@ -215,4 +216,12 @@ public class SecurityController {
         return Result.success();
     }
 
+
+    /**
+     * h5端登录
+     */
+    @PostMapping("loginType")
+    public Result loginType(@RequestBody @Validated LoginTypeDto loginTypeDto) {
+        return Result.success(sysUserService.loginType(loginTypeDto));
+    }
 }

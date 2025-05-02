@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>admin-gateway</module>
+        <module>web-gateway</module>
     </modules>
 
     <properties>

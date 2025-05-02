@@ -1,10 +1,12 @@
 package com.hao.topic.security.service;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hao.topic.client.system.SystemFeignClient;
 import com.hao.topic.common.auth.TokenInterceptor;
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.utils.JWTUtils;
@@ -19,18 +21,23 @@ import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.security.constant.JwtConstant;
+import com.hao.topic.security.dto.LoginTypeDto;
 import com.hao.topic.security.dto.UserDto;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
+import com.hao.topic.security.properties.AuthProperties;
 import com.hao.topic.security.utils.PasswordUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Description: 系统用户接口层
@@ -51,6 +58,11 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
     @Autowired
     private SysUserMapper sysUserMapper;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private AuthProperties ignoreWhiteProperties;
 
     /**
      * 根据用户名查询用户信息
@@ -437,7 +449,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         sysUserDb.setEmail(userDto.getEmail());
         try {
             sysUserMapper.updateById(sysUserDb);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new TopicException(ResultCodeEnum.USER_NICKNAME_EXIST);
         }
     }
@@ -467,5 +479,92 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 开始修改
         sysUserDb.setPassword(PasswordUtils.encodePassword(userDto.getNewPassword()));
         sysUserMapper.updateById(sysUserDb);
+    }
+
+    /**
+     * h5端账户登录和邮箱登录
+     *
+     * @param loginTypeDto
+     * @return
+     */
+    public Object loginType(LoginTypeDto loginTypeDto) {
+        Integer loginType = loginTypeDto.getLoginType();
+        String account = loginTypeDto.getAccount();
+        if (account == null) {
+            throw new TopicException(ResultCodeEnum.FAIL);
+        }
+        String email = loginTypeDto.getEmail();
+        if (email == null) {
+            throw new TopicException(ResultCodeEnum.FAIL);
+        }
+        switch (loginType) {
+            case 0:
+                return accountLogin(loginTypeDto);
+            case 1:
+                return emailLogin(loginTypeDto);
+            default:
+                throw new TopicException(ResultCodeEnum.FAIL);
+        }
+    }
+
+    /**
+     * 邮箱登录
+     *
+     * @param loginTypeDto
+     * @return
+     */
+    private Map<String, String> emailLogin(LoginTypeDto loginTypeDto) {
+        // 根据邮箱查询
+        LambdaQueryWrapper<SysUser> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserLambdaQueryWrapper.eq(SysUser::getEmail, loginTypeDto.getEmail());
+        SysUser sysUser = sysUserMapper.selectOne(sysUserLambdaQueryWrapper);
+        if (sysUser == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        // 密码校验
+        if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
+            throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
+        // 密码正常生成token
+        String token = createToken(sysUser);
+        return Map.of(
+                "token", token,
+                "userInfo", JSON.toJSONString(sysUser)
+        );
+    }
+
+    /**
+     * 账户登录
+     *
+     * @param loginTypeDto
+     * @return
+     */
+    private Map<String, String> accountLogin(LoginTypeDto loginTypeDto) {
+        // 根据账户查询
+        SysUser sysUser = findByUserName(loginTypeDto.getAccount());
+        if (sysUser == null) {
+            throw new TopicException(ResultCodeEnum.USER_NOT_EXIST);
+        }
+        // 密码校验
+        if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
+            throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
+        // 密码正常生成token
+        String token = createToken(sysUser);
+        return Map.of(
+                "token", token,
+                "userInfo", JSON.toJSONString(sysUser)
+        );
+    }
+
+    private String createToken(SysUser sysUser) {
+        // 创建包含用户名和角色的负载
+        Map<String, String> load = new HashMap<>();
+        load.put("username", sysUser.getAccount());
+        load.put("id", String.valueOf(sysUser.getId()));
+        String token = JWTUtils.creatToken(load, JwtConstant.EXPIRE_TIME * ignoreWhiteProperties.getH5Timeout());
+        // 存入redis中
+        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX, token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
+        return token;
     }
 }
