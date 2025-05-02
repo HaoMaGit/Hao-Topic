@@ -87,10 +87,12 @@ const contactUs = () => {
 
 // 意见反馈的对话框
 const feedbackPopup = ref()
+// 反馈内容
+const feedbackContent = ref('')
 // 点击了提交
-const dialogInputConfirm = async (value) => {
+const handleFeedbackSubmit = async () => {
 	// 校验反馈内容不能为空
-	if (value === '') {
+	if (feedbackContent.value === '') {
 		uni.showToast({
 			title: '请输入反馈内容',
 			icon: 'none'
@@ -98,15 +100,22 @@ const dialogInputConfirm = async (value) => {
 		return
 	}
 	await apiSendFeedback({
-		feedbackContent: value
+		feedbackContent: feedbackContent.value
 	})
 	uni.showToast({
 		title: '反馈成功可在我的反馈中查看',
 		icon: 'none',
 		duration: 2000
 	})
+	handleCloseFeedback()
+
 }
 
+// 关闭意见反馈
+const handleCloseFeedback = () => {
+	feedbackContent.value = ''
+	feedbackPopup.value.close()
+}
 
 </script>
 <template>
@@ -140,10 +149,21 @@ const dialogInputConfirm = async (value) => {
 			<image src="../../common/image/ewm.png" class="image-style" mode="aspectFill"></image>
 		</uni-popup>
 
-		<!-- 意见反馈的弹层 -->
-		<uni-popup ref="feedbackPopup" type="dialog">
-			<uni-popup-dialog ref="inputClose" mode="input" title="意见反馈" value="对话框预置提示内容!" placeholder="请输入反馈内容"
-				@confirm="dialogInputConfirm"></uni-popup-dialog>
+		<!-- 修改意见反馈的弹层 -->
+		<uni-popup ref="feedbackPopup" type="center" background-color="#fff">
+			<view class="feedback-popup">
+				<view class="feedback-header">
+					<text class="title">意见反馈</text>
+					<uni-icons type="close" size="25" color="#666" @click="handleCloseFeedback()"></uni-icons>
+				</view>
+				<view class="feedback-body">
+					<textarea v-model="feedbackContent" class="feedback-textarea" placeholder="请输入您的反馈意见，我们会认真查看并及时处理..."
+						:maxlength="100"></textarea>
+				</view>
+				<view class="feedback-footer">
+					<button class="submit-btn" @click="handleFeedbackSubmit">提交反馈</button>
+				</view>
+			</view>
 		</uni-popup>
 
 		<!-- 头像位置 -->
@@ -278,6 +298,71 @@ const dialogInputConfirm = async (value) => {
 
 	.border-row {
 		border-bottom: 1px solid #e6e6e6;
+	}
+
+	.feedback-popup {
+		width: 650rpx;
+		background: #fff;
+		border-radius: 16rpx;
+		overflow: hidden;
+
+		.feedback-header {
+			padding: 30rpx;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid #eee;
+
+			.title {
+				font-size: 32rpx;
+				font-weight: 600;
+				color: #333;
+			}
+		}
+
+		.feedback-body {
+			padding: 30rpx;
+			position: relative;
+
+			.feedback-textarea {
+				width: 100%;
+				height: 300rpx;
+				padding: 20rpx;
+				box-sizing: border-box;
+				font-size: 28rpx;
+				line-height: 1.5;
+				border: 1px solid #eee;
+				border-radius: 8rpx;
+				background: #f8f8f8;
+			}
+
+			.word-count {
+				position: absolute;
+				right: 40rpx;
+				bottom: 40rpx;
+				font-size: 24rpx;
+				color: #999;
+			}
+		}
+
+		.feedback-footer {
+			padding: 20rpx 30rpx 30rpx;
+
+			.submit-btn {
+				width: 100%;
+				height: 80rpx;
+				line-height: 80rpx;
+				text-align: center;
+				background: #1677ff;
+				color: #fff;
+				border-radius: 40rpx;
+				font-size: 30rpx;
+
+				&:active {
+					opacity: 0.8;
+				}
+			}
+		}
 	}
 
 	.image-style {
