@@ -6,26 +6,7 @@
 	import {
 		onLoad
 	} from '@dcloudio/uni-app';
-	// 标题
-	const navBarTitle = ref('')
-	onLoad((options) => {
-		// 获取路径参数，并设置默认值
-		const type = options.type !== undefined ? options.type : '0'
-		// 根据类型设置导航栏标题
-		if (type === '0') {
-			navBarTitle.value = '我的收藏'
-		} else if (type === '1') {
-			navBarTitle.value = '我的记录'
-		} else {
-			// 处理未知类型的默认情况
-			navBarTitle.value = '默认标题'
-		}
 
-		// 设置导航栏标题
-		uni.setNavigationBarTitle({
-			title: navBarTitle.value
-		})
-	})
 </script>
 <template>
 	<view class="collect">

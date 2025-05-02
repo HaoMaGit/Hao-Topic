@@ -46,3 +46,11 @@ export function apiSaveUserAvatar (data) {
     data
   })
 }
+
+// 退出登录
+export const apiLogout = () => {
+  return request({
+    url: prefix + "logout",
+    method: "post",
+  })
+}

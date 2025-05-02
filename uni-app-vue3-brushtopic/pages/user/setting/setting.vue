@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { apiUpdateNicknameAndEmail, apiSaveUserAvatar } from '@/api/auth'
+import { clearStorage } from '@/utils/auth'
+import { apiUpdateNicknameAndEmail, apiSaveUserAvatar, apiLogout } from '@/api/auth'
 // 头像的样式
 const imageStyles = ref({
 	width: 80,
@@ -101,10 +102,19 @@ const logout = () => {
 	uni.showModal({
 		title: '提示',
 		content: '确定要退出登录吗？',
-		success: (res) => {
+		success: async (res) => {
 			if (res.confirm) {
-				// 执行退出登录逻辑
-				console.log('用户点击确定')
+				clearStorage()
+				await apiLogout()
+				uni.showToast({
+					title: '退出登录成功',
+					icon: 'success'
+				})
+				setTimeout(() => {
+					uni.reLaunch({
+						url: '/pages/login/login'
+					})
+				}, 1000)
 			}
 		}
 	})
