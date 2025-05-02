@@ -2,11 +2,9 @@
 import {
 	ref,
 	reactive,
-	onUnmounted,
-	onMounted,
-	onBeforeMount
+
 } from 'vue'
-import { apiLogin, apiSendEmail, apiResetPassword } from '@/api/auth'
+import { apiLogin, apiSendEmail, apiResetPassword, apiRegister } from '@/api/auth'
 
 
 
@@ -178,6 +176,44 @@ const handleForgetSubmit = async () => {
 	})
 	backLogin()
 }
+
+// 注册
+const handleRegisterSubmit = async () => {
+	if (!email.value) {
+		return uni.showToast({
+			title: '请输入QQ邮箱',
+			icon: 'none'
+		})
+	}
+	if (!/^[a-zA-Z0-9_-]+@qq.com$/.test(email.value)) {
+		return uni.showToast({
+			title: '请输入正确QQ邮箱',
+			icon: 'none'
+		})
+	}
+	if (!registerForm.account) {
+		return uni.showToast({
+			title: '请输入唯一账户名称',
+			icon: 'none'
+		})
+	}
+	if (!registerForm.code) {
+		return uni.showToast({
+			title: '请输入验证码',
+			icon: 'none'
+		})
+	}
+	// 开始注册
+	await apiRegister({
+		...registerForm,
+		email: email.value
+	})
+	uni.showToast({
+		title: '注册成功',
+		icon: 'success'
+	})
+	backLogin()
+}
 </script>
 <template>
 	<view class="login-content">
@@ -246,7 +282,7 @@ const handleForgetSubmit = async () => {
 						</template>
 					</uv-input>
 				</view>
-				<button class="register-submit-btn" hover-class="btn-hover">开启AI刷题之旅</button>
+				<button class="register-submit-btn" hover-class="btn-hover" @click="handleRegisterSubmit">开启AI刷题之旅</button>
 			</view>
 
 			<!-- 忘记密码 -->

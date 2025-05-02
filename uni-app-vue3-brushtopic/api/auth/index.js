@@ -72,3 +72,12 @@ export const apiResetPassword = (data) => {
     data,
   })
 }
+
+// 注册账户
+export const apiRegister = (data) => {
+  return request({
+    url: prefix + "register",
+    method: "post",
+    data,
+  })
+}
