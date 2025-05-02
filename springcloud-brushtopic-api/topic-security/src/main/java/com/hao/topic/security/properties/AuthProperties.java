@@ -27,6 +27,12 @@ public class AuthProperties {
      */
     private int rememberMe;
 
+    /**
+     * h5登录超时时间
+     *
+     * @return
+     */
+    private int h5Timeout;
 
     public int getTimeout() {
         return timeout;
@@ -42,5 +48,13 @@ public class AuthProperties {
 
     public void setRememberMe(int rememberMe) {
         this.rememberMe = rememberMe;
+    }
+
+    public int getH5Timeout() {
+        return h5Timeout;
+    }
+
+    public void setH5Timeout(int h5Timeout) {
+        this.h5Timeout = h5Timeout;
     }
 }
