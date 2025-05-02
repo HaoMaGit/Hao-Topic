@@ -115,12 +115,13 @@ const handleLogin = async () => {
 		})
 		return
 	}
-	console.log("===========>", res.data);
 	// 将用户信息解析回来
 	const userInfo = JSON.parse(res.data.userInfo)
-	localStorage.setItem('h5UserInfo', userInfo)
+	localStorage.setItem('h5UserInfo', res.data.userInfo)
 	// 存一下token
 	localStorage.setItem(userInfo.account + 'token', res.data.token)
+	// 存一下角色
+	localStorage.setItem("role", res.data.role)
 	uni.showToast({
 		title: '登录成功',
 		duration: 2000
@@ -142,9 +143,7 @@ const clearDefault = () => {
 	loginWay.value = loginWay.value === 0 ? 1 : 0
 }
 
-onBeforeMount(() => {
-	isLogin()
-})
+
 </script>
 <template>
 	<view class="login-content">

@@ -9,11 +9,12 @@ const request = axios.create({
 
 //第二步:request实例添加请求与响应拦截器
 request.interceptors.request.use((config) => {
-  // config配置对象,headers属性请求头,经常给服务器端携带公共参数
   // 获取token
   const userInfo = uni.getStorageSync('h5UserInfo')
+  console.log("==============>", userInfo);
   if (userInfo) {
-    config.headers.Authorization = uni.getStorageSync(userInfo.account + 'token')
+    const json =  JSON.parse(userInfo)
+    config.headers.Authorization = uni.getStorageSync(json.account + 'token')
   }
   // 返回配置对象
   return config
@@ -26,6 +27,8 @@ request.interceptors.response.use(
     return response.data
   },
   (error) => {
+    console.log("error1", error);
+
     console.log(error);
 
     const status = error.response.status
@@ -38,8 +41,14 @@ request.interceptors.response.use(
         icon: 'error',
         duration: 2000
       });
+      // 获取用户信息
+      const userInfo = JSON.parse(uni.getStorageSync('h5UserInfo'))
       // 清除用户信息
       uni.removeStorageSync('h5UserInfo')
+      // 清除token
+      uni.removeStorageSync(userInfo.account + 'token')
+      // 清除角色
+      uni.removeStorageSync("role")
       // 跳转
       setTimeout(() => {
         uni.reLaunch({

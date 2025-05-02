@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-
+import { ref, computed } from 'vue'
+import { apiUpdateNicknameAndEmail } from '@/api/auth'
 // 头像的样式
 const imageStyles = ref({
 	width: 80,
@@ -38,13 +38,70 @@ const logout = () => {
 }
 
 // 开启自定义题目
-const isCustomQuestion = ref(false)
+const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
+// 修改开关
+const asyncChange = async (e) => {
+	uni.showModal({
+		title: '提示',
+		content: e ? '开启会员自定义题目展示' : '确定要关闭会员自定义的题目展示吗',
+		success: (res) => {
+			if (res.confirm) {
+				isCustomQuestion.value = true
+				// 修改缓存
+				uni.setStorageSync('isCustomQuestion', true)
+			} else {
+				isCustomQuestion.value = false
+				uni.setStorageSync('isCustomQuestion', false)
+			}
+		}
+	})
+}
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+
+// 头像文字
+const text = computed(() => {
+	console.log(userInfo.value.nickname);
+	if (!userInfo.value.nickname) {
+		return userInfo.value.account.substring(0, 2);
+	}
+	return userInfo.value.nickname.substring(0, 2)
+})
+
+// 确认修改昵称
+const dialogInputConfirm = async (value) => {
+	// 校验参数
+	if (!value) {
+		uni.showToast({
+			title: '请输入昵称',
+			icon: 'none'
+		})
+		return
+	}
+	// 发起请求
+	await apiUpdateNicknameAndEmail({
+		id: userInfo.value.id,
+		nickname: value,
+		password: userInfo.value.password
+	})
+	const json = JSON.parse(uni.getStorageSync('h5UserInfo'))
+	json.nickname = value
+	// 修改本地缓存
+	uni.setStorageSync('h5UserInfo', JSON.stringify(json))
+	userInfo.value.nickname = value
+	// 修改成功
+	uni.showToast({
+		title: '修改成功',
+		icon: 'success',
+		duration: 2000
+	})
+}
 </script>
 <template>
 	<view class="setting-box">
 		<!-- 修改名称的弹层 -->
 		<uni-popup ref="nameDialog" type="dialog">
-			<uni-popup-dialog ref="inputClose" mode="input" title="修改名称" placeholder="请输入新的名称"
+			<uni-popup-dialog :maxlength="8" ref="inputClose" mode="input" title="修改昵称" placeholder="请输入新的昵称"
 				@confirm="dialogInputConfirm"></uni-popup-dialog>
 		</uni-popup>
 
@@ -58,7 +115,8 @@ const isCustomQuestion = ref(false)
 					<view class="right">
 						<uni-file-picker @select="uploadSuccess" limit="1" :del-icon="false" disable-preview
 							:imageStyles="imageStyles" file-mediatype="image">
-							<uv-avatar class="avatar" size="55" src="https://via.placeholder.com/200x200.png/2878ff"></uv-avatar>
+							<uv-avatar v-if="!userInfo.avatar" size="55" :text="text" fontSize="18" randomBgColor></uv-avatar>
+							<uv-avatar v-else size="55" :src="userInfo.avatar"></uv-avatar>
 						</uni-file-picker>
 					</view>
 				</view>
@@ -68,7 +126,7 @@ const isCustomQuestion = ref(false)
 						<text class="label">修改昵称</text>
 					</view>
 					<view class="right" @click="nameDialog.open()">
-						<text class="value">书中易语</text>
+						<text class="value">{{ userInfo?.nickname }}</text>
 						<uni-icons type="right" size="16" color="#999"></uni-icons>
 					</view>
 				</view>
@@ -88,7 +146,7 @@ const isCustomQuestion = ref(false)
 						<text class="label">会员展示题目</text>
 					</view>
 					<view class="right">
-						<uv-switch v-model="isCustomQuestion" activeColor="#1677ff"></uv-switch>
+						<uv-switch @change="asyncChange" v-model="isCustomQuestion" activeColor="#1677ff"></uv-switch>
 					</view>
 				</view>
 			</view>
@@ -141,9 +199,7 @@ $theme-color: #1677ff;
 				align-items: center;
 				gap: 10rpx;
 
-				.avatar {
-					padding-right: 15rpx;
-				}
+
 
 				.value {
 					font-size: 28rpx;

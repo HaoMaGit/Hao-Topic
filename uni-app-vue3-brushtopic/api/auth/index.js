@@ -1,4 +1,4 @@
-import request  from '@/utils/request.js'
+import request from '@/utils/request.js'
 
 // 前缀
 const prefix = '/security/user/'
@@ -17,5 +17,14 @@ export const apiGetUserInfo = (id) => {
   return request({
     url: prefix + 'info/' + id,
     method: 'get',
+  })
+}
+
+// 修改昵称
+export const apiUpdateNicknameAndEmail = (data) => {
+  return request({
+    url: prefix + 'updateNicknameAndEmail',
+    method: 'put',
+    data
   })
 }

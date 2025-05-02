@@ -55,8 +55,12 @@
 <script setup>
 import Java from '../../common/image/java.png'
 import {
-	ref
+	onLoad
+} from '@dcloudio/uni-app'
+import {
+	ref, onBeforeMount
 } from 'vue'
+
 const avatarList = ref([{
 	url: Java
 }])
@@ -66,6 +70,7 @@ const tapRanking = () => {
 		url: '/pages/index/ranking/ranking'
 	})
 }
+
 </script>
 
 <style lang="scss" scoped>

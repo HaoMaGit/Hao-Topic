@@ -1,7 +1,8 @@
 
 export const isLogin = () => {
   const user = uni.getStorageSync('h5UserInfo')
-
+  console.log("================>");
+  
   if (!user) {
     //跳转进入登录页
     uni.reLaunch({
