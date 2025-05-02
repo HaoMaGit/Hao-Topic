@@ -1,6 +1,7 @@
 package com.hao.topic.web.gateway.filter;
 
 
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.utils.JWTUtils;
 import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.web.gateway.properties.IgnoreWhiteProperties;
@@ -67,7 +68,7 @@ public class AuthorizeFilter implements Ordered, GlobalFilter {
             String username = (String) userInfo.get("username");
 
             // 从Redis验证token
-            String cachedToken = (String) redisTemplate.opsForValue().get(username);
+            String cachedToken = (String) redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + username);
             if (!token.equals(cachedToken)) {
                 log.warn("Token验证失败: {}", username);
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);

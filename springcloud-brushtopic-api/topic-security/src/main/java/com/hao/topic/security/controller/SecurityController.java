@@ -16,7 +16,9 @@ import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.server.WebFilterExchange;
@@ -221,7 +223,9 @@ public class SecurityController {
      * h5端登录
      */
     @PostMapping("loginType")
-    public Result loginType(@RequestBody @Validated LoginTypeDto loginTypeDto) {
-        return Result.success(sysUserService.loginType(loginTypeDto));
+    public Mono<Result<Map<String, Object>>> loginType(@RequestBody @Validated LoginTypeDto loginTypeDto) {
+        return sysUserService.loginType(loginTypeDto)
+                .map(Result::success)
+                .defaultIfEmpty(Result.fail("登录失败"));
     }
 }

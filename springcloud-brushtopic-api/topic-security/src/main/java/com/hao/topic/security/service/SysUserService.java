@@ -35,7 +35,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -445,8 +448,20 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (!PasswordUtils.matches(userDto.getPassword(), sysUserDb.getPassword())) {
             throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
         }
+        // 查询用户昵称是否存在了
+        LambdaQueryWrapper<SysUser> eq = new LambdaQueryWrapper<SysUser>().eq(SysUser::getNickname, userDto.getNickname());
+        if (sysUserMapper.selectCount(eq) > 0) {
+            throw new TopicException(ResultCodeEnum.USER_NICKNAME_EXIST);
+        }
+        if (userDto.getEmail() != null) {
+            // 查询用户邮箱是否存在了
+            LambdaQueryWrapper<SysUser> emailEq = new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, userDto.getEmail());
+            if (sysUserMapper.selectCount(emailEq) > 0) {
+                throw new TopicException(ResultCodeEnum.USER_EMAIL_EXIST);
+            }
+            sysUserDb.setEmail(userDto.getEmail());
+        }
         sysUserDb.setNickname(userDto.getNickname());
-        sysUserDb.setEmail(userDto.getEmail());
         try {
             sysUserMapper.updateById(sysUserDb);
         } catch (Exception e) {
@@ -487,7 +502,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param loginTypeDto
      * @return
      */
-    public Object loginType(LoginTypeDto loginTypeDto) {
+    public Mono<Map<String, Object>> loginType(LoginTypeDto loginTypeDto) {
         Integer loginType = loginTypeDto.getLoginType();
         String account = loginTypeDto.getAccount();
         if (account == null) {
@@ -513,7 +528,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param loginTypeDto
      * @return
      */
-    private Map<String, String> emailLogin(LoginTypeDto loginTypeDto) {
+    private Mono<Map<String, Object>> emailLogin(LoginTypeDto loginTypeDto) {
         // 根据邮箱查询
         LambdaQueryWrapper<SysUser> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysUserLambdaQueryWrapper.eq(SysUser::getEmail, loginTypeDto.getEmail());
@@ -525,13 +540,40 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
             throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
         }
-        // 密码正常生成token
-        String token = createToken(sysUser);
-        return Map.of(
-                "token", token,
-                "userInfo", JSON.toJSONString(sysUser)
-        );
+        return getRoleIdentify(sysUser)
+                .map(sysRole -> {
+                    String token = createToken(sysUser, sysRole);
+                    return Map.of(
+                            "token", token,
+                            "userInfo", JSON.toJSONString(sysUser),
+                            "role", sysRole.getIdentify()
+                    );
+                });
     }
+
+    /**
+     * 查询用户角色标识
+     *
+     * @param sysUser
+     * @return
+     */
+    private Mono<SysRole> getRoleIdentify(SysUser sysUser) {
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, sysUser.getId());
+                    return sysUserRoleMapper.selectOne(sysUserRoleLambdaQueryWrapper);
+                })
+                .publishOn(Schedulers.boundedElastic()) // 在弹性线程池中执行
+                .filter(Objects::nonNull)
+                .switchIfEmpty(Mono.error(new TopicException(ResultCodeEnum.USER_NOT_EXIST)))
+                .flatMap(sysUserRole ->
+                        Mono.fromCallable(() -> systemFeignClient.getById(sysUserRole.getRoleId()))
+                                .publishOn(Schedulers.boundedElastic())
+                                .filter(Objects::nonNull)
+                                .switchIfEmpty(Mono.error(new TopicException(ResultCodeEnum.USER_NOT_EXIST)))
+                );
+    }
+
 
     /**
      * 账户登录
@@ -539,7 +581,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
      * @param loginTypeDto
      * @return
      */
-    private Map<String, String> accountLogin(LoginTypeDto loginTypeDto) {
+    private Mono<Map<String, Object>> accountLogin(LoginTypeDto loginTypeDto) {
         // 根据账户查询
         SysUser sysUser = findByUserName(loginTypeDto.getAccount());
         if (sysUser == null) {
@@ -549,22 +591,26 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
             throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
         }
-        // 密码正常生成token
-        String token = createToken(sysUser);
-        return Map.of(
-                "token", token,
-                "userInfo", JSON.toJSONString(sysUser)
-        );
+        return getRoleIdentify(sysUser)
+                .map(sysRole -> {
+                    String token = createToken(sysUser, sysRole);
+                    return Map.of(
+                            "token", token,
+                            "userInfo", JSON.toJSONString(sysUser),
+                            "role", sysRole.getIdentify()
+                    );
+                });
     }
 
-    private String createToken(SysUser sysUser) {
+    private String createToken(SysUser sysUser, SysRole sysRole) {
         // 创建包含用户名和角色的负载
         Map<String, String> load = new HashMap<>();
         load.put("username", sysUser.getAccount());
         load.put("id", String.valueOf(sysUser.getId()));
+        load.put("role", sysRole.getRoleKey());
         String token = JWTUtils.creatToken(load, JwtConstant.EXPIRE_TIME * ignoreWhiteProperties.getH5Timeout());
         // 存入redis中
-        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX, token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX + sysUser.getAccount(), token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
         return token;
     }
 }
