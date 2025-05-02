@@ -60,7 +60,15 @@
                   <a-input v-model:value="formState.nickname" placeholder="请谨慎修改账户昵称修改昵称后会影响展示效果" />
                 </a-form-item>
                 <a-form-item label="邮箱" name="email">
-                  <a-input v-model:value="formState.email" placeholder="请输入邮箱" />
+                  <a-input v-model:value="formState.email" placeholder="请输入邮箱">
+                    <template #suffix>
+                      <a-button type="primary" @click="sendEmail">发送验证码</a-button>
+                    </template>
+                  </a-input>
+                </a-form-item>
+                <!-- 发送验证码 -->
+                <a-form-item label="验证码" name="code">
+                  <a-input v-model:value="formState.code" placeholder="请输入验证码" />
                 </a-form-item>
                 <a-form-item label="密码" name="password">
                   <a-input-password v-model:value="formState.password" placeholder="请输入密码" />
@@ -103,7 +111,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 import type { FormInstance } from 'ant-design-vue';
-import { apiGetUserInfoDetail, apiSaveUserAvatar, apiUpdateUserInfo, apiUpdatePassword } from '@/api/auth/index'
+import { apiGetUserInfoDetail, apiSendEmail, apiSaveUserAvatar, apiUpdateUserInfo, apiUpdatePassword } from '@/api/auth/index'
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useRouter } from 'vue-router';
@@ -171,7 +179,6 @@ const getUserInfo = async () => {
     // @ts-expect-error
     userInfo.value = res
     formState.nickname = userInfo.value.nickname
-    formState.email = userInfo.value.email
   })
 };
 
@@ -198,7 +205,8 @@ const loading = ref<boolean>(false);
 const formState = reactive({
   nickname: '',
   email: '',
-  password: null
+  password: null,
+  code: ''
 });
 
 // 密码表单数据
@@ -219,10 +227,9 @@ const rules = {
   { max: 10, message: '昵称长度不能超过10个字符', trigger: 'blur' }
   ],
   email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
   ],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 };
 
 // 密码表单验证规则
@@ -281,6 +288,11 @@ const changePassword = () => {
   });
 };
 
+// 发送qq邮件
+const sendEmail = async () => {
+  await apiSendEmail(formState.email)
+  message.success('邮件发送成功');
+}
 // 页面加载时获取用户信息
 onMounted(() => {
   getUserInfo();

@@ -75,3 +75,12 @@ export function apiUpdatePassword(data: any) {
     data
   })
 }
+
+// 发送邮件
+export const apiSendEmail = (email: string) => {
+  return request({
+    url: prefix + "sendEmail",
+    method: "get",
+    params: { email },
+  })
+}
