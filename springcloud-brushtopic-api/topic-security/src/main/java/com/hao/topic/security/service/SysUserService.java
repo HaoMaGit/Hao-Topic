@@ -27,6 +27,7 @@ import com.hao.topic.security.dto.UserDto;
 import com.hao.topic.security.mapper.SysUserMapper;
 import com.hao.topic.security.mapper.SysUserRoleMapper;
 import com.hao.topic.security.properties.AuthProperties;
+import com.hao.topic.security.utils.EmailSendUtils;
 import com.hao.topic.security.utils.PasswordUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -66,6 +67,9 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
 
     @Autowired
     private AuthProperties ignoreWhiteProperties;
+
+    @Autowired
+    private EmailSendUtils emailSendUtils;
 
     /**
      * 根据用户名查询用户信息
@@ -613,5 +617,22 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 存入redis中
         redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX + sysUser.getAccount(), token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
         return token;
+    }
+
+    /**
+     * 发送qq邮箱验证码
+     *
+     * @param email
+     */
+    public void sendVerificationEmail(String email) {
+        // 校验参数
+        if (StringUtils.isEmpty(email)) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_NOT_EXIST);
+        }
+        try {
+            emailSendUtils.sendVerificationEmail(email);
+        } catch (Exception e) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_SEND_ERROR);
+        }
     }
 }

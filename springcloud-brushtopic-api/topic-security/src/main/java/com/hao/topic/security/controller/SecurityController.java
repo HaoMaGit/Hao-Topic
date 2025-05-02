@@ -228,4 +228,15 @@ public class SecurityController {
                 .map(Result::success)
                 .defaultIfEmpty(Result.fail("登录失败"));
     }
+
+    /**
+     * 发送qq邮箱验证码
+     */
+    @GetMapping("/sendEmail")
+    public Result sendEmail(String email) {
+        // 发送qq邮箱验证码
+        sysUserService.sendVerificationEmail(email);
+        return Result.success();
+    }
+
 }

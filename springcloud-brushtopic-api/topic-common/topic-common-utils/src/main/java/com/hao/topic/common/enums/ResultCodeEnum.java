@@ -80,40 +80,11 @@ public enum ResultCodeEnum {
     USER_PASSWORD_ERROR(99939, "用户密码错误"),
     USER_NICKNAME_EXIST(99940, "用户昵称已存在"),
     USER_EMAIL_EXIST(99941, "用户邮箱已存在"),
-    SERVICE_ERROR(2012, "服务异常"),
+    USER_EMAIL_NOT_EXIST(99942, "用户邮箱不存在"),
+    USER_EMAIL_SEND_ERROR(99943, "发送邮件失败"),
 
-    DATA_ERROR(204, "数据异常"),
+    SERVICE_ERROR(2012, "服务异常");
 
-    ADMIN_LOCKED(207, "登录失败请确认身份"),
-
-    REPEAT_SUBMIT(1001, "重复提交"),
-
-    LOGIN_AUTH_ERROR(1000, "登录认证失败请重新登录"),
-
-    AI_HISTORY_NOT_FOUND(1002, "历史记录不存在"),
-
-
-    MENU_ERROR(1004, "没有权限访问"),
-
-
-    AI_EXPORT_ERROR(1017, "导出失败"),
-
-
-    USER_DATA_ERROR(1005, "暂时没有用户数据"),
-
-    USER_ERROR(1006, "账号异常请联系管理员处理"),
-
-    // SUBJECT_UPDATE_ERROR(1016, "修改专题失败"),
-
-    REQUEST_TIMEOUT(1002, "请求超时"),
-
-    REQUEST_LIMIT(1003, "请求次数超限"),
-
-    REQUEST_NOT_FOUND(1004, "请求不存在"),
-
-    REQUEST_METHOD_NOT_SUPPORTED(1005, "请求方法不支持"),
-
-    REQUEST_PARAM_NOT_VALID(1006, "请求参数校验不通过");
 
     private Integer code;
     private String message;
