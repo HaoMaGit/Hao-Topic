@@ -1,5 +1,7 @@
 // 进行axios二次封装:使用请求与响应拦截器
 import axios from 'axios'
+import { clearStorage } from '@/utils/auth'
+
 //第一步:利用axios对象的create方法,去创建axios实例(其他的配置:基础路径、超时的时间)
 const request = axios.create({
   //基础路径
@@ -41,14 +43,7 @@ request.interceptors.response.use(
         icon: 'error',
         duration: 2000
       });
-      // 获取用户信息
-      const userInfo = JSON.parse(uni.getStorageSync('h5UserInfo'))
-      // 清除用户信息
-      uni.removeStorageSync('h5UserInfo')
-      // 清除token
-      uni.removeStorageSync(userInfo.account + 'token')
-      // 清除角色
-      uni.removeStorageSync("role")
+      clearStorage()
       // 跳转
       setTimeout(() => {
         uni.reLaunch({

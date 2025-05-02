@@ -28,3 +28,12 @@ export const apiUpdateNicknameAndEmail = (data) => {
     data
   })
 }
+
+// 修改密码
+export const apiUpdatePassword = (data) => {
+  return request({
+    url: prefix + 'updatePassword',
+    method: 'put',
+    data
+  })
+}

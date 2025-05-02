@@ -103,6 +103,11 @@ const handleLogin = async () => {
 			})
 		}
 	}
+	// loading
+	uni.showLoading({
+		title: '登录中...',
+		mask: true
+	})
 	// 开始登陆
 	const res = await apiLogin({
 		loginType: loginWay.value,
@@ -122,6 +127,7 @@ const handleLogin = async () => {
 	localStorage.setItem(userInfo.account + 'token', res.data.token)
 	// 存一下角色
 	localStorage.setItem("role", res.data.role)
+	uni.hideLoading()
 	uni.showToast({
 		title: '登录成功',
 		duration: 2000

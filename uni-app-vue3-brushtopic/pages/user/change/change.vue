@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-
+import { apiUpdatePassword } from '@/api/auth'
+import { clearStorage } from '@/utils/auth'
 // 添加密码显示状态控制
 const showOldPassword = ref(false)
 const showNewPassword = ref(false)
@@ -11,9 +12,57 @@ const form = ref({
 	newPassword: '',
 	confirmPassword: ''
 })
-
-const handleSubmit = () => {
-	console.log('提交表单', form.value)
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+const handleSubmit = async () => {
+	// 校验参数
+	if (form.value.oldPassword === '') {
+		uni.showToast({
+			title: '请输入原密码',
+			icon: 'none'
+		})
+		return
+	}
+	if (form.value.newPassword === '') {
+		uni.showToast({
+			title: '请输入新密码',
+			icon: 'none'
+		})
+		return
+	}
+	if (form.value.newPassword !== form.value.confirmPassword) {
+		uni.showToast({
+			title: '两次密码不一致',
+			icon: 'none'
+		})
+		return
+	}
+	await apiUpdatePassword({
+		id: userInfo.value.id,
+		password: form.value.oldPassword,
+		newPassword: form.value.newPassword,
+		confirmPassword: form.value.confirmPassword,
+	})
+	uni.showToast({
+		title: '修改成功',
+		icon: 'success'
+	})
+	// 清空表单
+	form.value = {
+		oldPassword: '',
+		newPassword: '',
+		confirmPassword: ''
+	}
+	// 重新登录清空缓存
+	clearStorage()
+	// 重定向
+	setTimeout(() => {
+		// 重新登录
+		uni.reLaunch({
+			url: "/pages/login/login",
+			success: () => { }
+		})
+	}, 1000)
 }
 </script>
 <template>
