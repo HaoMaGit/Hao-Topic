@@ -2,8 +2,14 @@
 import {
 	ref,
 	reactive,
-	onUnmounted
+	onUnmounted,
+	onMounted,
+	onBeforeMount
 } from 'vue'
+import { apiLogin } from '@/api/auth'
+import { isLogin } from '@/utils/auth'
+
+
 // 登录方式 0账号登录  1邮箱登录 
 const loginWay = ref(0)
 // 是否点击了注册
@@ -77,6 +83,68 @@ const backLogin = () => {
 	clearInterval(timer)
 	timer = null
 }
+
+// 开始登录
+const handleLogin = async () => {
+	if (loginWay.value === 0) {
+		// 校验参数
+		if (!loginForm.account || !loginForm.password) {
+			return uni.showToast({
+				title: '请输入账户名称和密码',
+				icon: 'none'
+			})
+		}
+	} else {
+		// 校验邮箱和密码
+		if (!loginForm.email || !loginForm.password) {
+			return uni.showToast({
+				title: '请输入邮箱和密码',
+				icon: 'none'
+			})
+		}
+	}
+	// 开始登陆
+	const res = await apiLogin({
+		loginType: loginWay.value,
+		...loginForm
+	})
+	if (res.code === 201) {
+		uni.showToast({
+			title: '登录失败',
+			icon: 'error'
+		})
+		return
+	}
+	console.log("===========>", res.data);
+	// 将用户信息解析回来
+	const userInfo = JSON.parse(res.data.userInfo)
+	localStorage.setItem('h5UserInfo', userInfo)
+	// 存一下token
+	localStorage.setItem(userInfo.account + 'token', res.data.token)
+	uni.showToast({
+		title: '登录成功',
+		duration: 2000
+	});
+	// 跳转首页
+	uni.reLaunch({
+		url: "/pages/index/index",
+		success: () => { }
+	})
+}
+
+// 恢复默认值
+const clearDefault = () => {
+	loginForm.value = {
+		account: '',
+		password: '',
+		email: '',
+	}
+	loginWay.value = loginWay.value === 0 ? 1 : 0
+}
+
+onBeforeMount(() => {
+	isLogin()
+})
 </script>
 <template>
 	<view class="login-content">
@@ -101,10 +169,10 @@ const backLogin = () => {
 				<uv-input class="input" v-else shape="circle" placeholder="请输入邮箱" v-model="loginForm.email"></uv-input>
 				<uv-input class="input" type="password" shape="circle" placeholder="请输入密码"
 					v-model="loginForm.password"></uv-input>
-				<button class="login-btn" hover-class="btn-hover">开始刷题</button>
+				<button @click="handleLogin" class="login-btn" hover-class="btn-hover">开始刷题</button>
 				<view class="action-row">
 					<text @click="isForget = true">忘记密码</text>
-					<text @click="loginWay = loginWay === 0 ? 1 : 0">
+					<text @click="clearDefault()">
 						{{ loginWay === 0 ? '邮箱登录' : '账户登录' }}
 					</text>
 				</view>
