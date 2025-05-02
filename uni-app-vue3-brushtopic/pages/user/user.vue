@@ -1,8 +1,9 @@
 <script setup>
 import {
-	ref, onMounted, computed
+	ref, computed
 } from 'vue'
 import { apiGetRoleDetail } from '@/api/system/role'
+import { apiSendFeedback } from '@/api/system/feedback'
 import { apiGetUserInfo } from '@/api/auth/index'
 import { onShow } from '@dcloudio/uni-app'
 // 用户信息
@@ -13,8 +14,13 @@ const role = ref(uni.getStorageSync('role'))
 const roleDetail = ref(null)
 // 获取角色详情
 const getRoleDetail = async () => {
+	// loading
+	uni.showLoading({
+		mask: true
+	})
 	const res = await apiGetRoleDetail(role.value)
 	roleDetail.value = res
+	uni.hideLoading()
 }
 // 获取用户信息
 const getUserDetail = async () => {
@@ -82,22 +88,26 @@ const contactUs = () => {
 // 意见反馈的对话框
 const feedbackPopup = ref()
 // 点击了提交
-const dialogInputConfirm = () => {
-	toast("提交成功")
+const dialogInputConfirm = async (value) => {
+	// 校验反馈内容不能为空
+	if (value === '') {
+		uni.showToast({
+			title: '请输入反馈内容',
+			icon: 'none'
+		})
+		return
+	}
+	await apiSendFeedback({
+		feedbackContent: value
+	})
+	uni.showToast({
+		title: '反馈成功可在我的反馈中查看',
+		icon: 'none',
+		duration: 2000
+	})
 }
 
-// 预览头像
-const avatarPreview = ref([{
-	url: userInfo.avatar,
-}])
-// 头像的样式
-const imageStyles = ref({
-	width: 110,
-	height: 110,
-	border: {
-		radius: '50%'
-	}
-})
+
 </script>
 <template>
 	<view class="user-box">

@@ -114,7 +114,7 @@ const logout = () => {
 					uni.reLaunch({
 						url: '/pages/login/login'
 					})
-				}, 1000)
+				}, 300)
 			}
 		}
 	})
