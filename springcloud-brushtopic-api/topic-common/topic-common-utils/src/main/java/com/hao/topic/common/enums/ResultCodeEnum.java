@@ -84,7 +84,7 @@ public enum ResultCodeEnum {
     USER_EMAIL_SEND_ERROR(99943, "发送邮件失败"),
     USER_EMAIL_CODE_ERROR(99944, "验证码过期或未发送"),
     USER_EMAIL_CODE_INPUT_ERROR(99945, "验证码输入错误"),
-
+    USER_EMAIL_CODE_EXIST(99946, "验证码已存在打开QQ查看哦"),
     SERVICE_ERROR(2012, "服务异常");
 
 

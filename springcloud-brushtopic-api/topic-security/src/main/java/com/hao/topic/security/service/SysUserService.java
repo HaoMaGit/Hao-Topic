@@ -630,6 +630,10 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (StringUtils.isEmpty(email)) {
             throw new TopicException(ResultCodeEnum.USER_EMAIL_NOT_EXIST);
         }
+        // 先查询是否发送过验证码
+        if (redisTemplate.hasKey(EmailConstant.EMAIL_CODE.getValue() + ":" + email)) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_EXIST);
+        }
         try {
             emailSendUtils.sendVerificationEmail(email);
         } catch (Exception e) {
