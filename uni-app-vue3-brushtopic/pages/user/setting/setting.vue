@@ -19,7 +19,7 @@ const nameDialog = ref()
 // 跳转修改密码
 const goToChange = () => {
 	uni.navigateTo({
-		url: '/pages/change/change'
+		url: '/pages/user/change/change'
 	})
 }
 
