@@ -23,6 +23,7 @@ import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.constant.EmailConstant;
 import com.hao.topic.security.constant.JwtConstant;
+import com.hao.topic.security.dto.RegisterDto;
 import com.hao.topic.security.dto.ResetPasswordDto;
 import com.hao.topic.security.dto.LoginTypeDto;
 import com.hao.topic.security.dto.UserDto;
@@ -41,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -670,5 +672,63 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         }
         sysUser.setPassword(PasswordUtils.encodePassword(resetPasswordDto.getNewPassword()));
         sysUserMapper.updateById(sysUser);
+    }
+
+    /**
+     * 注册账户
+     *
+     * @param registerDto
+     */
+    public void register(RegisterDto registerDto) {
+        String email = registerDto.getEmail();
+        // 根据邮箱查询是否存在
+        LambdaQueryWrapper<SysUser> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserLambdaQueryWrapper.eq(SysUser::getEmail, email);
+        SysUser sysUser = sysUserMapper.selectOne(sysUserLambdaQueryWrapper);
+        if (sysUser != null) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_EXIST);
+        }
+        String account = registerDto.getAccount();
+        // 根据账户查询是否已存在
+        LambdaQueryWrapper<SysUser> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(SysUser::getAccount, account);
+        SysUser sysUserAccount = sysUserMapper.selectOne(userLambdaQueryWrapper);
+        if (sysUserAccount != null) {
+            throw new TopicException(ResultCodeEnum.USER_ACCOUNT_EXIST);
+        }
+        // 判断昵称是否存在
+        if (!StringUtils.isEmpty(registerDto.getNickname())) {
+            // 存在那根据昵称查询
+            LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysUser::getNickname, registerDto.getNickname());
+            SysUser sysUserNickname = sysUserMapper.selectOne(queryWrapper);
+            if (sysUserNickname != null) {
+                throw new TopicException(ResultCodeEnum.USER_NICKNAME_EXIST);
+            }
+        }
+        // 校验验证码
+        Object o = redisTemplate.opsForValue().get(EmailConstant.EMAIL_CODE.getValue() + ":" + email);
+        if (o == null) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_ERROR);
+        }
+        String code = o.toString();
+        if (!code.equals(registerDto.getCode())) {
+            throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_INPUT_ERROR);
+        }
+        // 加密密码
+        String password = PasswordUtils.encodePassword(registerDto.getPassword());
+        // 开始注册
+        SysUser sysUserDb = new SysUser();
+        sysUserDb.setAccount(account);
+        sysUserDb.setEmail(email);
+        sysUserDb.setPassword(password);
+        sysUserDb.setNickname(registerDto.getNickname());
+        sysUserMapper.insert(sysUserDb);
+
+        // 插入到用户角色关系表中默认是用户
+        SysUserRole sysUserRole = new SysUserRole();
+        sysUserRole.setUserId(sysUserDb.getId());
+        sysUserRole.setRoleId(2L);
+        sysUserRoleMapper.insert(sysUserRole);
     }
 }

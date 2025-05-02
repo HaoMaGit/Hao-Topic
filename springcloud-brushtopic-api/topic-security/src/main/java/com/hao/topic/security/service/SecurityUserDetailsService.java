@@ -89,9 +89,7 @@ public class SecurityUserDetailsService implements ReactiveUserDetailsService {
                     if (sysRole == null) {
                         return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT_ROLE));
                     }
-                    if (sysRole.getIdentify() == 0) {
-                        return Mono.error(new UsernameNotFoundException(ExceptionConstant.USER_NOT));
-                    }
+
 
                     Collection<GrantedAuthority> authorities = new ArrayList<>();
                     authorities.add(new SimpleGrantedAuthority(sysRole.getRoleKey()));

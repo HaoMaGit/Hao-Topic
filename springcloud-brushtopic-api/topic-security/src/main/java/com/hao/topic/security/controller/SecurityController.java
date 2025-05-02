@@ -8,10 +8,7 @@ import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
-import com.hao.topic.security.dto.ResetPasswordDto;
-import com.hao.topic.security.dto.LoginRequestDto;
-import com.hao.topic.security.dto.LoginTypeDto;
-import com.hao.topic.security.dto.UserDto;
+import com.hao.topic.security.dto.*;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -244,6 +241,15 @@ public class SecurityController {
     @PutMapping("/resetPassword")
     public Result resetPassword(@RequestBody @Validated ResetPasswordDto resetPasswordDto) {
         sysUserService.resetPassword(resetPasswordDto);
+        return Result.success();
+    }
+
+    /**
+     * 注册账户
+     */
+    @PostMapping("/register")
+    public Result register(@RequestBody @Validated RegisterDto registerDto) {
+        sysUserService.register(registerDto);
         return Result.success();
     }
 
