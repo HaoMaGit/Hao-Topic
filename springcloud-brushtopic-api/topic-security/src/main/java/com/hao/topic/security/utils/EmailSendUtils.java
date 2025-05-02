@@ -79,6 +79,6 @@ public class EmailSendUtils {
             EMAIL_CODE.append(newStr[(int) (Math.random() * 62)]);
         }
         // 存入Redis中并设置时长为2分钟
-        redisTemplate.opsForValue().set(EmailConstant.EMAIL_CODE.getValue() + ":" + email, EMAIL_CODE, 1, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(EmailConstant.EMAIL_CODE.getValue() + ":" + email, EMAIL_CODE, 2, TimeUnit.MINUTES);
     }
 }

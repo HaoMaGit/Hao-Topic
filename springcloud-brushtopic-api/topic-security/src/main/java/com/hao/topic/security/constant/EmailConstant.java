@@ -16,7 +16,7 @@ public enum EmailConstant {
     EMAIL_MESSAGE("您的 HaoAi刷题 平台验证码为："),
 
     // 验证码过期时间说明
-    EMAIL_OUT_TIME("，验证码有效期为1分钟，请及时填写。"),
+    EMAIL_OUT_TIME("，验证码有效期为2分钟，请及时填写。"),
 
     // 邮件标题
     EMAIL_TITLE("HaoAi刷题 邮箱验证码"),
