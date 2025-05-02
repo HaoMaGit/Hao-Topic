@@ -37,3 +37,12 @@ export const apiUpdatePassword = (data) => {
     data
   })
 }
+
+// 根据用户id保存用户头像
+export function apiSaveUserAvatar (data) {
+  return request({
+    url: prefix + 'avatar',
+    method: 'put',
+    data
+  })
+}

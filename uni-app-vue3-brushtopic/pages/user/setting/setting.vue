@@ -1,16 +1,89 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { apiUpdateNicknameAndEmail } from '@/api/auth'
+import { apiUpdateNicknameAndEmail, apiSaveUserAvatar } from '@/api/auth'
 // 头像的样式
 const imageStyles = ref({
 	width: 80,
 	height: 80,
 	border: false,
 })
-
+// 上传地址
+const uploadUrl = 'http://localhost:9993/api/system/user/avatar';
+// 允许的图片类型
+const imageTypes = ['jpg', 'jpeg', 'png', 'gif']
+// 图片上传前校验
+const beforeUpload = (file) => {
+	// 获取文件扩展名
+	const extension = file.name.split('.').pop().toLowerCase()
+	// 校验文件类型
+	if (!imageTypes.includes(extension)) {
+		uni.showToast({
+			title: '只能上传图片文件',
+			icon: 'error'
+		})
+		return false
+	}
+	// 校验文件大小(5MB)
+	if (file.size > 2 * 1024 * 1024) {
+		uni.showToast({
+			title: '图片大小不能超过6MB',
+			icon: 'error'
+		})
+		return false
+	}
+	return true
+}
 // 图片上传成功的回调
-const uploadSuccess = (e) => {
-	console.log('上传成功', e)
+const uploadSuccess = async (e) => {
+	const [file] = e.tempFiles
+	if (!file) return
+
+	try {
+		// 显示上传中
+		uni.showLoading({ title: '保存头像中...' })
+		// 获取token
+		const token = uni.getStorageSync(userInfo.value.account + 'token')
+		// 调用上传接口
+		const res = await uni.uploadFile({
+			url: uploadUrl,
+			filePath: file.url,
+			name: 'avatar',
+			header: {
+				'Authorization': token
+			},
+			formData: {},
+			method: 'POST',
+		})
+
+		console.log('res', res);
+		// 转换json
+		const jsonResult = JSON.parse(res.data)
+		console.log('jsonResult', jsonResult);
+		
+		// 保存一下头像地址
+		await apiSaveUserAvatar({
+			id: userInfo.value.id,
+			avatar: jsonResult.data
+		})
+		// 更新本地存储
+		const json = JSON.parse(uni.getStorageSync('h5UserInfo'))
+		json.avatar = jsonResult.data
+		uni.setStorageSync('h5UserInfo', JSON.stringify(json))
+
+		// 更新当前数据
+		userInfo.value.avatar = jsonResult.data
+		uni.hideLoading()
+
+		uni.showToast({
+			title: '头像更新成功',
+			icon: 'success'
+		})
+	} catch (error) {
+		uni.showToast({
+			title: '头像更新失败',
+			icon: 'error'
+		})
+	}
 }
 
 // 修改名称对话框
@@ -113,8 +186,8 @@ const dialogInputConfirm = async (value) => {
 						<text class="label">修改头像</text>
 					</view>
 					<view class="right">
-						<uni-file-picker @select="uploadSuccess" limit="1" :del-icon="false" disable-preview
-							:imageStyles="imageStyles" file-mediatype="image">
+						<uni-file-picker @beforeUpload="beforeUpload" @select="uploadSuccess" limit="1" :del-icon="false"
+							disable-preview :imageStyles="imageStyles" file-mediatype="image">
 							<uv-avatar v-if="!userInfo.avatar" size="55" :text="text" fontSize="18" randomBgColor></uv-avatar>
 							<uv-avatar v-else size="55" :src="userInfo.avatar"></uv-avatar>
 						</uni-file-picker>
