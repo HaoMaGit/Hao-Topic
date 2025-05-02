@@ -16,4 +16,5 @@ public class UserDto {
     private String confirmPassword;
     private String nickname;
     private String email;
+    private String code;
 }

@@ -461,11 +461,21 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (sysUserMapper.selectCount(eq) > 0) {
             throw new TopicException(ResultCodeEnum.USER_NICKNAME_EXIST);
         }
-        if (userDto.getEmail() != null) {
+        if (userDto.getEmail() != null && !userDto.getEmail().equals("")) {
             // 查询用户邮箱是否存在了
             LambdaQueryWrapper<SysUser> emailEq = new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, userDto.getEmail());
             if (sysUserMapper.selectCount(emailEq) > 0) {
                 throw new TopicException(ResultCodeEnum.USER_EMAIL_EXIST);
+            }
+            // 校验验证码
+            // 校验验证码
+            Object o = redisTemplate.opsForValue().get(EmailConstant.EMAIL_CODE.getValue() + ":" + userDto.getEmail());
+            if (o == null) {
+                throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_ERROR);
+            }
+            String code = o.toString();
+            if (!code.equals(userDto.getCode())) {
+                throw new TopicException(ResultCodeEnum.USER_EMAIL_CODE_INPUT_ERROR);
             }
             sysUserDb.setEmail(userDto.getEmail());
         }
