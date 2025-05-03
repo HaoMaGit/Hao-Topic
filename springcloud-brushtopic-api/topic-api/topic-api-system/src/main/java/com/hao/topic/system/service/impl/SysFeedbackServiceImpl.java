@@ -43,6 +43,7 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
      *
      * @param sysFeedback
      */
+    @Transactional
     public void saveFeedback(SysFeedback sysFeedback) {
         // 校验反馈内容不能为空
         if (sysFeedback.getFeedbackContent() == null || sysFeedback.getFeedbackContent().isEmpty()) {
@@ -54,6 +55,13 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
         sysFeedback.setUserId(currentId);
         sysFeedback.setAccount(currentName);
         sysFeedbackMapper.insert(sysFeedback);
+        // 添加到通知表中
+        SysNotice sysNotice = new SysNotice();
+        sysNotice.setAccount(currentName);
+        sysNotice.setUserId(currentId);
+        sysNotice.setContent(sysFeedback.getFeedbackContent());
+        sysNotice.setStatus(NoticeEnums.FEEDBACK.getCode());
+        sysNoticeMapper.insert(sysNotice);
     }
 
     /**
