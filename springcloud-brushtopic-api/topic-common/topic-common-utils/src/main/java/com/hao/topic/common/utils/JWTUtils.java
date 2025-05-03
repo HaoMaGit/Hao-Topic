@@ -32,13 +32,27 @@ public class JWTUtils {
     }
 
     public static Map<String, Object> getTokenInfo(String token) {
-        DecodedJWT verify = JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
-        Map<String, Claim> claims = verify.getClaims();
-        SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String expired = dateTime.format(verify.getExpiresAt());
-        Map<String, Object> m = new HashMap<>();
-        claims.forEach((k, v) -> m.put(k, v.asString()));
-        m.put("exp", expired);
-        return m;
+        try {
+
+            DecodedJWT verify = JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
+            Map<String, Claim> claims = verify.getClaims();
+            SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String expired = dateTime.format(verify.getExpiresAt());
+            Map<String, Object> m = new HashMap<>();
+            claims.forEach((k, v) -> m.put(k, v.asString()));
+            m.put("exp", expired);
+            return m;
+        } catch (Exception e) {
+            throw new RuntimeException("无效的Token，请重新登录");
+        }
+    }
+
+    public static boolean verifyToken(String token) {
+        try {
+            JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -72,7 +72,10 @@ public class SecurityRepository implements ServerSecurityContextRepository {
     public Mono<SecurityContext> load(ServerWebExchange exchange) {
         String token = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         log.info("获取到的令牌: {}", token);
-
+        // 校验令牌是否合法
+        if (token == null || !JWTUtils.verifyToken(token)) {
+            token = null;
+        }
         if (token != null) {
             Map<String, Object> tokenInfo = JWTUtils.getTokenInfo(token);
             String username = (String) tokenInfo.get("username");
