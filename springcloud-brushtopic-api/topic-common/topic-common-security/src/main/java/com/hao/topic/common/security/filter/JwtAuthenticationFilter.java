@@ -1,5 +1,6 @@
 package com.hao.topic.common.security.filter;
 
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.utils.JWTUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

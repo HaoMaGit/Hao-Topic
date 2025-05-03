@@ -2,12 +2,16 @@ package com.hao.topic.system.controller;
 
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.system.SysFeedback;
+import com.hao.topic.model.entity.system.SysMenu;
+import com.hao.topic.model.vo.system.SysFeedbackVo;
+import com.hao.topic.model.vo.system.SysMenuListVo;
 import com.hao.topic.system.service.SysFeedbackService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Description: 反馈管理
@@ -29,4 +33,17 @@ public class SysFeedbackController {
         sysFeedbackService.saveFeedback(sysFeedback);
         return Result.success();
     }
+
+    /**
+     * 查询反馈列表
+     *
+     * @return
+     */
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('admin')")
+    public Result<Map<String, Object>> list(SysFeedback sysFeedback) {
+        Map<String, Object> map = sysFeedbackService.list(sysFeedback);
+        return Result.success(map);
+    }
+
 }

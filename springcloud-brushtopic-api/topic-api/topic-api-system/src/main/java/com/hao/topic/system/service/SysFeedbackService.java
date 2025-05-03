@@ -2,6 +2,8 @@ package com.hao.topic.system.service;
 
 import com.hao.topic.model.entity.system.SysFeedback;
 
+import java.util.Map;
+
 /**
  * Description:
  * Author: Hao
@@ -9,4 +11,6 @@ import com.hao.topic.model.entity.system.SysFeedback;
  */
 public interface SysFeedbackService {
     void saveFeedback(SysFeedback sysFeedback);
+
+    Map<String, Object> list(SysFeedback sysFeedback);
 }

@@ -68,7 +68,7 @@ public class AuthorizeFilter implements Ordered, GlobalFilter {
             String username = (String) userInfo.get("username");
 
             // 从Redis验证token
-            String cachedToken = (String) redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + username);
+            String cachedToken = (String) redisTemplate.opsForValue().get(username);
             if (!token.equals(cachedToken)) {
                 log.warn("Token验证失败: {}", username);
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);

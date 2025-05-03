@@ -628,7 +628,7 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         load.put("role", sysRole.getRoleKey());
         String token = JWTUtils.creatToken(load, JwtConstant.EXPIRE_TIME * ignoreWhiteProperties.getH5Timeout());
         // 存入redis中
-        redisTemplate.opsForValue().set(RedisConstant.USER_LOGIN_KEY_PREFIX + sysUser.getAccount(), token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(sysUser.getAccount(), token, ignoreWhiteProperties.getH5Timeout(), TimeUnit.DAYS);
         return token;
     }
 
