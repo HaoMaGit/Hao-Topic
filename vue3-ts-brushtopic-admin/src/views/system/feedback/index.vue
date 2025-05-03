@@ -101,9 +101,6 @@ const handleReset = () => {
   getFeedbackList()
 }
 
-
-
-
 // 分页变化处理
 const handleTableChange = (pagination: any) => {
   params.value.pageNum = pagination.current;
@@ -111,6 +108,15 @@ const handleTableChange = (pagination: any) => {
   getFeedbackList();
 }
 
+// 弹窗
+const drawer = ref(false)
+// 关闭弹窗
+const onClose = () => {
+  drawer.value = false
+}
+// 回复
+const onSave = () => {
+}
 onMounted(() => {
   getFeedbackList()
 })
@@ -152,6 +158,8 @@ onMounted(() => {
     }" :loading="tableLoading" @change="handleTableChange" :dataSource="tableData" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
+          <a-button ghost type="primary" @click="drawer = true" v-if="record.status === 0">回复</a-button>
+          <a-button type="success" v-else>已回复</a-button>
         </template>
         <template v-if="column.key === 'feedbackContent'">
           <a-tooltip>
@@ -173,6 +181,20 @@ onMounted(() => {
         </template>
       </template>
     </a-table>
+    <!-- 回复框 -->
+    <a-drawer title="回复" placement="right" v-model:open="drawer" @close="onClose">
+      <!-- 回复内容 -->
+      <a-form-item label="回复内容">
+        <a-textarea></a-textarea>
+      </a-form-item>
+      <!-- 添加底部按钮 -->
+      <template #footer>
+        <a-space class="space-footer-box">
+          <a-button @click="onClose">取消</a-button>
+          <a-button type="primary" @click="onSave">回复</a-button>
+        </a-space>
+      </template>
+    </a-drawer>
   </div>
 </template>
 <style lang="scss" scoped>
