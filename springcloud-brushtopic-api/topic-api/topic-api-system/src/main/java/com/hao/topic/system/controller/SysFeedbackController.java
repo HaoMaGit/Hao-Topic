@@ -3,6 +3,7 @@ package com.hao.topic.system.controller;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.system.SysFeedback;
 import com.hao.topic.model.entity.system.SysMenu;
+import com.hao.topic.model.vo.system.SysFeedbackUserVo;
 import com.hao.topic.model.vo.system.SysFeedbackVo;
 import com.hao.topic.model.vo.system.SysMenuListVo;
 import com.hao.topic.system.service.SysFeedbackService;
@@ -46,4 +47,12 @@ public class SysFeedbackController {
         return Result.success(map);
     }
 
+    /**
+     * h5查询反馈列表
+     */
+    @GetMapping("/feedback")
+    public Result<List<SysFeedbackUserVo>> feedback() {
+        List<SysFeedbackUserVo> list = sysFeedbackService.feedback();
+        return Result.success(list);
+    }
 }

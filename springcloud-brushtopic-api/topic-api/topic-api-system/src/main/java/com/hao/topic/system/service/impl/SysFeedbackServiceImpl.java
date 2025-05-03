@@ -8,6 +8,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.system.SysFeedback;
+import com.hao.topic.model.vo.system.SysFeedbackUserVo;
 import com.hao.topic.model.vo.system.SysFeedbackVo;
 import com.hao.topic.system.mapper.SysFeedbackMapper;
 import com.hao.topic.system.service.SysFeedbackService;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -80,5 +82,22 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
                         }
                 )
         );
+    }
+
+    /**
+     * h5查询反馈列表
+     *
+     * @return
+     */
+    public List<SysFeedbackUserVo> feedback() {
+        LambdaQueryWrapper<SysFeedback> sysFeedbackLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysFeedbackLambdaQueryWrapper.eq(SysFeedback::getUserId, SecurityUtils.getCurrentId());
+        sysFeedbackLambdaQueryWrapper.orderByDesc(SysFeedback::getCreateTime);
+        List<SysFeedback> sysFeedbacks = sysFeedbackMapper.selectList(sysFeedbackLambdaQueryWrapper);
+        return sysFeedbacks.stream().map(sysFeedback -> {
+            SysFeedbackUserVo sysFeedbackUserVo = new SysFeedbackUserVo();
+            BeanUtils.copyProperties(sysFeedback, sysFeedbackUserVo);
+            return sysFeedbackUserVo;
+        }).toList();
     }
 }
