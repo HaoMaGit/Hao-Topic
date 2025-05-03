@@ -57,7 +57,7 @@
             <a-tab-pane key="1" tab="基本信息">
               <a-form :model="formState" :rules="rules" ref="formRef" layout="vertical">
                 <a-form-item label="昵称" name="nickname">
-                  <a-input v-model:value="formState.nickname" placeholder="请谨慎修改账户昵称修改昵称后会影响展示效果" />
+                  <a-input :maxlength="8" v-model:value="formState.nickname" placeholder="请谨慎修改账户昵称修改昵称后会影响展示效果" />
                 </a-form-item>
                 <a-form-item label="邮箱" name="email">
                   <a-input v-model:value="formState.email" placeholder="请输入邮箱">
