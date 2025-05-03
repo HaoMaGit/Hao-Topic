@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { apiGetFeedbackList } from '@/api/system/feedback/index'
+import { apiGetFeedbackList, apiReplyFeedback } from '@/api/system/feedback/index'
 import type { FeedbackQueryType } from '@/api/system/feedback/type';
+import { message } from 'ant-design-vue';
 // 查询反馈列表
 const getFeedbackList = async () => {
   tableLoading.value = true
@@ -113,9 +114,30 @@ const drawer = ref(false)
 // 关闭弹窗
 const onClose = () => {
   drawer.value = false
+  replyContent.value = null
+  currentRecordId.value = null
 }
+// 当前反馈id
+const currentRecordId = ref<number | null>(null)
+// 回复内容
+const replyContent = ref<any>(null)
 // 回复
-const onSave = () => {
+const onSave = async () => {
+  if (!replyContent.value || replyContent.value.trim() === '') {
+    message.error('请输入回复内容')
+    return
+  }
+  await apiReplyFeedback({
+    id: currentRecordId.value,
+    replyContent: replyContent.value
+  })
+  message.success('回复成功')
+  drawer.value = false
+  getFeedbackList()
+}
+const handleReply = (id: number) => {
+  currentRecordId.value = id
+  drawer.value = true
 }
 onMounted(() => {
   getFeedbackList()
@@ -158,7 +180,7 @@ onMounted(() => {
     }" :loading="tableLoading" @change="handleTableChange" :dataSource="tableData" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
-          <a-button ghost type="primary" @click="drawer = true" v-if="record.status === 0">回复</a-button>
+          <a-button ghost type="primary" @click="handleReply(record.id)" v-if="record.status === 0">回复</a-button>
           <a-button type="success" v-else>已回复</a-button>
         </template>
         <template v-if="column.key === 'feedbackContent'">
@@ -185,7 +207,7 @@ onMounted(() => {
     <a-drawer title="回复" placement="right" v-model:open="drawer" @close="onClose">
       <!-- 回复内容 -->
       <a-form-item label="回复内容">
-        <a-textarea></a-textarea>
+        <a-textarea v-model:value="replyContent" placeholder="请输入回复内容"></a-textarea>
       </a-form-item>
       <!-- 添加底部按钮 -->
       <template #footer>

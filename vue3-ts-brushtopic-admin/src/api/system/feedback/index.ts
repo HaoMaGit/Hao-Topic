@@ -11,3 +11,12 @@ export const apiGetFeedbackList = (query: FeedbackQueryType) => {
     params: query
   });
 };
+
+// 回复内容
+export const apiReplyFeedback = (data: any) => {
+  return request({
+    url: prefix + "reply",
+    method: "post",
+    data
+  });
+};
