@@ -3,10 +3,13 @@ package com.hao.topic.system.service.impl;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.captcha.generator.RandomGenerator;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.hao.topic.common.utils.JWTUtils;
+import com.hao.topic.model.entity.system.WebConfig;
 import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.system.constant.SystemConstant;
+import com.hao.topic.system.mapper.WebConfigMapper;
 import com.hao.topic.system.service.SystemService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 public class SystemServiceImpl implements SystemService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private WebConfigMapper webConfigMapper;
 
     public void getCode(HttpServletResponse response) {
         // 生成随机6位
@@ -48,6 +54,18 @@ public class SystemServiceImpl implements SystemService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 查询前端配置
+     *
+     * @param status
+     * @return
+     */
+    public WebConfig getConfig(Integer status) {
+        LambdaQueryWrapper<WebConfig> webConfigLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        webConfigLambdaQueryWrapper.eq(WebConfig::getStatus, status);
+        return webConfigMapper.selectOne(webConfigLambdaQueryWrapper);
     }
 
 
