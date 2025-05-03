@@ -20,7 +20,7 @@ public class SysFeedback extends BaseEntity {
     private String replyContent;
     private Integer status;
     private String replyAccount;
-    private String replyId;
+    private Long replyId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime replyTime;
 }

@@ -7,16 +7,22 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
+import com.hao.topic.model.dto.system.SysFeedbackReplyDto;
 import com.hao.topic.model.entity.system.SysFeedback;
+import com.hao.topic.model.entity.system.SysNotice;
 import com.hao.topic.model.vo.system.SysFeedbackUserVo;
 import com.hao.topic.model.vo.system.SysFeedbackVo;
+import com.hao.topic.system.enums.NoticeEnums;
 import com.hao.topic.system.mapper.SysFeedbackMapper;
+import com.hao.topic.system.mapper.SysNoticeMapper;
 import com.hao.topic.system.service.SysFeedbackService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +36,7 @@ import java.util.Map;
 @Slf4j
 public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFeedback> implements SysFeedbackService {
     private final SysFeedbackMapper sysFeedbackMapper;
+    private final SysNoticeMapper sysNoticeMapper;
 
     /**
      * 用户发起反馈
@@ -99,5 +106,45 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
             BeanUtils.copyProperties(sysFeedback, sysFeedbackUserVo);
             return sysFeedbackUserVo;
         }).toList();
+    }
+
+    /**
+     * 回复内容
+     *
+     * @param sysFeedbackReplyDto
+     */
+    @Transactional
+    public void reply(SysFeedbackReplyDto sysFeedbackReplyDto) {
+        // 校验一下参数
+        if (sysFeedbackReplyDto.getId() == null || sysFeedbackReplyDto.getReplyContent() == null || sysFeedbackReplyDto.getReplyContent().isEmpty()) {
+            throw new TopicException(ResultCodeEnum.FEEDBACK_CONTENT_IS_NULL);
+        }
+        // 查询一下这条反馈记录
+        SysFeedback sysFeedback = sysFeedbackMapper.selectById(sysFeedbackReplyDto.getId());
+        if (sysFeedback == null) {
+            throw new TopicException(ResultCodeEnum.FEEDBACK_NOT_EXIST);
+        }
+        // 反馈记录存在
+        sysFeedback.setReplyContent(sysFeedbackReplyDto.getReplyContent());
+        sysFeedback.setReplyAccount(SecurityUtils.getCurrentName());
+        sysFeedback.setReplyTime(LocalDateTime.now());
+        sysFeedback.setReplyId(SecurityUtils.getCurrentId());
+        // 修改状态为已回复
+        sysFeedback.setStatus(1);
+        // 修改
+        sysFeedbackMapper.updateById(sysFeedback);
+
+        // 记录到通知表中通知到这个反馈用户已经回复了
+        SysNotice sysNotice = new SysNotice();
+        // 创建人
+        sysNotice.setAccount(sysFeedback.getReplyAccount());
+        sysNotice.setUserId(sysFeedback.getReplyId());
+        // 通知内容
+        sysNotice.setContent(sysFeedback.getReplyContent());
+        sysNotice.setStatus(NoticeEnums.REPLY.getCode());
+        // 接收人
+        sysNotice.setRecipientsId(sysFeedback.getUserId());
+        // 插入到通知表
+        sysNoticeMapper.insert(sysNotice);
     }
 }

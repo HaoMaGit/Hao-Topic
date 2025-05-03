@@ -1,6 +1,7 @@
 package com.hao.topic.system.controller;
 
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.dto.system.SysFeedbackReplyDto;
 import com.hao.topic.model.entity.system.SysFeedback;
 import com.hao.topic.model.entity.system.SysMenu;
 import com.hao.topic.model.vo.system.SysFeedbackUserVo;
@@ -54,5 +55,14 @@ public class SysFeedbackController {
     public Result<List<SysFeedbackUserVo>> feedback() {
         List<SysFeedbackUserVo> list = sysFeedbackService.feedback();
         return Result.success(list);
+    }
+
+    /**
+     * 回复内容
+     */
+    @PostMapping("/reply")
+    public Result reply(@RequestBody SysFeedbackReplyDto sysFeedbackReplyDto) {
+        sysFeedbackService.reply(sysFeedbackReplyDto);
+        return Result.success();
     }
 }

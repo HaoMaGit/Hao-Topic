@@ -1,5 +1,6 @@
 package com.hao.topic.system.service;
 
+import com.hao.topic.model.dto.system.SysFeedbackReplyDto;
 import com.hao.topic.model.entity.system.SysFeedback;
 import com.hao.topic.model.vo.system.SysFeedbackUserVo;
 
@@ -18,4 +19,5 @@ public interface SysFeedbackService {
 
     List<SysFeedbackUserVo> feedback();
 
+    void reply(SysFeedbackReplyDto content);
 }

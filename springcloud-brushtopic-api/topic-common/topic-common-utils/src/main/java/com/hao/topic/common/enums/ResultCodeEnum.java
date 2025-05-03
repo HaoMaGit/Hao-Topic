@@ -86,10 +86,10 @@ public enum ResultCodeEnum {
     USER_EMAIL_CODE_INPUT_ERROR(99945, "验证码输入错误"),
     USER_EMAIL_CODE_EXIST(99946, "验证码已存在打开QQ查看哦"),
     USER_ACCOUNT_EXIST(99947, "账户名称重复或账户已存在"),
-    FEEDBACK_CONTENT_IS_NULL(99948, "反馈内容不能为空");
-
+    FEEDBACK_CONTENT_IS_NULL(99948, "反馈内容不能为空"),
+    FEEDBACK_NOT_EXIST(99949, "反馈记录不存在");
 
     private Integer code;
     private String message;
 
-}
+    }
