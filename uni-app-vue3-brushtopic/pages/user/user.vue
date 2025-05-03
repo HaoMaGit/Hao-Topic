@@ -39,9 +39,9 @@ const getRoleIcon = computed(() => {
 })
 const getRoleColor = computed(() => {
 	const colorMap = {
-		2: '#ffd700',
-		1: '#ff6b6b',
-		0: '#ffffff'
+		1: '#712a07',
+		2: '#564021',
+		0: '#203c71'
 	}
 	return colorMap[role.value] || '#ffffff'
 })
@@ -117,9 +117,28 @@ const handleCloseFeedback = () => {
 	feedbackPopup.value.close()
 }
 
+// 修改渐变背景计算属性，使上面更深，下面更浅
+const getPageGradient = computed(() => {
+	const gradientMap = {
+		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
+		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
+		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
+	}
+	return gradientMap[role.value] || gradientMap[0]
+})
+
+// 添加文字颜色的计算属性
+const getTextColor = computed(() => {
+	const textColorMap = {
+		1: '#712a07',
+		2: '#564021',
+		0: '#203c71'
+	}
+	return textColorMap[role.value] || gradientMap[0]
+})
 </script>
 <template>
-	<view class="user-box">
+	<view class="user-box" :style="{ background: getPageGradient }">
 		<!-- 会员对话框 -->
 		<uv-modal ref="memberModal" title="会员服务" confirmText="去支付" @confirm="goToPay">
 			<template #default>
@@ -180,15 +199,17 @@ const handleCloseFeedback = () => {
 			</view>
 			<view class="user-info">
 				<view class="name-wrap">
-					<text class="nickname">{{ userInfo?.nickname || '暂无昵称' }}</text>
-					<text class="account-tag">账户: {{ userInfo.account }}</text>
+					<text class="nickname" :style="{ color: getTextColor }">{{ userInfo?.nickname || '暂无昵称' }}</text>
+					<text class="account-tag" :style="{ color: getTextColor }">账户: {{ userInfo.account }}</text>
 				</view>
 				<view class="role-wrap" v-if="roleDetail">
 					<view class="role-badge">
 						<uni-icons :type="getRoleIcon" size="16" :color="getRoleColor"></uni-icons>
-						<text class="role-name">{{ roleDetail?.name }}</text>
+						<text class="role-name" :style="{ color: getTextColor }">{{ roleDetail?.name }}</text>
 					</view>
-					<text class="role-desc">{{ roleDetail?.remark }}</text>
+				</view>
+				<view class="role-wrap" v-if="roleDetail">
+					<text class="role-desc" :style="{ color: getTextColor }">{{ roleDetail?.remark }}</text>
 				</view>
 			</view>
 		</view>
@@ -413,7 +434,6 @@ const handleCloseFeedback = () => {
 		width: 690rpx;
 		margin: 28rpx auto;
 		border: 1px solid #eeeeee;
-		border-radius: 10rpx;
 		box-shadow: 0 0 30rpx rgba(0, 0, 0, 0.05);
 
 		.list {
@@ -426,6 +446,7 @@ const handleCloseFeedback = () => {
 				border-bottom: 1px solid #eeeeee;
 				padding: 0 20rpx;
 				position: relative;
+				border-radius: 10rpx;
 
 				&:last-child {
 					border-bottom: 0;
@@ -469,14 +490,15 @@ const handleCloseFeedback = () => {
 	}
 
 	.user-top {
-		padding: 60rpx 0;
-		background: linear-gradient(135deg, #1677ff, #4096ff);
+		padding: 55rpx 0rpx 23rpx 0rpx;
+		// background: linear-gradient(135deg, #1677ff, #4096ff);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-direction: column;
 		position: relative;
 		overflow: hidden;
+		border-radius: 0rpx 0rpx 5rpx 5rpx;
 
 		&::after {
 			content: '';
@@ -485,7 +507,7 @@ const handleCloseFeedback = () => {
 			left: 0;
 			right: 0;
 			bottom: 0;
-			background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+			// background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
 		}
 
 		.avatar-wrap {
@@ -541,6 +563,7 @@ const handleCloseFeedback = () => {
 					text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 					display: block;
 					margin-bottom: 8rpx;
+
 				}
 
 				.account-tag {
@@ -569,14 +592,15 @@ const handleCloseFeedback = () => {
 
 					.role-name {
 						font-size: 24rpx;
-						color: #fff;
+						color: #712a07;
 						font-weight: 500;
 					}
 				}
 
 				.role-desc {
+					margin-top: 10rpx;
 					font-size: 24rpx;
-					color: rgba(255, 255, 255, 0.9);
+					color: #712a07;
 				}
 			}
 		}
