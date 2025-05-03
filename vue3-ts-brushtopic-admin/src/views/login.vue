@@ -46,6 +46,9 @@ const formRule = ref({
 const loginLoading = ref(false)
 // 登录
 const login = () => {
+  // 在登录前执行清除
+  localStorage.clear();
+  sessionStorage.clear();
   if (!adminRef.value) return // 确保表单实例存在
   if (adminRef.value) {
     // 表单校验

@@ -2,9 +2,10 @@
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting';
+import { apiGetNoticeList } from '@/api/system/notice'
 const settingStore = useSettingStore()
 import Hao from '@/assets/images/H.png'
-import { ref, h } from 'vue'
+import { ref, h, onMounted } from 'vue'
 import { message } from 'ant-design-vue';
 import { BellOutlined, DownOutlined, SettingOutlined, MenuFoldOutlined, MenuUnfoldOutlined, FullscreenOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 // 引入颜色选择器
@@ -34,23 +35,7 @@ const fullScreen = () => {
     document.exitFullscreen()
   }
 }
-// 通知数据
-const notifications = ref([
-  {
-    type: 'member',
-    typeText: '会员充值',
-    message: '张三充值了会员',
-    time: '10分钟前',
-    read: false
-  },
-  {
-    type: 'feedback',
-    typeText: '意见反馈',
-    message: '张三发起意见反馈：这个题目添加不上去',
-    time: '30分钟前',
-    read: false
-  },
-]);
+
 
 // 点击了已读
 const markAsRead = (index: number) => {
@@ -130,6 +115,50 @@ const resetTheme = () => {
 const handleErrorImg = (event: any) => {
   event.target.src = Hao
 };
+
+// 通知数据
+const notifications = ref<any[]>([]);
+const notificationsLoding = ref(false)
+// 查询通知
+const getNoticeList = () => {
+  notificationsLoding.value = true
+  apiGetNoticeList().then(res => {
+    notifications.value = res.data
+  }).finally(() => {
+    notificationsLoding.value = false
+  })
+}
+
+// 映射一下类名
+const getClassName = (status: number) => {
+  console.log("========>", status);
+
+  const map = <any>{
+    0: 'member',
+    1: 'feedback',
+    2: 'reply'
+  }
+  return map[status] || 'member'
+}
+// 映射类型
+const getType = (status: number) => {
+  const map = <any>{
+    0: '会员支付',
+    1: '意见反馈',
+    2: '回复内容'
+  }
+  return map[status] || '会员'
+}
+// 点击了通知
+const isPopoverOpen = ref(false)
+const handlePopoverChange = () => {
+  isPopoverOpen.value = !isPopoverOpen.value
+  if (isPopoverOpen.value) {
+    getNoticeList()
+  }
+}
+onMounted(() => {
+})
 </script>
 <template>
   <!-- 布局设置抽底 -->
@@ -180,8 +209,8 @@ const handleErrorImg = (event: any) => {
     <!-- 按钮位置 -->
     <a-button :icon="h(ReloadOutlined)" shape="circle" @click="updateRefsh"></a-button>
     <a-button :icon="h(FullscreenOutlined)" shape="circle" @click="fullScreen"></a-button>
-    <!-- 通知：审核题目 会员购买 -->
-    <a-popover placement="bottom">
+    <!-- 通知：审核题目 会员购买 回复内容 -->
+    <a-popover placement="bottom" trigger="click" :open="isPopoverOpen" @openChange="handlePopoverChange">
       <!-- 自定义内容 -->
       <template #content>
         <div class="bell-box">
@@ -192,23 +221,27 @@ const handleErrorImg = (event: any) => {
           </div>
           <!-- 内容区域是通知信息 -->
           <div class="bell-content">
-            <div v-if="notifications.length > 0" class="notification-list">
-              <div v-for="(item, index) in notifications" :key="index" class="notification-item">
-                <div class="notification-content">
-                  <div class="notification-title">
-                    <span class="notification-type" :class="item.type">{{ item.typeText }}</span>
-                    <span class="notification-time">{{ item.time }}</span>
+            <a-spin :spinning="notificationsLoding">
+              <div v-if="notifications.length > 0" class="notification-list">
+                <div v-for="(item, index) in notifications" :key="index" class="notification-item">
+                  <div class="notification-content">
+                    <div class="notification-title">
+                      <span class="notification-type" :class="getClassName(item.status)">
+                        {{ getType(item.status) }}
+                      </span>
+                      <span class="notification-time">{{ item.timeDesc }}</span>
+                    </div>
+                    <div class="notification-message">{{ item.account + ": " + item.content }}</div>
                   </div>
-                  <div class="notification-message">{{ item.message }}</div>
-                </div>
-                <div class="notification-actions">
-                  <a-button type="link" size="small" @click="markAsRead(index)" v-if="!item.read">
-                    已读
-                  </a-button>
+                  <div class="notification-actions">
+                    <a-button type="link" size="small" @click="markAsRead(index)" v-if="!item.read">
+                      已读
+                    </a-button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <a-empty v-else description="暂无通知" />
+              <a-empty v-else description="暂无通知" />
+            </a-spin>
           </div>
           <!-- 底部关闭通知 -->
           <div class="bell-bottom" v-if="notifications.length > 0">
@@ -337,6 +370,11 @@ const handleErrorImg = (event: any) => {
     &.member {
       background-color: #fff3e0;
       color: #fa8c16;
+    }
+
+    &.reply {
+      background-color: #f0fff0; // 浅绿色背景
+      color: #52c41a; // 清新的绿色文字
     }
 
   }
