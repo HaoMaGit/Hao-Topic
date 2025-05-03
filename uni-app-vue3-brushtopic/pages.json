@@ -48,7 +48,7 @@
 			}
 		},
 		{
-			"path": "pages/user/list/list",
+			"path": "pages/user/favorite/favorite",
 			"style": {
 				"navigationBarTitleText": "我的收藏"
 			}

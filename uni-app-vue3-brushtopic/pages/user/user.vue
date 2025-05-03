@@ -231,7 +231,7 @@ const goToPay = () => {
 					</view>
 				</view>
 
-				<navigator url="/pages/user/list/list" class="border-row">
+				<navigator url="/pages/user/favorite/favorite" class="border-row">
 					<view class="row">
 						<view class="left">
 							<uni-icons type="star-filled" size="28" color="#1677ff"></uni-icons>
