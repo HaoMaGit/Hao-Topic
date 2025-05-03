@@ -2,12 +2,12 @@ package com.hao.topic.system.controller;
 
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.system.SysNoticeDto;
+import com.hao.topic.model.vo.system.SysNoticeVo;
 import com.hao.topic.system.service.SysNoticeService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Description: 通知控制层
@@ -28,5 +28,14 @@ public class SysNoticeController {
     public Result recordNotice(@RequestBody SysNoticeDto sysNoticeDto) {
         sysNoticeService.recordNotice(sysNoticeDto);
         return Result.success();
+    }
+
+    /**
+     * 查询反馈通知列表
+     */
+    @GetMapping("/list")
+    public Result list() {
+        List<SysNoticeVo> sysNoticeVos = sysNoticeService.list();
+        return Result.success(sysNoticeVos);
     }
 }

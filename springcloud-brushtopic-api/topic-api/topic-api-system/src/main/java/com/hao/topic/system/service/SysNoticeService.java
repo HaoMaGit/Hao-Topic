@@ -1,6 +1,9 @@
 package com.hao.topic.system.service;
 
 import com.hao.topic.model.dto.system.SysNoticeDto;
+import com.hao.topic.model.vo.system.SysNoticeVo;
+
+import java.util.List;
 
 /**
  * Description:
@@ -9,4 +12,6 @@ import com.hao.topic.model.dto.system.SysNoticeDto;
  */
 public interface SysNoticeService {
     void recordNotice(SysNoticeDto sysNoticeDto);
+
+    List<SysNoticeVo> list();
 }

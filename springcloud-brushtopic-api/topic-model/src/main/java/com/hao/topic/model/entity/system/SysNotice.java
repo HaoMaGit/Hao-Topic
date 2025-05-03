@@ -25,8 +25,8 @@ public class SysNotice {
     private String account;
     private Long userId;
     private String content;
-    private Integer status;
     private Integer isRead;
+    private Integer status;
     private Long recipientsId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

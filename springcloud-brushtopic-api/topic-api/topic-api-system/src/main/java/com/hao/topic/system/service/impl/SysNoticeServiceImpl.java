@@ -1,19 +1,27 @@
 package com.hao.topic.system.service.impl;
 
+import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hao.topic.api.utils.constant.TimeUtils;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.system.SysNoticeDto;
 import com.hao.topic.model.entity.system.SysNotice;
+import com.hao.topic.model.vo.system.SysNoticeVo;
 import com.hao.topic.system.constant.NoticeConstant;
 import com.hao.topic.system.enums.NoticeEnums;
 import com.hao.topic.system.mapper.SysNoticeMapper;
 import com.hao.topic.system.service.SysNoticeService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -63,5 +71,47 @@ public class SysNoticeServiceImpl implements SysNoticeService {
             sysNoticeDb.setContent(message);
         }
         sysNoticeMapper.insert(sysNoticeDb);
+    }
+
+    /**
+     * 查询通知列表
+     *
+     * @return
+     */
+    public List<SysNoticeVo> list() {
+        // 获取当前登录用户
+        Long currentId = SecurityUtils.getCurrentId();
+        // 获取当前登录用户角色
+        String role = SecurityUtils.getCurrentRole();
+        List<SysNotice> sysNoticeList = null;
+        if (role.equals("admin")) {
+            // 是管理员那就查全部
+            LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysNoticeLambdaQueryWrapper.orderByDesc(SysNotice::getCreateTime);
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getIsRead, 0);
+            sysNoticeList = sysNoticeMapper.selectList(sysNoticeLambdaQueryWrapper);
+        } else {
+            // 不是管理员那就查接收人是不是自己哦
+            LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getRecipientsId, currentId);
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getIsRead, 0);
+            sysNoticeLambdaQueryWrapper.orderByDesc(SysNotice::getCreateTime);
+            // 非管理员只能接受到2回复内容
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getStatus, NoticeEnums.REPLY.getCode());
+            sysNoticeList = sysNoticeMapper.selectList(sysNoticeLambdaQueryWrapper);
+        }
+        return sysNoticeList.stream().map(item -> {
+            SysNoticeVo sysNoticeVo = new SysNoticeVo();
+            BeanUtils.copyProperties(item, sysNoticeVo);
+            // 处理一下时间 判断是否是当天额外处理一下
+            String today = DateUtils.format(item.getCreateTime(), "yyyy-MM-dd");
+            if (today.equals(DateUtils.format(new Date(), "yyyy-MM-dd"))) {
+                sysNoticeVo.setTimeDesc(TimeUtils.formatTimeAgo(item.getCreateTime()));
+            } else {
+                // 不是当天直接返回
+                sysNoticeVo.setTimeDesc(item.getCreateTime().toString());
+            }
+            return sysNoticeVo;
+        }).toList();
     }
 }

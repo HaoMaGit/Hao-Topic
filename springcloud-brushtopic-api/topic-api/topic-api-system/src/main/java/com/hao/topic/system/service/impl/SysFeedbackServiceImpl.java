@@ -84,6 +84,7 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
         if (!StringUtils.isEmpty(sysFeedback.getAccount())) {
             sysFeedbackLambdaQueryWrapper.like(SysFeedback::getAccount, sysFeedback.getAccount());
         }
+        sysFeedbackLambdaQueryWrapper.orderByDesc(SysFeedback::getCreateTime);
         // 开始分页查询
         Page<SysFeedback> selectedPage = sysFeedbackMapper.selectPage(page, sysFeedbackLambdaQueryWrapper);
         // 封装返回数据
