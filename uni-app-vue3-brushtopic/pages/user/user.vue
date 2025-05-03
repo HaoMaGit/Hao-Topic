@@ -306,7 +306,7 @@ const goToPay = () => {
 		</view>
 
 		<!-- 会员对话框 -->
-		<uv-modal ref="memberModal" :title="role === '1' ? 'HaoAi刷题会员' : '会员服务'" :show-cancel-button="false"
+		<uv-modal :show-cancel-button="true" ref="memberModal" :title="role === '1' ? 'HaoAi刷题会员' : '会员服务'"
 			:confirm-text="role === '1' ? '关闭' : '我已支付'" @confirm="role === '1' ? memberModal.close() : goToPay()">
 			<template #default>
 				<view class="modal-box">
@@ -342,7 +342,7 @@ const goToPay = () => {
 						<view class="pay-content">
 							<image :src="payConfig.url" mode="widthFix" class="pay-qrcode"></image>
 							<view class="pay-tips">
-								<text>支付完成后请联系我们根据交易号申请</text>
+								<text>{{ payConfig.remark }}</text>
 							</view>
 						</view>
 					</template>

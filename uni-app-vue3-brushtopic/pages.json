@@ -8,7 +8,7 @@
 			}
 		},
 		{
-			"path": "pages/category/category",
+			"path": "pages/database/database",
 			"style": {
 				"navigationBarTitleText": "题库",
 				"navigationStyle": "custom"
@@ -66,13 +66,13 @@
 			}
 		},
 		{
-			"path": "pages/category/subject/subject",
+			"path": "pages/database/subject/subject",
 			"style": {
 				"navigationBarTitleText": ""
 			}
 		},
 		{
-			"path": "pages/category/topic/topic",
+			"path": "pages/database/topic/topic",
 			"style": {
 				"navigationBarTitleText": ""
 			}
@@ -95,7 +95,7 @@
 				"text": "首页"
 			},
 			{
-				"pagePath": "pages/category/category",
+				"pagePath": "pages/database/database",
 				"iconPath": "static/tabbar/topic.png",
 				"selectedIconPath": "static/tabbar/topic-active.png",
 				"text": "题库"
