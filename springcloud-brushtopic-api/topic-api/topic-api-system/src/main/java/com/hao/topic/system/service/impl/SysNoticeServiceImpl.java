@@ -50,7 +50,7 @@ public class SysNoticeServiceImpl implements SysNoticeService {
             // 判断这个人是否记录过支付了
             LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysNoticeLambdaQueryWrapper.eq(SysNotice::getStatus, NoticeEnums.MEMBER_PAY.getCode());
-            sysNoticeLambdaQueryWrapper.eq(SysNotice::getId, currentId);
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getUserId, currentId);
             SysNotice sysNotice = sysNoticeMapper.selectOne(sysNoticeLambdaQueryWrapper);
             if (sysNotice != null) {
                 // 已存在用户支付通知
