@@ -17,4 +17,5 @@ public class WebConfig {
     private Double price;
     private String url;
     private Integer status;
+    private String remark;
 }
