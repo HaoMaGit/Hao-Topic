@@ -11,3 +11,11 @@ export const apiSendFeedback = (data) => {
     data
   })
 }
+
+// 查询反馈列表
+export const apiQueryFeedbackList = () => {
+  return request({
+    url: prefix + 'feedback',
+    method: 'get',
+  })
+}
