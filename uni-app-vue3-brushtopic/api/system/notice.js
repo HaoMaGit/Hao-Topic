@@ -1,0 +1,16 @@
+import request from '@/utils/request.js'
+
+// 前缀
+const prefix = '/system/notice/'
+
+/**
+ * 记录通知
+ * @param {} data 
+ * @returns 
+ */
+export const apiRecordNotice = (data) =>
+  request({
+    url: prefix + 'record',
+    method: 'post',
+    data
+  })

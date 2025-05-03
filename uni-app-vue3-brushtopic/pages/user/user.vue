@@ -6,6 +6,7 @@ import { apiGetRoleDetail } from '@/api/system/role'
 import { apiSendFeedback } from '@/api/system/feedback'
 import { apiGetUserInfo } from '@/api/auth/index'
 import { apiGetConfig } from '@/api/system/index'
+import { apiRecordNotice } from '@/api/system/notice'
 import { onShow } from '@dcloudio/uni-app'
 // 用户信息
 const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
@@ -141,8 +142,11 @@ const getWebConfig = async () => {
 }
 
 // 去支付
-const goToPay = () => {
+const goToPay = async() => {
 	// 发送请求到通知
+	await apiRecordNotice({
+		status: 0
+	})
 	memberModal.value.close()
 	const tips = [
 		'感谢您的支持，让我们一起开启AI之旅~',
