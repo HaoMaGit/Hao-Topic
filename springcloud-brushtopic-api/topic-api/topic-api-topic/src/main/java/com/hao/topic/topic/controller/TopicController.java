@@ -192,4 +192,6 @@ public class TopicController {
     void updateAiAnswer(@RequestBody Topic topic) {
         topicService.updateAiAnswer(topic);
     }
+
+
 }

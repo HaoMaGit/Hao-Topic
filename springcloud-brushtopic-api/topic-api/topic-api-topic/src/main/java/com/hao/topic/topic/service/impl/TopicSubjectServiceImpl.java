@@ -14,19 +14,15 @@ import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.audit.TopicAuditSubject;
 import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
-import com.hao.topic.model.entity.topic.TopicCategory;
-import com.hao.topic.model.entity.topic.TopicCategorySubject;
-import com.hao.topic.model.entity.topic.TopicSubject;
-import com.hao.topic.model.entity.topic.TopicSubjectTopic;
+import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.system.TopicSubjectWebVo;
 import com.hao.topic.model.vo.topic.TopicCategoryVo;
+import com.hao.topic.model.vo.topic.TopicNameVo;
+import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
-import com.hao.topic.topic.mapper.TopicCategoryMapper;
-import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
-import com.hao.topic.topic.mapper.TopicSubjectMapper;
-import com.hao.topic.topic.mapper.TopicSubjectTopicMapper;
+import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicSubjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +50,7 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
     private final TopicCategorySubjectMapper topicCategorySubjectMapper;
     private final TopicCategoryMapper topicCategoryMapper;
     private final RabbitService rabbitService;
+    private final TopicMapper topicMapper;
 
 
     /**
@@ -582,5 +579,47 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         // 根据id排序
         topicSubjectWebVos.sort(Comparator.comparing(TopicSubjectWebVo::getId));
         return topicSubjectWebVos;
+    }
+
+    /**
+     * 根据专题id查询专题详情和题目列表
+     *
+     * @param id
+     * @return
+     */
+    public TopicSubjectDetailAndTopicVo subjectDetail(Long id) {
+        // 查询专题
+        if (id == null) {
+            return null;
+        }
+        TopicSubject topicSubject = topicSubjectMapper.selectById(id);
+        if (topicSubject == null) {
+            return null;
+        }
+        TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = new TopicSubjectDetailAndTopicVo();
+        BeanUtils.copyProperties(topicSubject, topicSubjectDetailAndTopicVo);
+        // 查询题目专题关系表
+        LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getSubjectId, id);
+        List<TopicSubjectTopic> topicSubjectTopics = topicSubjectTopicMapper.selectList(topicSubjectTopicLambdaQueryWrapper);
+        // 题目列表
+        List<TopicNameVo> topicNameVos = new ArrayList<>();
+        // 查询题目
+        for (TopicSubjectTopic topicSubjectTopic : topicSubjectTopics) {
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper.eq(Topic::getId, topicSubjectTopic.getTopicId());
+            topicLambdaQueryWrapper.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+            topicLambdaQueryWrapper.orderByDesc(Topic::getSorted);
+            topicLambdaQueryWrapper.orderByDesc(Topic::getCreateTime);
+            Topic topic = topicMapper.selectOne(topicLambdaQueryWrapper);
+            if (topic != null) {
+                TopicNameVo topicNameVo = new TopicNameVo();
+                topicNameVo.setTopicName(topic.getTopicName());
+                topicNameVo.setId(topic.getId());
+                topicNameVos.add(topicNameVo);
+            }
+        }
+        topicSubjectDetailAndTopicVo.setTopicNameVos(topicNameVos);
+        return topicSubjectDetailAndTopicVo;
     }
 }

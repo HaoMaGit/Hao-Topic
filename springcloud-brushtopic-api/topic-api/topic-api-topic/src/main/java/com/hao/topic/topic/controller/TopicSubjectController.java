@@ -16,6 +16,8 @@ import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.system.TopicSubjectWebVo;
+import com.hao.topic.model.vo.topic.TopicNameVo;
+import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.service.TopicSubjectService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -186,5 +188,14 @@ public class TopicSubjectController {
     public Result<List<TopicSubjectWebVo>> subject(@PathVariable Long categoryId) {
         List<TopicSubjectWebVo> list = topicSubjectService.subject(categoryId);
         return Result.success(list);
+    }
+
+    /**
+     * 根据专题id查询专题详细信息和题目列表
+     */
+    @GetMapping("/subjectDetail/{id}")
+    public Result<TopicSubjectDetailAndTopicVo> subjectDetail(@PathVariable Long id) {
+        TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = topicSubjectService.subjectDetail(id);
+        return Result.success(topicSubjectDetailAndTopicVo);
     }
 }
