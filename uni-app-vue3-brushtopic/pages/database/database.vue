@@ -22,6 +22,10 @@ const goToSubject = (item) => {
 		url: `/pages/database/subject/subject?id=1&name=Java专题练习`
 	})
 }
+
+// 是否开启会员自定义题目
+const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
+
 </script>
 <template>
 	<view class="category-box">

@@ -124,20 +124,26 @@ const logout = () => {
 const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
 // 修改开关
 const asyncChange = async (e) => {
+	console.log("===========>", e);
 	uni.showModal({
 		title: '提示',
 		content: e ? '开启会员自定义题目展示' : '确定要关闭会员自定义的题目展示吗',
 		success: (res) => {
 			if (res.confirm) {
-				isCustomQuestion.value = true
-				// 修改缓存
-				uni.setStorageSync('isCustomQuestion', true)
-			} else {
-				isCustomQuestion.value = false
-				uni.setStorageSync('isCustomQuestion', false)
+				if (e) {
+					// 点击了开启会员
+					isCustomQuestion.value = true
+					// 修改缓存
+					uni.setStorageSync('isCustomQuestion', true)
+				} else {
+					// 关闭
+					isCustomQuestion.value = false
+					uni.setStorageSync('isCustomQuestion', false)
+				}
 			}
 		}
 	})
+	return true
 }
 // 用户信息
 const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
@@ -179,6 +185,8 @@ const dialogInputConfirm = async (value) => {
 		duration: 2000
 	})
 }
+// 当前身份
+const role = ref(uni.getStorageSync('role'))
 </script>
 <template>
 	<view class="setting-box">
@@ -223,12 +231,12 @@ const dialogInputConfirm = async (value) => {
 				</view>
 
 				<!-- 加一个开启展示自定义题目需要身份为identify1才展示 -->
-				<view class="row">
+				<view class="row" v-if="role == 1">
 					<view class="left">
 						<text class="label">会员展示题目</text>
 					</view>
 					<view class="right">
-						<uv-switch @change="asyncChange" v-model="isCustomQuestion" activeColor="#1677ff"></uv-switch>
+						<uv-switch v-model="isCustomQuestion" @change="asyncChange" asyncChange activeColor="#1677ff"></uv-switch>
 					</view>
 				</view>
 			</view>
