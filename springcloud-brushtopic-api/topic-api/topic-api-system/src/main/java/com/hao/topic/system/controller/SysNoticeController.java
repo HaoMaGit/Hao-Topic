@@ -57,4 +57,14 @@ public class SysNoticeController {
         sysNoticeService.read(sysNoticeReadDto);
         return Result.success();
     }
+
+    /**
+     * h5清空通知
+     */
+    @PutMapping("/clear")
+    public Result clearNotice() {
+        sysNoticeService.clearNotice();
+        return Result.success();
+    }
+
 }

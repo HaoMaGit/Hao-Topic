@@ -20,4 +20,6 @@ public interface SysNoticeService {
 
     void read(SysNoticeReadDto idsList);
 
+    void clearNotice();
+
 }

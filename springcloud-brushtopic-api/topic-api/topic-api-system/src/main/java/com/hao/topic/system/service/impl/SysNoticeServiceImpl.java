@@ -161,4 +161,25 @@ public class SysNoticeServiceImpl implements SysNoticeService {
             sysNoticeMapper.updateById(sysNotice);
         });
     }
+
+    /**
+     * 清空通知
+     */
+    public void clearNotice() {
+        // 获取当前登录用户
+        Long currentId = SecurityUtils.getCurrentId();
+        // 查询接收人的通知
+        // 是管理员那就查全部
+        LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysNoticeLambdaQueryWrapper.eq(SysNotice::getIsRead, 0);
+        sysNoticeLambdaQueryWrapper.eq(SysNotice::getRecipientsId, currentId);
+        List<SysNotice> sysNotices = sysNoticeMapper.selectList(sysNoticeLambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(sysNotices)) {
+            return;
+        }
+        sysNotices.forEach(item -> {
+            item.setIsRead(1);
+            sysNoticeMapper.updateById(item);
+        });
+    }
 }
