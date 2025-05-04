@@ -10,11 +10,12 @@ const handlerMenu = (index, id) => {
 	uni.showLoading({
 		title: '加载中'
 	});
+	searchValue.value = null
+	categoryId.value = id
 	activeIndex.value = index
 	getSubject(id)
 	uni.hideLoading();
 }
-const value = ref()
 
 // 跳转到专题列表
 const goToSubject = (item) => {
@@ -27,6 +28,8 @@ const goToSubject = (item) => {
 const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
 // 获取分类名称和id
 const category = ref([])
+// 当前分类id
+const categoryId = ref(0)
 // 查询分类数据
 const getCategory = async () => {
 	uni.showLoading({
@@ -48,6 +51,22 @@ const getSubject = async (categoryId) => {
 	subject.value = res.data
 }
 
+// 当前搜索的值
+const searchValue = ref(null)
+// 搜索
+const handleSearch = () => {
+	if (!searchValue.value || searchValue.value.trim('') === '') {
+		getSubject(categoryId.value)
+		return
+	}
+	subject.value = subject.value.filter(item => item.subjectName.toLowerCase().includes(searchValue.value.toLowerCase().trim('')))
+}
+// 清除
+const handleClear = () => {
+	searchValue.value = ''
+	handleSearch()
+}
+
 onMounted(() => {
 	getCategory()
 })
@@ -56,8 +75,8 @@ onMounted(() => {
 	<view class="category-box">
 		<!-- 搜索区域 -->
 		<view class="search">
-			<uv-input shape="circle" placeholder="在该分类下搜索题目专题" prefixIcon="search"
-				prefixIconStyle="font-size: 22px;color: #909399"></uv-input>
+			<uv-input v-model="searchValue" clearable shape="circle" @clear="handleClear" placeholder="在该分类下搜索题目专题"
+				prefixIcon="search" prefixIconStyle="font-size: 22px;color: #909399" @blur="handleSearch"></uv-input>
 		</view>
 		<!-- 菜单 -->
 		<view class="menu">
