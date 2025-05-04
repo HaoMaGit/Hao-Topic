@@ -20,6 +20,8 @@ import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.entity.topic.TopicSubjectTopic;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import com.hao.topic.model.vo.system.TopicSubjectWebVo;
+import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
@@ -35,10 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -548,5 +547,40 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
             topicSubject.setFailMsg("");
         }
         topicSubjectMapper.updateById(topicSubject);
+    }
+
+
+    /**
+     * 根据分类id查询
+     *
+     * @param categoryId
+     * @return
+     */
+    public List<TopicSubjectWebVo> subject(Long categoryId) {
+        List<TopicSubjectWebVo> topicSubjectWebVos = new ArrayList<>();
+        // 查询分类专题表
+        LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getCategoryId, categoryId);
+        List<TopicCategorySubject> topicCategorySubjects = topicCategorySubjectMapper.selectList(topicCategorySubjectLambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(topicCategorySubjects)) {
+            return null;
+        }
+        // 获取所有的专题id
+        List<Long> subjectIds = topicCategorySubjects.stream().map(TopicCategorySubject::getSubjectId).toList();
+        // 查询专题表
+        for (Long subjectId : subjectIds) {
+            LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicSubjectLambdaQueryWrapper.eq(TopicSubject::getId, subjectId);
+            topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+            TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+            if (topicSubject != null) {
+                TopicSubjectWebVo topicSubjectWebVo = new TopicSubjectWebVo();
+                BeanUtils.copyProperties(topicSubject, topicSubjectWebVo);
+                topicSubjectWebVos.add(topicSubjectWebVo);
+            }
+        }
+        // 根据id排序
+        topicSubjectWebVos.sort(Comparator.comparing(TopicSubjectWebVo::getId));
+        return topicSubjectWebVos;
     }
 }

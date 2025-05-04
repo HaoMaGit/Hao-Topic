@@ -4,6 +4,7 @@ import com.hao.topic.model.dto.topic.TopicSubjectDto;
 import com.hao.topic.model.dto.topic.TopicSubjectListDto;
 import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
+import com.hao.topic.model.vo.system.TopicSubjectWebVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,4 +36,5 @@ public interface TopicSubjectService {
 
     void auditSubject(TopicSubject topicSubject);
 
+    List<TopicSubjectWebVo> subject(Long categoryId);
 }
