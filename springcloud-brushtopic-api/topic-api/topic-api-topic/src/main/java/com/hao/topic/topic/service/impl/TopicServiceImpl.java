@@ -224,10 +224,10 @@ public class TopicServiceImpl implements TopicService {
         // 获取当前用户id
         Long currentId = SecurityUtils.getCurrentId();
         if (currentId == 1L) {
-            // 开始插入
-            topicMapper.insert(topic);
             // 是开发者不需要审核
             topic.setStatus(StatusEnums.NORMAL.getCode());
+            // 开始插入
+            topicMapper.insert(topic);
         } else {
             topicMapper.insert(topic);
             // 不是开发者需要审核

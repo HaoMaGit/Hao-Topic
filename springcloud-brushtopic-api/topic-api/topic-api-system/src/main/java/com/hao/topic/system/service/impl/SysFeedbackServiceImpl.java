@@ -4,6 +4,7 @@ import com.alibaba.nacos.common.utils.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
@@ -42,26 +43,29 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
     /**
      * 用户发起反馈
      *
-     * @param sysFeedback
+     * @param sysFeedbackDto
      */
     @Transactional
-    public void saveFeedback(SysFeedback sysFeedback) {
+    public void saveFeedback(SysFeedback sysFeedbackDto) {
         // 校验反馈内容不能为空
-        if (sysFeedback.getFeedbackContent() == null || sysFeedback.getFeedbackContent().isEmpty()) {
+        if (StringUtils.isEmpty(sysFeedbackDto.getFeedbackContent())) {
             throw new TopicException(ResultCodeEnum.PARAM_ACCOUNT_ERROR);
         }
         // 获取用户id
         Long currentId = SecurityUtils.getCurrentId();
         String currentName = SecurityUtils.getCurrentName();
+        SysFeedback sysFeedback = new SysFeedback();
         sysFeedback.setUserId(currentId);
         sysFeedback.setAccount(currentName);
+        sysFeedback.setFeedbackContent(sysFeedbackDto.getFeedbackContent());
+        sysFeedback.setStatus(0);
         sysFeedbackMapper.insert(sysFeedback);
         // 添加到通知表中
         SysNotice sysNotice = new SysNotice();
         sysNotice.setAccount(currentName);
         sysNotice.setUserId(currentId);
-        sysNotice.setContent(sysFeedback.getFeedbackContent());
-        sysNotice.setStatus(sysFeedback.getStatus());
+        sysNotice.setContent(sysFeedbackDto.getFeedbackContent());
+        sysNotice.setStatus(sysFeedbackDto.getStatus());
         sysNoticeMapper.insert(sysNotice);
     }
 
