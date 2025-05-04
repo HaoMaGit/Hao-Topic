@@ -35,3 +35,13 @@ export const apiCollectionTopic = (id) =>
     */
 export const apiQueryCollectionTopicList = () =>
   request(prefix + 'collection/list')
+
+/**
+  * 计算用户刷题次数
+  */
+export const apiCountTopic = (data) =>
+  request({
+    url: prefix + 'count',
+    method: 'post',
+    data
+  })

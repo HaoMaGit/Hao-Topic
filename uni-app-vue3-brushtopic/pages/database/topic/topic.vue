@@ -6,7 +6,7 @@ import {
 	onLoad
 } from '@dcloudio/uni-app'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
-import { apiQueryTopicDetail, apiQueryTopicAnswer, apiCollectionTopic } from '@/api/topic/topic'
+import { apiQueryTopicDetail, apiCountTopic, apiQueryTopicAnswer, apiCollectionTopic } from '@/api/topic/topic'
 import { apiSendFeedback } from '@/api/system/feedback'
 
 // 添加导入
@@ -31,7 +31,8 @@ onLoad(async (options) => {
 		// 并行请求数据
 		await Promise.all([
 			getTopicList(options.subjectId),
-			getTopicDetail(options.id)
+			getTopicDetail(options.id),
+			countTopic()
 		])
 	} catch (error) {
 		console.error('加载失败:', error)
@@ -43,6 +44,17 @@ onLoad(async (options) => {
 		uni.hideLoading()
 	}
 })
+
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+// 计算用户刷题次数
+const countTopic = async () => {
+	await apiCountTopic({
+		topicId: currentTopicId.value,
+		subjectId: currentSubjectId.value,
+		nickname: userInfo.nickname
+	})
+}
 
 // 当前题目列表详情
 const subjcetDetail = ref({})
@@ -320,13 +332,14 @@ const goToTopic = (item) => {
 }
 
 :deep(.list-item.active) {
-  .uni-list-item {
-    background-color: rgba(22, 119, 255, 0.1);
-  }
-  .title {
-    color: #1677ff;
-    font-weight: bold;
-  }
+	.uni-list-item {
+		background-color: rgba(22, 119, 255, 0.1);
+	}
+
+	.title {
+		color: #1677ff;
+		font-weight: bold;
+	}
 }
 
 
