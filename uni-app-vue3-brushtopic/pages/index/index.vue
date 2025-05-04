@@ -25,7 +25,7 @@
 					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第3名 / 总3人</text>
 				</view>
 				<uni-icons type="arrow-right" size="24" :color="getTextColor" class="clickable-icon"></uni-icons>
-				<image class="rank-img" src="../../common/image/zzjb.png" mode="aspectFill"></image>
+				<image class="rank-img" src="../../static/images/zzjb.png" mode="aspectFill"></image>
 			</view>
 		</view>
 		<!-- 每日必刷 -->
@@ -61,14 +61,13 @@
 </template>
 
 <script setup>
-import Java from '../../common/image/java.png'
 import {
 	ref, computed
 } from 'vue'
 
-const avatarList = ref([{
-	url: Java
-}])
+// const avatarList = ref([{
+// 	url: Java
+// }])
 // 点击了排名
 const tapRanking = () => {
 	uni.navigateTo({

@@ -163,7 +163,7 @@ const showFeedback = ref(false)
 
 		<!-- 联系我们的弹层 -->
 		<uni-popup ref="contactUsPopup" background-color="#fff">
-			<image src="../../common/image/ewm.png" class="image-style" mode="aspectFill"></image>
+			<image src="../../static/images/qq.png" class="image-style" mode="aspectFill"></image>
 		</uni-popup>
 
 		<!-- 意见反馈的弹层 -->

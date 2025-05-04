@@ -5,7 +5,6 @@
 	import {
 		toast
 	} from '../../uni_modules/uv-ui-tools/libs/function';
-	import AiAvatar from '../../common/image/ai-icon.png'
 	// 输入给ai的对话
 	const aiValue = ref('')
 	// 是否发送
@@ -57,18 +56,18 @@
 			<uv-input placeholder="对话" class="ai-input" v-model="aiValue">
 				<!-- vue3模式下必须使用v-slot:prefix -->
 				<template v-slot:prefix>
-					<image src="../../common/image/ai-icon.png" mode="aspectFill" style="width: 40rpx;height: 40rpx;">
-					</image>
+					<!-- <image src="../../common/image/ai-icon.png" mode="aspectFill" style="width: 40rpx;height: 40rpx;"> -->
+					<!-- </image> -->
 				</template>
 				<template v-slot:suffix>
 					<!-- 发送 -->
-					<image v-if="!isSend" @click="dialogue()" src="../../common/image/ai-send.png" mode="aspectFill"
+					<!-- <image v-if="!isSend" @click="dialogue()" src="../../common/image/ai-send.png" mode="aspectFill"
 						style="width: 76rpx;height: 76rpx;">
-					</image>
+					</image> -->
 					<!-- 取消发送 -->
-					<image v-else @click="cancelDialogue()" src="../../common/image/stop.png" mode="aspectFill"
+					<!-- <image v-else @click="cancelDialogue()" src="../../common/image/stop.png" mode="aspectFill"
 						style="width: 76rpx;height: 76rpx;">
-					</image>
+					</image> -->
 				</template>
 			</uv-input>
 		</view>
@@ -78,8 +77,8 @@
 			<uv-input placeholder="搜索我的历史" class="ai-input" v-model="aiValue">
 				<!-- vue3模式下必须使用v-slot:prefix -->
 				<template v-slot:prefix>
-					<image src="../../common/image/ai-icon.png" mode="aspectFill" style="width: 40rpx;height: 40rpx;">
-					</image>
+					<!-- <image src="../../common/image/ai-icon.png" mode="aspectFill" style="width: 40rpx;height: 40rpx;">
+					</image> -->
 				</template>
 				<template v-slot:suffix>
 					<uni-icons type="contact" color="#00a0e9" size="38"></uni-icons>
