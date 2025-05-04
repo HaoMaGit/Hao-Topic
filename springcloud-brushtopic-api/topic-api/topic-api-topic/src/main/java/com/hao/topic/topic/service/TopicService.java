@@ -2,6 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.dto.topic.TopicRecordCountDto;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.TopicExcelExport;
 import com.hao.topic.model.vo.topic.TopicAnswerVo;
@@ -49,5 +50,7 @@ public interface TopicService {
     void collection(Long id);
 
     List<TopicCollectionVo> collectionList();
+
+    void count(TopicRecordCountDto topicRecordCountDto);
 
 }

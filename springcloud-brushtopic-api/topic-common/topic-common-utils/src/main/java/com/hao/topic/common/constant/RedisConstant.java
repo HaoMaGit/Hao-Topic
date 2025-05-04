@@ -24,4 +24,8 @@ public class RedisConstant {
 
     // 题目收藏的key
     public static final String USER_COLLECTIONS_PREFIX = "user:collections:";
+    // 刷题次数排行榜的key
+    public static final String TOPIC_RANK_PREFIX = "topic:rank";
+    // 题目统计次数的key
+    public static final String TOPIC_COUNT_PREFIX = "topic:count:";
 }

@@ -17,6 +17,7 @@ import com.hao.topic.model.dto.audit.TopicAudit;
 import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.dto.topic.TopicRecordCountDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
@@ -62,6 +63,7 @@ public class TopicServiceImpl implements TopicService {
     private final RabbitService rabbitService;
     private final StringRedisTemplate stringRedisTemplate;
     private final TopicCollectionMapper topicCollectionMapper;
+    private final TopicRecordMapper topicRecordMapper;
 
     /**
      * 查询题目列表
@@ -1350,6 +1352,7 @@ public class TopicServiceImpl implements TopicService {
         return topicCollectionVos;
     }
 
+
     /**
      * 是否有收藏key
      *
@@ -1388,4 +1391,46 @@ public class TopicServiceImpl implements TopicService {
         return result;
     }
 
+
+    /**
+     * 计算用户刷题次数
+     */
+    public void count(TopicRecordCountDto topicRecordCountDto) {
+        // 校验参数
+        if (topicRecordCountDto.getTopicId() == null || topicRecordCountDto.getSubjectId() == null) {
+            return;
+        }
+        // 当前登录id
+        Long userId = SecurityUtils.getCurrentId();
+        String currentName;
+        // 判断当前名称
+        if (StringUtils.isEmpty(topicRecordCountDto.getNickname())) {
+            // 获取当前登录名称
+            currentName = SecurityUtils.getCurrentName();
+        } else {
+            currentName = topicRecordCountDto.getNickname();
+        }
+        // 查询记录表
+        LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicRecordLambdaQueryWrapper.eq(TopicRecord::getTopicId, topicRecordCountDto.getTopicId());
+        TopicRecord topicRecord = topicRecordMapper.selectOne(topicRecordLambdaQueryWrapper);
+        if (topicRecord == null) {
+            // 插入到redis中
+            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_PREFIX, currentName + "&" + userId, 1);
+            // 说明是第一次
+            topicRecord = new TopicRecord();
+            topicRecord.setTopicId(topicRecordCountDto.getTopicId());
+            topicRecord.setSubjectId(topicRecordCountDto.getSubjectId());
+            topicRecord.setCount(1L);
+            topicRecord.setUserId(userId);
+            topicRecord.setNickname(currentName);
+            topicRecordMapper.insert(topicRecord);
+        } else {
+            // 更新分值
+            stringRedisTemplate.opsForZSet().incrementScore(RedisConstant.TOPIC_RANK_PREFIX, currentName + "&" + userId, 1);
+            // 不是第一次刷这个题目
+            topicRecord.setCount(topicRecord.getCount() + 1);
+            topicRecordMapper.updateById(topicRecord);
+        }
+    }
 }

@@ -5,10 +5,7 @@ import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.common.security.utils.SecurityUtils;
-import com.hao.topic.model.dto.topic.TopicCategoryDto;
-import com.hao.topic.model.dto.topic.TopicCategoryListDto;
-import com.hao.topic.model.dto.topic.TopicDto;
-import com.hao.topic.model.dto.topic.TopicListDto;
+import com.hao.topic.model.dto.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.model.vo.topic.TopicAnswerVo;
@@ -231,5 +228,15 @@ public class TopicController {
         List<TopicCollectionVo> topicCollectionVos = topicService.collectionList();
         return Result.success(topicCollectionVos);
     }
+
+    /**
+     * 计算用户刷题次数
+     */
+    @PostMapping("/count")
+    public Result count(@RequestBody TopicRecordCountDto topicRecordCountDto) {
+        topicService.count(topicRecordCountDto);
+        return Result.success();
+    }
+
 
 }
