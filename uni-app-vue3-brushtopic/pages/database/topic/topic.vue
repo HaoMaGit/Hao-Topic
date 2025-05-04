@@ -198,13 +198,20 @@ const nextTopic = () => {
 	})
 }
 
+// 题目列表跳转
+const goToTopic = (item) => {
+	uni.redirectTo({
+		url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${currentSubjectId.value}`
+	})
+}
 </script>
 <template>
 	<!-- 题目列表 -->
 	<uni-drawer ref="showRight" mode="right" width="260">
 		<scroll-view class="scroll-view-box" scroll-y="true" style="height: 100vh;">
 			<uni-list>
-				<uni-list-item class="item" showArrow v-for="item in subjcetDetail" clickable @click="goToTopic(item)">
+				<uni-list-item class="list-item" :class="{ 'active': item.id == currentTopicId }" showArrow
+					v-for="item in subjcetDetail" clickable @click="goToTopic(item)">
 					<template #header>
 						<span class="title">{{ item.topicName }}</span>
 					</template>
@@ -311,6 +318,17 @@ const nextTopic = () => {
 	/* 控制显示两行 */
 	overflow: hidden;
 }
+
+:deep(.list-item.active) {
+  .uni-list-item {
+    background-color: rgba(22, 119, 255, 0.1);
+  }
+  .title {
+    color: #1677ff;
+    font-weight: bold;
+  }
+}
+
 
 .topic-box {
 
