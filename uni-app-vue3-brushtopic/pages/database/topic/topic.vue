@@ -59,7 +59,8 @@ const getTopicList = async (subjectId) => {
 			const index = res.data.topicNameVos.findIndex(item => item.id === currentTopicId)
 			currentIndex.value = index !== -1 ? index + 1 : 1
 		}
-	}
+	}        
+
 }
 // 题目详情
 const topicDetail = ref({})
@@ -67,6 +68,7 @@ const topicDetail = ref({})
 const getTopicDetail = async (id) => {
 	const res = await apiQueryTopicDetail(id)
 	topicDetail.value = res.data
+	isCollected.value = res.data.isCollected
 }
 
 // tab标签页
@@ -129,7 +131,6 @@ const handleFeedbackSubmit = () => {
 
 // 收藏状态
 const isCollected = ref(false)
-
 // 收藏题目
 const handleCollect = async () => {
 	try {
@@ -190,8 +191,7 @@ const nextQuestion = () => {
 					</view>
 					<view class="star-box" @click="handleCollect">
 						<!-- 收藏 -->
-						<uni-icons :type="isCollected ? 'star-filled' : 'star'" color="#1677ff"
-							size="24"></uni-icons>
+						<uni-icons :type="isCollected ? 'star-filled' : 'star'" color="#1677ff" size="24"></uni-icons>
 					</view>
 				</view>
 			</view>
