@@ -11,3 +11,12 @@ const prefix = '/topic/topic/'
  */
 export const apiQueryTopicDetail = (id) =>
   request(prefix + 'detail/' + id)
+
+
+
+/**
+ * 获取答案
+ */
+
+export const apiQueryTopicAnswer = (id) =>
+  request(prefix + 'answer/' + id)

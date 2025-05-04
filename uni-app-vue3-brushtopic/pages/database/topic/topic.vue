@@ -6,8 +6,8 @@ import {
 	onLoad
 } from '@dcloudio/uni-app'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
-import { apiQueryTopicDetail } from '@/api/topic/topic'
-onLoad((options) => {
+import { apiQueryTopicDetail, apiQueryTopicAnswer } from '@/api/topic/topic'
+onLoad(async (options) => {
 	// 获取路径参数
 	console.log(options.name);
 	console.log(options.id);
@@ -17,12 +17,26 @@ onLoad((options) => {
 	uni.setNavigationBarTitle({
 		title: options.name
 	})
+	// 显示加载提示
 	uni.showLoading({
 		title: '加载中...',
+		mask: true
 	})
-	getTopicList(options.subjectId)
-	getTopicDetail(options.id)
-	uni.hideLoading()
+	try {
+		// 并行请求数据
+		await Promise.all([
+			getTopicList(options.subjectId),
+			getTopicDetail(options.id)
+		])
+	} catch (error) {
+		console.error('加载失败:', error)
+		uni.showToast({
+			title: '加载失败，请重试',
+			icon: 'none'
+		})
+	} finally {
+		uni.hideLoading()
+	}
 })
 // 当前题目列表详情
 const subjcetDetail = ref({})
@@ -52,19 +66,42 @@ const getTopicDetail = async (id) => {
 	const res = await apiQueryTopicDetail(id)
 	topicDetail.value = res.data
 }
+
 // tab标签页
 const isTabs = ref(true)
 // 是否点击了查看
 const isShowAnswer = ref(false)
+// 题目答案对象
+const answer = ref({
+	answer: null,
+	aiAnswer: null
+})
 // 查看答案
-const showAnswer = () => {
+const showAnswer = async () => {
 	// 获取题目答案
+	const res = await apiQueryTopicAnswer(currentTopicId.value)
+	answer.value = res.data
+	if (isTabs.value) {
+		markDownContent.value = res.data.answer
+	} else {
+		markDownContent.value = res.data.aiAnswer
+	}
+	// 显示
 	isShowAnswer.value = true
 }
 // 答案
-const markDownContent = ref(
-	'String内部维护的是private final char byte数组， 不可变线程安全 好处 防止被恶意篡改 作为HashMap的key可以保证不可变性 可以实现字符串常量池， 在Java中， 创建字符串对象的方式 通过字符串常量进行创建 在字符串常量池判断是否存在， 如果存在就返回， 不存在就在字符串常量池创建后返回 通过new字符串对象进行创建 在字符串常量池中判断是否存在， 如果不存在就创建， 再判断堆中是否存在， 如果不存在就创建， 然后返回该对象， 总之要保证字符串常量池和堆中都有该对象 String、 StringBuilder、 StringBuffer的区别 String内部维护的是private final char'
-)
+const markDownContent = ref()
+// tab点击事件
+const handleTabs = () => {
+	isTabs.value = !isTabs.value
+	if (isTabs.value) {
+		markDownContent.value = answer.value.answer
+	} else {
+		markDownContent.value = answer.value.aiAnswer
+	}
+}
+
+
 // 题目列表遮罩
 const showRight = ref()
 // 下一题
@@ -110,10 +147,10 @@ const nextQuestion = () => {
 			<view class="topic-bottom">
 				<!-- 标签页 -->
 				<view class="tab-box">
-					<view :class="{ 'tab-one': true, 'active-tab-box': isTabs }" @click="isTabs = true">
+					<view :class="{ 'tab-one': true, 'active-tab-box': isTabs }" @click="handleTabs">
 						精简答案
 					</view>
-					<view :class="{ 'tab-one': true, 'active-tab-box': !isTabs }" @click="isTabs = false">
+					<view :class="{ 'tab-one': true, 'active-tab-box': !isTabs }" @click="handleTabs">
 						AI答案
 					</view>
 				</view>
@@ -126,7 +163,8 @@ const nextQuestion = () => {
 					<!-- 答案显示区域 -->
 					<view v-else class="answer-box">
 						<!-- 默认用法 直接传入md文本即可-->
-						<zero-markdown-view :markdown="markDownContent"></zero-markdown-view>
+						<zero-markdown-view v-if="markDownContent" :markdown="markDownContent"></zero-markdown-view>
+						<uv-empty v-else text="系统正在完善题目答案哦～" icon="../../../static/images/empty.png"></uv-empty>
 					</view>
 				</view>
 			</view>
@@ -164,7 +202,7 @@ const nextQuestion = () => {
 			</view>
 		</view>
 	</view>
-	<uv-empty v-else text="系统正在完善题目信息哦～" icon="../../static/images/empty.png"></uv-empty>
+	<uv-empty v-else text="系统正在完善题目信息哦～" icon="../../../static/images/empty.png"></uv-empty>
 </template>
 <style lang="scss" scoped>
 .title {
