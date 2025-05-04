@@ -11,6 +11,9 @@ import java.util.List;
  */
 @Data
 public class TopicDetailVo {
+
     private String topicName;
+    private Integer isMember;
     List<String> labelNames;
+
 }

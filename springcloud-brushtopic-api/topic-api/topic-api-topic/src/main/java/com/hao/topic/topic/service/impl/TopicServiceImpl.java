@@ -1155,8 +1155,28 @@ public class TopicServiceImpl implements TopicService {
      * @return
      */
     public TopicAnswerVo getAnswer(Long id) {
-        if(id == null){
+        if (id == null) {
             throw new TopicException(ResultCodeEnum.TOPIC_ANSWER_NOT_EXIST);
+        }
+        // 获取当前身份
+        String account = SecurityUtils.getCurrentName();
+        // 是会员和管理员才能查看答案
+        Topic topic = topicMapper.selectById(id);
+        if (topic == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_ANSWER_NOT_EXIST);
+        }
+        if (topic.getIsMember() == 1) {
+            if (account.equals("member") || account.equals("admin")) {
+                TopicAnswerVo topicAnswerVo = new TopicAnswerVo();
+                BeanUtils.copyProperties(topic, topicAnswerVo);
+                return topicAnswerVo;
+            } else {
+                throw new TopicException(ResultCodeEnum.TOPIC_MEMBER_ERROR);
+            }
+        } else {
+            TopicAnswerVo topicAnswerVo = new TopicAnswerVo();
+            BeanUtils.copyProperties(topic, topicAnswerVo);
+            return topicAnswerVo;
         }
     }
 
