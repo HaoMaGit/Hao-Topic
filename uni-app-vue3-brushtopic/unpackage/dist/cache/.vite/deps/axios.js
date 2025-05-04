@@ -1,8 +1,6 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all3) => {
-  for (var name in all3)
-    __defProp(target, name, { get: all3[name], enumerable: true });
-};
+import {
+  __export
+} from "./chunk-P2LSHJDD.js";
 
 // E:/FullStackDemo/豪AI刷题/topic/uni-app-vue3-brushtopic/node_modules/axios/lib/helpers/bind.js
 function bind(fn, thisArg) {

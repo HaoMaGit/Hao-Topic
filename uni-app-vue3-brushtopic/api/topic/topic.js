@@ -28,3 +28,10 @@ export const apiQueryTopicAnswer = (id) =>
 
 export const apiCollectionTopic = (id) =>
   request(prefix + 'collection/' + id)
+
+
+/**
+    * 查询收藏的题目
+    */
+export const apiQueryCollectionTopicList = () =>
+  request(prefix + 'collection/list')

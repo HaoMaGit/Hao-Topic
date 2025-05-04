@@ -1,21 +1,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { apiQueryCollectionTopicList } from '@/api/topic/topic'
+import dyajs from 'dayjs'
 
 const favoriteList = ref([
-  {
-    id: 1,
-    title: '你认为Java的优势是什么？',
-    tags: ['Java', 'JavaSE', 'MySQL'],
-    difficulty: 'medium',
-    createTime: '2024-01-20 12:20'
-  },
-  {
-    id: 2,
-    title: '如何在Java中处理日期和时间？',
-    tags: ['Java', 'JavaSE',],
-  }
 ])
+
+const getFavoriteList = () => {
+  apiQueryCollectionTopicList().then(res => {
+    favoriteList.value = res.data
+  })
+}
+
+onMounted(() => {
+  getFavoriteList()
+})
 </script>
 
 <template>
@@ -25,17 +24,19 @@ const favoriteList = ref([
         <view class="list-item" v-for="item in favoriteList" :key="item.id">
           <view class="item-content">
             <view class="item-right">
-              <text class="title">{{ item.title }}</text>
+              <text class="title">{{ item.topicName }}</text>
               <uni-icons type="star-filled" size="20" color="#1677ff"></uni-icons>
             </view>
             <view class="info-row">
               <view class="tags-row">
-                <view class="tag" v-for="(tag, index) in item.tags" :key="index">
+                <view class="tag" v-for="(tag, index) in item.labelNames" :key="index">
                   {{ tag }}
                 </view>
               </view>
               <view class="time-box">
-                <text class="time">{{ item.createTime || '2024-01-20' }}</text>
+                <text class="time">{{ dyajs(item.collectionTime).format(
+                  'YYYY-MM-DD HH:mm:ss'
+                ) }}</text>
               </view>
             </view>
           </view>

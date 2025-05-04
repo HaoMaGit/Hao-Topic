@@ -1,15 +1,25 @@
 {
-  "hash": "4c69f124",
+  "hash": "8dabbc42",
   "configHash": "ba3c5d20",
-  "lockfileHash": "6ad2e4a6",
-  "browserHash": "627669db",
+  "lockfileHash": "4b317c5e",
+  "browserHash": "6ff87a35",
   "optimized": {
     "axios": {
       "src": "../../../../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "bf454472",
+      "fileHash": "3ebcbefc",
       "needsInterop": false
+    },
+    "dayjs": {
+      "src": "../../../../../node_modules/dayjs/dayjs.min.js",
+      "file": "dayjs.js",
+      "fileHash": "48e0533f",
+      "needsInterop": true
     }
   },
-  "chunks": {}
+  "chunks": {
+    "chunk-P2LSHJDD": {
+      "file": "chunk-P2LSHJDD.js"
+    }
+  }
 }
