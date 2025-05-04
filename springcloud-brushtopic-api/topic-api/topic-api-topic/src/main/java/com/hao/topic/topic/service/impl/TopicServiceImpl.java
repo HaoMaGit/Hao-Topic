@@ -1159,14 +1159,14 @@ public class TopicServiceImpl implements TopicService {
             throw new TopicException(ResultCodeEnum.TOPIC_ANSWER_NOT_EXIST);
         }
         // 获取当前身份
-        String account = SecurityUtils.getCurrentName();
+        String role = SecurityUtils.getCurrentRole();
         // 是会员和管理员才能查看答案
         Topic topic = topicMapper.selectById(id);
         if (topic == null) {
             throw new TopicException(ResultCodeEnum.TOPIC_ANSWER_NOT_EXIST);
         }
         if (topic.getIsMember() == 1) {
-            if (account.equals("member") || account.equals("admin")) {
+            if (role.equals("member") || role.equals("admin")) {
                 TopicAnswerVo topicAnswerVo = new TopicAnswerVo();
                 BeanUtils.copyProperties(topic, topicAnswerVo);
                 return topicAnswerVo;

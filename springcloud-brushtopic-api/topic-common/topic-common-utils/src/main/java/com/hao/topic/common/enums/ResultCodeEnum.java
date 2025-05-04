@@ -90,7 +90,7 @@ public enum ResultCodeEnum {
     FEEDBACK_NOT_EXIST(99949, "反馈记录不存在"),
 
     TOPIC_ANSWER_NOT_EXIST(99950, "题目答案不存在"),
-    TOPIC_MEMBER_ERROR(99951, "该题目需要会员才能查看哦");
+    TOPIC_MEMBER_ERROR(99951, "该题目答案需要会员才能查看哦");
 
     private Integer code;
     private String message;
