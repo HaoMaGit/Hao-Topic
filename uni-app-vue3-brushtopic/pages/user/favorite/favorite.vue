@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiQueryCollectionTopicList } from '@/api/topic/topic'
-import dyajs from 'dayjs'
 
 // 收藏列表
 const favoriteList = ref([
@@ -41,7 +40,7 @@ onMounted(() => {
 
 <template>
   <view class="favorite">
-    <view class="favorite-container">
+    <view class="favorite-container" v-if="favoriteList && favoriteList.length !== 0">
       <view class="list-wrapper">
         <view class="list-item" v-for="item in favoriteList" :key="item.id">
           <view class="item-content">
@@ -56,15 +55,14 @@ onMounted(() => {
                 </view>
               </view>
               <view class="time-box">
-                <text class="time">{{ dyajs(item.collectionTime).format(
-                  'YYYY-MM-DD HH:mm:ss'
-                ) }}</text>
+                <text class="time">{{ item.collectionTime }}</text>
               </view>
             </view>
           </view>
         </view>
       </view>
     </view>
+    <uv-empty v-else text="还没有收藏题目哦～" icon="../../../static/images/empty.png"></uv-empty>
   </view>
 </template>
 

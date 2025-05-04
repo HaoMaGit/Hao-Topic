@@ -7,6 +7,8 @@ import {
 } from '@dcloudio/uni-app'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
 import { apiQueryTopicDetail, apiQueryTopicAnswer, apiCollectionTopic } from '@/api/topic/topic'
+import { apiSendFeedback } from '@/api/system/feedback'
+
 // 添加导入
 import FeedbackPopup from '@/components/feedbackPopup.vue'
 onLoad(async (options) => {
@@ -125,11 +127,16 @@ const handleTabs = () => {
 
 // 反馈弹窗显示状态
 const showFeedback = ref(false)
-// TODO  提交反馈
-const handleFeedbackSubmit = () => {
+//  提交反馈
+const handleFeedbackSubmit = async (content) => {
+	await apiSendFeedback({
+		feedbackContent: "题目" + currentTopicId.value + ":" + content,
+		status: 3
+	})
 	uni.showToast({
-		title: '提交成功',
-		icon: 'none'
+		title: '反馈成功可在我的反馈中查看',
+		icon: 'none',
+		duration: 2000
 	})
 }
 
@@ -157,8 +164,9 @@ const handleCollect = async () => {
 // 题目列表遮罩
 const showRight = ref()
 // 下一题
-const nextQuestion = () => {
+const nextQuestion = async (content) => {
 	// 更新题目的内容重新调用获取题目的接口
+
 }
 
 

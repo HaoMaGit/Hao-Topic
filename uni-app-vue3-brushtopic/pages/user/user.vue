@@ -86,7 +86,8 @@ const contactUs = () => {
 // 点击了提交
 const handleFeedbackSubmit = async (content) => {
 	await apiSendFeedback({
-		feedbackContent: content
+		feedbackContent: content,
+		status: 2
 	})
 	uni.showToast({
 		title: '反馈成功可在我的反馈中查看',

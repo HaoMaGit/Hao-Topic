@@ -2,18 +2,24 @@
   "hash": "8dabbc42",
   "configHash": "ba3c5d20",
   "lockfileHash": "4b317c5e",
-  "browserHash": "6ff87a35",
+  "browserHash": "b70fef9b",
   "optimized": {
     "axios": {
       "src": "../../../../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "3ebcbefc",
+      "fileHash": "7423dae7",
       "needsInterop": false
     },
     "dayjs": {
       "src": "../../../../../node_modules/dayjs/dayjs.min.js",
       "file": "dayjs.js",
-      "fileHash": "48e0533f",
+      "fileHash": "bb1f3bef",
+      "needsInterop": true
+    },
+    "dayjs/plugin/utc": {
+      "src": "../../../../../node_modules/dayjs/plugin/utc.js",
+      "file": "dayjs_plugin_utc.js",
+      "fileHash": "899bb757",
       "needsInterop": true
     }
   },
