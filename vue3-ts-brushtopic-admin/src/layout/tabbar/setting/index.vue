@@ -104,7 +104,8 @@ const getClassName = (status: number) => {
   const map = <any>{
     0: 'member',
     1: 'feedback',
-    2: 'reply'
+    2: 'reply',
+    3: 'topic',
   }
   return map[status] || 'member'
 }
@@ -113,7 +114,8 @@ const getType = (status: number) => {
   const map = <any>{
     0: '会员支付',
     1: '意见反馈',
-    2: '回复内容'
+    2: '回复内容',
+    3: '题目反馈'
   }
   return map[status] || '会员'
 }
@@ -381,6 +383,11 @@ onMounted(() => {
     &.reply {
       background-color: #f0fff0; // 浅绿色背景
       color: #52c41a; // 清新的绿色文字
+    }
+
+    &.topic {
+      background-color: #f3e8ff;
+      color: #7e3af2;
     }
 
   }

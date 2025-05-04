@@ -19,6 +19,7 @@ import { message, Modal } from 'ant-design-vue';
 import FileSaver from 'file-saver'
 import type { UploadChangeParam } from 'ant-design-vue';
 import { useUserStore } from '@/stores/modules/user';
+import MyEditor from './MyEditor.vue'
 const userStore = useUserStore()
 // 获取上传路径
 const { VITE_SERVE } = import.meta.env
@@ -496,6 +497,11 @@ const handleGenerateAnswer = (id: number) => {
 }
 
 
+// 更新富文本编辑器内容
+const update = (content: string) => {
+  formData.value.answer = content
+};
+
 
 onMounted(() => {
   getTopicTopicList()
@@ -599,13 +605,14 @@ onMounted(() => {
     </a-table>
 
     <!-- 新增和修改 -->
-    <a-drawer :title="drawerTitle" placement="right" v-model:open="drawer" @close="onClose">
+    <a-drawer :title="drawerTitle" size="large" placement="right" v-model:open="drawer" @close="onClose">
       <a-form ref="formRef" :model="formData" :rules="rules" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
         <a-form-item label="题目名称" name="topicName">
           <a-input v-model:value="formData.topicName" placeholder="请输入题目名称" />
         </a-form-item>
         <a-form-item label="题目答案" name="answer">
-          <a-textarea :auto-size="{ minRows: 3, maxRows: 8 }" v-model:value="formData.answer" placeholder="请输入题目答案" />
+          <MyEditor :content="formData.answer" @update="update" />
+          <!-- <a-textarea :auto-size="{ minRows: 3, maxRows: 8 }" v-model:value="formData.answer" placeholder="请输入题目答案" /> -->
         </a-form-item>
         <a-form-item label="题目专题" name="subjectId">
           <a-select placeholder="请选择专题" v-model:value="formData.subjectId" show-search :options="subjectNameAndId">
