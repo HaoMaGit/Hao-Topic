@@ -55,6 +55,7 @@ public class TopicServiceImpl implements TopicService {
     private final TopicLabelTopicMapper topicLabelTopicMapper;
     private final RabbitService rabbitService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final TopicCollectionMapper topicCollectionMapper;
 
     /**
      * 查询题目列表
@@ -1177,6 +1178,55 @@ public class TopicServiceImpl implements TopicService {
             TopicAnswerVo topicAnswerVo = new TopicAnswerVo();
             BeanUtils.copyProperties(topic, topicAnswerVo);
             return topicAnswerVo;
+        }
+    }
+
+    /**
+     * 收藏和取消收藏题目
+     *
+     * @param id
+     */
+    public void collection(Long id) {
+        if (id == null) {
+            throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
+        }
+        Long userId = SecurityUtils.getCurrentId(); // 获取当前用户ID
+
+        // 查询是否已收藏
+        LambdaQueryWrapper<TopicCollection> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TopicCollection::getTopicId, id)
+                .eq(TopicCollection::getUserId, userId);
+
+        // 查询是否有不去查数据
+        Long count = topicCollectionMapper.selectCount(wrapper);
+
+        if (count > 0) {
+            // 已收藏，执行取消收藏
+            int delete = topicCollectionMapper.delete(wrapper);
+            if (delete <= 0) {
+                throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
+            }
+            try {
+                // 同步更新Redis缓存
+                stringRedisTemplate.opsForZSet().remove(RedisConstant.USER_COLLECTIONS_PREFIX + userId, String.valueOf(id));
+            } catch (Exception e) {
+                throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
+            }
+        } else {
+            // 未收藏，执行收藏
+            TopicCollection newCollection = new TopicCollection();
+            newCollection.setTopicId(id);
+            newCollection.setUserId(userId);
+            int insert = topicCollectionMapper.insert(newCollection);
+            if (insert <= 0) {
+                throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
+            }
+            try {
+                // 同步更新Redis缓存
+                stringRedisTemplate.opsForZSet().add(RedisConstant.USER_COLLECTIONS_PREFIX + userId, String.valueOf(id), System.currentTimeMillis());
+            } catch (Exception e) {
+                throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
+            }
         }
     }
 

@@ -213,4 +213,13 @@ public class TopicController {
         return Result.success(topicAnswerVo);
     }
 
+    /**
+     * 根据题目id收藏题目
+     */
+    @GetMapping("/collection/{id}")
+    public Result collection(@PathVariable Long id) {
+        topicService.collection(id);
+        return Result.success();
+    }
+
 }

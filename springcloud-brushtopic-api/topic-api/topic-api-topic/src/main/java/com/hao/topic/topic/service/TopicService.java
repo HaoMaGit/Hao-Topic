@@ -44,4 +44,6 @@ public interface TopicService {
     TopicDetailVo detail(Long id);
 
     TopicAnswerVo getAnswer(Long id);
+
+    void collection(Long id);
 }

@@ -21,4 +21,7 @@ public class RedisConstant {
     public static final String SUBJECT_AUDIT_KEY_PREFIX = "subject:audit:";
     // 审核过期时间
     public static final Long AUDIT_EXPIRE_TIME = 5L;
+
+    // 题目收藏的key
+    public static final String USER_COLLECTIONS_PREFIX = "user:collections:";
 }
