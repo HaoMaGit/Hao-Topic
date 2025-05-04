@@ -18,3 +18,4 @@ export const apiQuerySubjectList = (categoryId) =>
 
 export const apiQuerySubjectDetail = (id) =>
   request(prefix + 'subjectDetail/' + id)
+

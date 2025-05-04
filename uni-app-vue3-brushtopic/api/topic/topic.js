@@ -20,3 +20,11 @@ export const apiQueryTopicDetail = (id) =>
 
 export const apiQueryTopicAnswer = (id) =>
   request(prefix + 'answer/' + id)
+
+
+/**
+ * 根据题目id收藏题目
+ */
+
+export const apiCollectionTopic = (id) =>
+  request(prefix + 'collection/' + id)

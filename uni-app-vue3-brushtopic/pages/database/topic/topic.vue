@@ -6,7 +6,7 @@ import {
 	onLoad
 } from '@dcloudio/uni-app'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
-import { apiQueryTopicDetail, apiQueryTopicAnswer } from '@/api/topic/topic'
+import { apiQueryTopicDetail, apiQueryTopicAnswer, apiCollectionTopic } from '@/api/topic/topic'
 // 添加导入
 import FeedbackPopup from '@/components/feedbackPopup.vue'
 onLoad(async (options) => {
@@ -119,12 +119,34 @@ const handleTabs = () => {
 
 // 反馈弹窗显示状态
 const showFeedback = ref(false)
-// 提交反馈
+// TODO  提交反馈
 const handleFeedbackSubmit = () => {
 	uni.showToast({
 		title: '提交成功',
 		icon: 'none'
 	})
+}
+
+// 收藏状态
+const isCollected = ref(false)
+
+// 收藏题目
+const handleCollect = async () => {
+	try {
+		const res = await apiCollectionTopic(currentTopicId.value)
+		if (res.code === 200) {
+			isCollected.value = !isCollected.value
+			uni.showToast({
+				title: isCollected.value ? '收藏成功' : '取消收藏',
+				icon: 'success'
+			})
+		}
+	} catch (error) {
+		uni.showToast({
+			title: '操作失败，请重试',
+			icon: 'none'
+		})
+	}
 }
 
 // 题目列表遮罩
@@ -166,9 +188,10 @@ const nextQuestion = () => {
 					<view class="tags-row">
 						<view class="tag" v-for="(tag, index) in topicDetail.labelNames" :key="index">{{ tag }}</view>
 					</view>
-					<view class="star-box">
+					<view class="star-box" @click="handleCollect">
 						<!-- 收藏 -->
-						<uni-icons type="star" :color="'#1677ff'" size="24"></uni-icons>
+						<uni-icons :type="isCollected ? 'star-filled' : 'star'" color="#1677ff"
+							size="24"></uni-icons>
 					</view>
 				</view>
 			</view>
@@ -288,6 +311,12 @@ const nextQuestion = () => {
 
 			.star-box {
 				display: flex;
+				cursor: pointer;
+				transition: transform 0.2s;
+
+				&:active {
+					transform: scale(0.9);
+				}
 			}
 		}
 	}
