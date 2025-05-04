@@ -4,15 +4,16 @@ import {
 } from 'vue'
 import Java from '../../common/image/java.png'
 import { apiQueryCategoryList } from '@/api/topic/category.js'
+import { apiQuerySubjectList } from '@/api/topic/subject.js'
 const activeIndex = ref(0)
-const handlerMenu = (index) => {
+// 菜单点击
+const handlerMenu = (index, id) => {
 	uni.showLoading({
 		title: '加载中'
 	});
 	activeIndex.value = index
-	setTimeout(function () {
-		uni.hideLoading();
-	}, 2000);
+	getSubject(id)
+	uni.hideLoading();
 }
 const value = ref()
 
@@ -28,13 +29,25 @@ const goToSubject = (item) => {
 const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
 // 获取分类名称和id
 const category = ref([])
+// 查询分类数据
 const getCategory = async () => {
 	uni.showLoading({
 		title: '加载中'
 	});
 	const res = await apiQueryCategoryList(isCustomQuestion.value)
 	category.value = res.data
+	if (category.value.length !== 0) {
+		// 查询专题
+		getSubject(category.value[0].id)
+	}
 	uni.hideLoading()
+}
+// 专题数据
+const subject = ref([])
+// 查询专题数据
+const getSubject = async (categoryId) => {
+	const res = await apiQuerySubjectList(categoryId)
+	subject.value = res.data
 }
 
 onMounted(() => {
@@ -52,20 +65,21 @@ onMounted(() => {
 		<view class="menu">
 			<scroll-view class="scroll-view_H" scroll-x="true" :show-scrollbar="false" @scroll="scroll">
 				<span :class="{ 'menu-item': true, 'selected': activeIndex === index }" v-for="(item, index) in category"
-					:key="index" @click="handlerMenu(index)">{{ item.categoryName }}</span>
+					:key="index" @click="handlerMenu(index, item.id)">{{ item.categoryName }}</span>
 			</scroll-view>
 		</view>
 		<!-- 列表区域 -->
 		<view class="list-item">
-			<uni-list>
-				<uni-list-item class="item" showArrow v-for="item in 15" clickable @click="goToSubject(item)">
+			<uni-list v-if="subject && subject.length !== 0">
+				<uni-list-item class="item" showArrow v-for="item in subject" clickable @click="goToSubject(item)">
 					<!-- 使用 slot 插入头像 -->
 					<template #header>
-						<image class="avatar" :src="Java" mode="aspectFill"></image>
-						<span class="title">Java基础面试题</span>
+						<image class="avatar" :src="item.imageUrl" mode="aspectFill"></image>
+						<span class="title">{{ item.subjectName }}</span>
 					</template>
 				</uni-list-item>
 			</uni-list>
+			<uv-empty v-else text="系统正在收录专题数据哦～" icon="../../static/images/empty.png"></uv-empty>
 		</view>
 	</view>
 </template>
@@ -83,7 +97,7 @@ onMounted(() => {
 			.avatar {
 				width: 80rpx;
 				height: 80rpx;
-				border-radius: 30rpx;
+				border-radius: 15rpx;
 			}
 
 			.title {
