@@ -1,8 +1,9 @@
 <script setup>
 import {
-	ref
+	ref, onMounted
 } from 'vue'
 import Java from '../../common/image/java.png'
+import { apiQueryCategoryList } from '@/api/topic/category.js'
 const activeIndex = ref(0)
 const handlerMenu = (index) => {
 	uni.showLoading({
@@ -25,7 +26,20 @@ const goToSubject = (item) => {
 
 // 是否开启会员自定义题目
 const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
+// 获取分类名称和id
+const category = ref([])
+const getCategory = async () => {
+	uni.showLoading({
+		title: '加载中'
+	});
+	const res = await apiQueryCategoryList(isCustomQuestion.value)
+	category.value = res.data
+	uni.hideLoading()
+}
 
+onMounted(() => {
+	getCategory()
+})
 </script>
 <template>
 	<view class="category-box">
@@ -37,8 +51,8 @@ const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
 		<!-- 菜单 -->
 		<view class="menu">
 			<scroll-view class="scroll-view_H" scroll-x="true" :show-scrollbar="false" @scroll="scroll">
-				<span :class="{ 'menu-item': true, 'selected': activeIndex === index }" v-for="(item, index) in 10" :key="index"
-					@click="handlerMenu(index)">Java</span>
+				<span :class="{ 'menu-item': true, 'selected': activeIndex === index }" v-for="(item, index) in category"
+					:key="index" @click="handlerMenu(index)">{{ item.categoryName }}</span>
 			</scroll-view>
 		</view>
 		<!-- 列表区域 -->
