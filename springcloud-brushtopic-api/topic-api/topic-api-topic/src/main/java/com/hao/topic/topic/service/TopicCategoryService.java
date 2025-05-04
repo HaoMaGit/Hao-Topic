@@ -4,6 +4,7 @@ import com.hao.topic.model.dto.topic.TopicCategoryDto;
 import com.hao.topic.model.dto.topic.TopicCategoryListDto;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
+import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,5 +30,7 @@ public interface TopicCategoryService {
     String importExcel(MultipartFile multipartFile, Boolean updateSupport) throws IOException;
 
     void auditCategory(TopicCategory topicCategory);
+
+    List<TopicCategoryVo> category(Boolean isCustomQuestion);
 
 }

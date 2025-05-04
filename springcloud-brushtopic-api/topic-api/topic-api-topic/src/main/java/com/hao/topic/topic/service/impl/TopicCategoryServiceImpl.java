@@ -18,6 +18,7 @@ import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicCategorySubject;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
+import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import com.hao.topic.topic.mapper.TopicCategoryMapper;
 import com.hao.topic.topic.mapper.TopicCategorySubjectMapper;
 import com.hao.topic.topic.service.TopicCategoryService;
@@ -396,5 +397,48 @@ public class TopicCategoryServiceImpl implements TopicCategoryService {
             topicCategory.setFailMsg("");
         }
         topicCategoryMapper.updateById(topicCategory);
+    }
+
+    /**
+     * h5查询分类列表
+     *
+     * @return
+     */
+    public List<TopicCategoryVo> category(Boolean isCustomQuestion) {
+        // 获取创建人
+        String createBy = SecurityUtils.getCurrentName();
+        // 获取当前登录用户角色
+        String role = SecurityUtils.getCurrentRole();
+        // 全部数据
+        List<TopicCategory> topicCategoriesAll = null;
+        // 会员数据
+        List<TopicCategory> topicCategoriesMember = null;
+        // 查公共的数据
+        LambdaQueryWrapper<TopicCategory> objectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        objectLambdaQueryWrapper.eq(TopicCategory::getStatus, StatusEnums.NORMAL.getCode())
+                .eq(TopicCategory::getCreateBy, "admin")
+                .orderByDesc(TopicCategory::getCreateTime);
+        topicCategoriesAll = topicCategoryMapper.selectList(objectLambdaQueryWrapper);
+        if (role.equals("member")) {
+            if (isCustomQuestion) {
+                // 是会员可以查自己专属的
+                // 为true说明开启了可以查自己的
+                LambdaQueryWrapper<TopicCategory> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+                lambdaQueryWrapper.eq(TopicCategory::getStatus, StatusEnums.NORMAL.getCode());
+                lambdaQueryWrapper.orderByDesc(TopicCategory::getCreateTime);
+                lambdaQueryWrapper.eq(TopicCategory::getCreateBy, createBy);
+                topicCategoriesMember = topicCategoryMapper.selectList(lambdaQueryWrapper);
+            }
+        }
+        // 判断会员数据是否为空
+        if (!CollectionUtils.isEmpty(topicCategoriesMember)) {
+            // 不为空将会员数据放在全部数据的前面
+            topicCategoriesAll.addAll(0, topicCategoriesMember);
+        }
+        return topicCategoriesAll.stream().map(topicCategory -> {
+            TopicCategoryVo topicCategoryVo = new TopicCategoryVo();
+            BeanUtils.copyProperties(topicCategory, topicCategoryVo);
+            return topicCategoryVo;
+        }).toList();
     }
 }

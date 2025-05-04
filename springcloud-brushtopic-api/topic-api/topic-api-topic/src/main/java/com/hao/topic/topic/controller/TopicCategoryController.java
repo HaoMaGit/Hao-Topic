@@ -11,6 +11,7 @@ import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcel;
 import com.hao.topic.model.excel.topic.TopicCategoryExcelExport;
+import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import com.hao.topic.topic.service.TopicCategoryService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -145,5 +146,12 @@ public class TopicCategoryController {
         }
     }
 
-
+    /**
+     * h5查询分类名称和id
+     */
+    @GetMapping("/category/{isCustomQuestion}")
+    public Result<List<TopicCategoryVo>> category(@PathVariable Boolean isCustomQuestion) {
+        List<TopicCategoryVo> list = topicCategoryService.category(isCustomQuestion);
+        return Result.success(list);
+    }
 }
