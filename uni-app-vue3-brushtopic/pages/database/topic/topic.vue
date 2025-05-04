@@ -76,18 +76,32 @@ const answer = ref({
 	answer: null,
 	aiAnswer: null
 })
+
+// 当前身份
+const role = ref(uni.getStorageSync('role'))
 // 查看答案
 const showAnswer = async () => {
-	// 获取题目答案
-	const res = await apiQueryTopicAnswer(currentTopicId.value)
-	answer.value = res.data
-	if (isTabs.value) {
-		markDownContent.value = res.data.answer
-	} else {
-		markDownContent.value = res.data.aiAnswer
+	if (topicDetail.value.isMember === 1) {
+		if (role.value == 0) {
+			uni.showToast({
+				title: '该题目答案需要会员才能查看哦',
+				icon: 'error',
+				duration: 2000
+			})
+			return
+		} else {
+			// 获取题目答案
+			const res = await apiQueryTopicAnswer(currentTopicId.value)
+			answer.value = res.data
+			if (isTabs.value) {
+				markDownContent.value = res.data.answer
+			} else {
+				markDownContent.value = res.data.aiAnswer
+			}
+			// 显示
+			isShowAnswer.value = true
+		}
 	}
-	// 显示
-	isShowAnswer.value = true
 }
 // 答案
 const markDownContent = ref()
@@ -157,8 +171,13 @@ const nextQuestion = () => {
 				<!-- 内容区域 -->
 				<view class="topic-answer">
 					<!-- 查看答案的按钮 -->
-					<view v-if="!isShowAnswer" class="show-btn" @click="showAnswer">
-						点击查看答案
+					<view v-if="!isShowAnswer">
+						<view v-if="topicDetail.isMember === 0" class="show-btn" @click="showAnswer">
+							点击查看答案
+						</view>
+						<view v-else class="show-btn vip-btn" @click="showAnswer">
+							开通会员查看答案
+						</view>
 					</view>
 					<!-- 答案显示区域 -->
 					<view v-else class="answer-box">
@@ -282,6 +301,11 @@ const nextQuestion = () => {
 				width: 280rpx;
 				height: 80rpx;
 				background-color: #1677ff;
+
+				&.vip-btn {
+					background: linear-gradient(to right, #FFD700, #FFA500);
+					box-shadow: 0 4rpx 8rpx rgba(255, 215, 0, 0.3);
+				}
 			}
 		}
 	}
