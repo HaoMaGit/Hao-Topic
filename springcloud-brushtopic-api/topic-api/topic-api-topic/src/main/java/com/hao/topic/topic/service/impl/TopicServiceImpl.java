@@ -21,6 +21,7 @@ import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.model.vo.topic.TopicAnswerVo;
+import com.hao.topic.model.vo.topic.TopicCollectionVo;
 import com.hao.topic.model.vo.topic.TopicDetailVo;
 import com.hao.topic.model.vo.topic.TopicVo;
 import com.hao.topic.topic.mapper.*;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -1245,6 +1247,113 @@ public class TopicServiceImpl implements TopicService {
                 throw new TopicException(ResultCodeEnum.TOPIC_COLLECTION_ERROR);
             }
         }
+    }
+
+    /**
+     * 查询收藏的题目列表
+     *
+     * @return
+     */
+    public List<TopicCollectionVo> collectionList() {
+        // 查询是否有收藏
+        boolean userCollectionExists = isUserCollectionExists();
+        if (!userCollectionExists) {
+            return null;
+        }
+
+        // 有收藏，获取所有收藏的题目ID和分值
+        Map<String, Double> topicIdScoreMap = getUserAllCollectionTopicIdsWithScores();
+        if (topicIdScoreMap == null || topicIdScoreMap.isEmpty()) {
+            return null;
+        }
+
+        // 提取题目ID列表用于数据库查询
+        List<Long> topicIds = topicIdScoreMap.keySet().stream()
+                .map(Long::valueOf)
+                .toList();
+
+        // 返回数据
+        List<TopicCollectionVo> topicCollectionVos = new ArrayList<>();
+
+        // 查询题目
+        for (Long topicId : topicIds) {
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper.eq(Topic::getId, topicId);
+            topicLambdaQueryWrapper.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+            Topic topic = topicMapper.selectOne(topicLambdaQueryWrapper);
+            if (topic != null) {
+                TopicCollectionVo topicCollectionVo = new TopicCollectionVo();
+                BeanUtils.copyProperties(topic, topicCollectionVo);
+                // 获取分值
+                Double score = topicIdScoreMap.get(topicId.toString());
+                // 将时间戳转换成日期格式2025:11:20 09:09:09
+                topicCollectionVo.setCollectionTime(new Date(score.longValue()).toString());
+                // 根据题目id查询题目标签题目关系表
+                LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, topicId);
+                List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+                if (CollectionUtils.isEmpty(topicLabelTopics)) {
+                    return null;
+                }
+                // 有标签
+                // 收集所有的id
+                List<Long> labelIds = topicLabelTopics.stream().map(TopicLabelTopic::getLabelId).toList();
+                // 存放标签名称
+                List<String> labelNames = new ArrayList<>();
+                // 查询
+                for (Long labelId : labelIds) {
+                    LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    topicLabelLambdaQueryWrapper.eq(TopicLabel::getId, labelId);
+                    topicLabelLambdaQueryWrapper.eq(TopicLabel::getStatus, StatusEnums.NORMAL.getCode());
+                    topicLabelLambdaQueryWrapper.orderByDesc(TopicLabel::getCreateTime);
+                    TopicLabel topicLabel = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+                    if (topicLabel != null) {
+                        labelNames.add(topicLabel.getLabelName());
+                    }
+                }
+                topicCollectionVo.setLabelNames(labelNames);
+                topicCollectionVos.add(topicCollectionVo);
+            }
+        }
+        return topicCollectionVos;
+    }
+
+    /**
+     * 是否有收藏key
+     *
+     * @return
+     */
+    public boolean isUserCollectionExists() {
+        Long userId = SecurityUtils.getCurrentId();
+        String key = RedisConstant.USER_COLLECTIONS_PREFIX + userId;
+
+        Boolean hasKey = stringRedisTemplate.hasKey(key);
+        return Boolean.TRUE.equals(hasKey);
+    }
+
+    /**
+     * 获取用户收藏的题目ID与对应分值的映射
+     *
+     * @return
+     */
+    public Map<String, Double> getUserAllCollectionTopicIdsWithScores() {
+        Long userId = SecurityUtils.getCurrentId();
+        String key = RedisConstant.USER_COLLECTIONS_PREFIX + userId;
+
+        // 获取 ZSet 中的所有元素及其分数
+        Set<ZSetOperations.TypedTuple<String>> tuples = stringRedisTemplate.opsForZSet().rangeWithScores(key, 0, -1);
+
+        if (tuples == null || tuples.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // 转换为 Map<topicId, score>
+        Map<String, Double> result = new HashMap<>();
+        for (ZSetOperations.TypedTuple<String> tuple : tuples) {
+            result.put(tuple.getValue(), tuple.getScore());
+        }
+
+        return result;
     }
 
 }

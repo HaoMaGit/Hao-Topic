@@ -12,6 +12,7 @@ import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
 import com.hao.topic.model.vo.topic.TopicAnswerVo;
+import com.hao.topic.model.vo.topic.TopicCollectionVo;
 import com.hao.topic.model.vo.topic.TopicDetailVo;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -220,6 +221,15 @@ public class TopicController {
     public Result collection(@PathVariable Long id) {
         topicService.collection(id);
         return Result.success();
+    }
+
+    /**
+     * 查询收藏的题目
+     */
+    @GetMapping("/collection/list")
+    public Result<List<TopicCollectionVo>> collectionList() {
+        List<TopicCollectionVo> topicCollectionVos = topicService.collectionList();
+        return Result.success(topicCollectionVos);
     }
 
 }
