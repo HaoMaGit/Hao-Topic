@@ -2,7 +2,6 @@
 import {
 	ref, onMounted
 } from 'vue'
-import Java from '../../common/image/java.png'
 import { apiQueryCategoryList } from '@/api/topic/category.js'
 import { apiQuerySubjectList } from '@/api/topic/subject.js'
 const activeIndex = ref(0)

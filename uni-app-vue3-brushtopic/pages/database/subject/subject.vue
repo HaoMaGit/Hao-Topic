@@ -5,7 +5,6 @@ import {
 import {
 	onLoad
 } from '@dcloudio/uni-app'
-import Java from '../../../common/image/java.png'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
 onLoad((options) => {
 	// 获取路径参数
@@ -15,15 +14,20 @@ onLoad((options) => {
 	uni.setNavigationBarTitle({
 		title: options.name
 	})
+	subjectId.value = options.id
 	getSubjectDetail(options.id)
 })
+// 当前专题id
+const subjectId = ref(null)
 const goToTopic = (item) => {
+	console.log(subjectId.value);
+	
 	uni.navigateTo({
-		url: `/pages/database/topic/topic?id=1&name=Java专题练习`
+		url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${subjectId.value}`
 	})
 }
 // 列表
-const subjectDetail = ref([])
+const subjectDetail = ref({})
 const getSubjectDetail = async (id) => {
 	uni.showLoading({
 		title: '加载中...'
@@ -36,7 +40,7 @@ const getSubjectDetail = async (id) => {
 </script>
 <template>
 	<view class="subject">
-		<view class="subject-box" v-if="subjectDetail && subjectDetail.length !== 0">
+		<view class="subject-box" v-if="subjectDetail">
 			<!-- 顶部介绍专题以及浏览量和总题目 以及avatar -->
 			<view class="subject-top">
 				<view class="top-left">
@@ -47,7 +51,7 @@ const getSubjectDetail = async (id) => {
 					<span class="desc">{{ subjectDetail.subjectDesc }}</span>
 					<p class="count">{{ subjectDetail.viewCount
 						}}次浏览
-						· {{ subjectDetail.topicCount }}个面试题
+						· {{ subjectDetail?.topicNameVos?.length }}个面试题
 					</p>
 				</view>
 			</view>

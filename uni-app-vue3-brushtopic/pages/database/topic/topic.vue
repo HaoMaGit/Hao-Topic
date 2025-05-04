@@ -5,21 +5,60 @@ import {
 import {
 	onLoad
 } from '@dcloudio/uni-app'
+import { apiQuerySubjectDetail } from '@/api/topic/subject'
+import { apiQueryTopicDetail } from '@/api/topic/topic'
 onLoad((options) => {
 	// 获取路径参数
 	console.log(options.name);
 	console.log(options.id);
+	console.log(options.subjectId);
+	currentTopicId.value = options.id
 	// 设置导航标题
 	uni.setNavigationBarTitle({
 		title: options.name
 	})
+	uni.showLoading({
+		title: '加载中...',
+	})
+	getTopicList(options.subjectId)
+	getTopicDetail(options.id)
+	uni.hideLoading()
 })
+// 当前题目列表详情
+const subjcetDetail = ref({})
+// 当前题目索引
+const currentIndex = ref(null)
+// 当前题目id
+const currentTopicId = ref(null)
+// 题目总数
+const total = ref(0)
+// 重新查询题目列表信息
+const getTopicList = async (subjectId) => {
+	const res = await apiQuerySubjectDetail(subjectId)
+	if (res.data) {
+		if (res.data.topicNameVos) {
+			subjcetDetail.value = res.data.topicNameVos
+			total.value = res.data.topicNameVos.length
+			// 找到当前题目的索引
+			const index = res.data.topicNameVos.findIndex(item => item.id === currentTopicId)
+			currentIndex.value = index !== -1 ? index + 1 : 1
+		}
+	}
+}
+// 题目详情
+const topicDetail = ref({})
+// 查询题目详情
+const getTopicDetail = async (id) => {
+	const res = await apiQueryTopicDetail(id)
+	topicDetail.value = res.data
+}
 // tab标签页
 const isTabs = ref(true)
 // 是否点击了查看
 const isShowAnswer = ref(false)
 // 查看答案
 const showAnswer = () => {
+	// 获取题目答案
 	isShowAnswer.value = true
 }
 // 答案
@@ -35,32 +74,30 @@ const nextQuestion = () => {
 </script>
 <template>
 	<!-- 题目列表 -->
-	<uni-drawer ref="showRight" mode="right" width="360">
+	<uni-drawer ref="showRight" mode="right" width="260">
 		<scroll-view class="scroll-view-box" scroll-y="true" style="height: 100vh;">
 			<uni-list>
-				<uni-list-item class="item" showArrow v-for="item in 50" clickable @click="goToTopic(item)">
+				<uni-list-item class="item" showArrow v-for="item in subjcetDetail" clickable @click="goToTopic(item)">
 					<template #header>
-						<span class="title">JavaJava中的序列化和反序列化是什么</span>
+						<span class="title">{{ item.topicName }}</span>
 					</template>
 				</uni-list-item>
 			</uni-list>
 		</scroll-view>
 	</uni-drawer>
 
-	<view class="topic">
+	<view class="topic" v-if="topicDetail">
 		<view class="topic-box">
 			<!-- 题目标题和标签以及收藏 -->
 			<view class="topic-top">
 				<!-- 标题 -->
 				<view class="top-box">
-					<h2 class="topic-title">Java中的序列化和反序列化是什么面试题Java中的序列化和反序列化是什么面试题？</h2>
+					<h2 class="topic-title">{{ topicDetail.topicName }}</h2>
 				</view>
 				<!-- 标签 -->
 				<view class="top-center">
 					<view class="tags-row">
-						<view class="tag">Java</view>
-						<view class="tag">JavaSE</view>
-						<view class="tag">MySQL</view>
+						<view class="tag" v-for="(tag, index) in topicDetail.labelNames" :key="index">{{ tag }}</view>
 					</view>
 					<view class="star-box">
 						<!-- 收藏 -->
@@ -98,7 +135,10 @@ const nextQuestion = () => {
 				<view class="operation-top">
 					<view class="list-box" @click="showRight.open()">
 						<uni-icons type="list" color="#1677ff" size="20"></uni-icons>
-						<span class="topic">Java专题练习 (<span class="topic-weight">1</span>/55)</span>
+						<span class="topic">{{ topicDetail.topicName }}</span>
+						(<span class="topic-weight">{{ currentIndex }}</span>/{{
+							total
+						}})
 					</view>
 					<progress class="progress" :percent="20" activeColor="#1677ff" stroke-width="6" />
 				</view>
@@ -124,10 +164,16 @@ const nextQuestion = () => {
 			</view>
 		</view>
 	</view>
+	<uv-empty v-else text="系统正在完善题目信息哦～" icon="../../static/images/empty.png"></uv-empty>
 </template>
 <style lang="scss" scoped>
 .title {
 	font-size: 25rpx;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 1;
+	/* 控制显示两行 */
+	overflow: hidden;
 }
 
 .topic-box {
@@ -220,6 +266,7 @@ const nextQuestion = () => {
 			height: 40rpx;
 
 			.list-box {
+				width: 60%;
 				display: flex;
 				align-items: center;
 				color: #1677ff;
@@ -227,17 +274,23 @@ const nextQuestion = () => {
 				.topic {
 					font-size: 16px;
 					padding-left: 5rpx;
-
-					.topic-weight {
-						font-weight: bold;
-					}
+					display: -webkit-box;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 1;
+					/* 控制显示两行 */
+					overflow: hidden;
 				}
+
+				.topic-weight {
+					font-weight: bold;
+				}
+			}
+
+			.progress {
+				width: 40%;
 			}
 		}
 
-		.progress {
-			width: 300rpx;
-		}
 
 		.operation-bottom {
 			margin-top: 30rpx;
