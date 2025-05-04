@@ -1,10 +1,58 @@
+<script setup>
+import {
+	ref, computed
+} from 'vue'
+import { getTimeOfDay } from '@/utils/time'
+// 点击了排名
+const tapRanking = () => {
+	uni.navigateTo({
+		url: '/pages/index/ranking/ranking'
+	})
+}
+
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+
+// 当前身份
+const role = ref(uni.getStorageSync('role'))
+// 映射身份
+const roleName = computed(() => {
+	const roleNameMap = {
+		1: '管理员',
+		2: '会员',
+		0: '用户'
+	}
+	return roleNameMap[role.value] || roleNameMap[0]
+})
+// 修改渐变背景计算属性，使上面更深，下面更浅
+const getPageGradient = computed(() => {
+	const gradientMap = {
+		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
+		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
+		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
+	}
+	return gradientMap[role.value] || gradientMap[0]
+})
+// 添加文字颜色的计算属性
+const getTextColor = computed(() => {
+	const textColorMap = {
+		1: '#712a07',
+		2: '#564021',
+		0: '#203c71'
+	}
+	return textColorMap[role.value] || gradientMap[0]
+})
+</script>
 <template>
 	<view class="content" :style="{ background: getPageGradient }">
 		<!-- 顶部展示区域 时间 会员信息 图标刷题量 在线时间 -->
 		<view class="content-top">
 			<view class="user-identity">
 				<!-- 限制8个字 -->
-				<h2 class="welcome" :style="{ color: getTextColor }">AI订单用户，下午好！</h2>
+				<h2 class="welcome" :style="{ color: getTextColor }">{{ userInfo.nickname || userInfo.account }}<text>{{
+					roleName
+				}}</text>，{{ getTimeOfDay() }}好！
+				</h2>
 			</view>
 			<!-- 统计刷题区域 -->
 			<view class="content-bottom" :style="{ color: getTextColor }">
@@ -59,43 +107,6 @@
 		</view>
 	</view>
 </template>
-
-<script setup>
-import {
-	ref, computed
-} from 'vue'
-
-// const avatarList = ref([{
-// 	url: Java
-// }])
-// 点击了排名
-const tapRanking = () => {
-	uni.navigateTo({
-		url: '/pages/index/ranking/ranking'
-	})
-}
-// 当前身份
-const role = ref(uni.getStorageSync('role'))
-// 修改渐变背景计算属性，使上面更深，下面更浅
-const getPageGradient = computed(() => {
-	const gradientMap = {
-		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
-		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
-		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
-	}
-	return gradientMap[role.value] || gradientMap[0]
-})
-// 添加文字颜色的计算属性
-const getTextColor = computed(() => {
-	const textColorMap = {
-		1: '#712a07',
-		2: '#564021',
-		0: '#203c71'
-	}
-	return textColorMap[role.value] || gradientMap[0]
-})
-</script>
-
 <style lang="scss" scoped>
 .content {
 	display: flex;
