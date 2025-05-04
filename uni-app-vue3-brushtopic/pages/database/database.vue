@@ -19,9 +19,8 @@ const value = ref()
 
 // 跳转到专题列表
 const goToSubject = (item) => {
-	console.log(1);
 	uni.navigateTo({
-		url: `/pages/database/subject/subject?id=1&name=Java专题练习`
+		url: `/pages/database/subject/subject?id=${item.id}&name=${item.subjectName}`
 	})
 }
 
