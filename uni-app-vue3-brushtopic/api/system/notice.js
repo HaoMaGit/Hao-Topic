@@ -14,3 +14,8 @@ export const apiRecordNotice = (data) =>
     method: 'post',
     data
   })
+
+// 查询是否有通知
+export const apiGetNoticeHas = () => {
+  return request.get(prefix + "has");
+}

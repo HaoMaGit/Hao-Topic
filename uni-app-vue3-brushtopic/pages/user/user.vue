@@ -6,7 +6,7 @@ import { apiGetRoleDetail } from '@/api/system/role'
 import { apiSendFeedback } from '@/api/system/feedback'
 import { apiGetUserInfo } from '@/api/auth/index'
 import { apiGetConfig } from '@/api/system/index'
-import { apiRecordNotice } from '@/api/system/notice'
+import { apiRecordNotice, apiGetNoticeHas } from '@/api/system/notice'
 import { onShow } from '@dcloudio/uni-app'
 // 用户信息
 const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
@@ -60,6 +60,7 @@ onShow(() => {
 	getUserDetail()
 	getRoleDetail()
 	getWebConfig()
+	getNotice()
 })
 
 
@@ -142,7 +143,7 @@ const getWebConfig = async () => {
 }
 
 // 去支付
-const goToPay = async() => {
+const goToPay = async () => {
 	// 发送请求到通知
 	await apiRecordNotice({
 		status: 0
@@ -159,6 +160,15 @@ const goToPay = async() => {
 		duration: 2000
 	})
 }
+// 是否有通知
+const hasNotice = ref(false)
+// 查询是否有通知
+const getNotice = async () => {
+	const res = await apiGetNoticeHas()
+	hasNotice.value = res.data
+}
+
+
 </script>
 <template>
 	<view class="user-box" :style="{ background: getPageGradient }">
@@ -260,6 +270,9 @@ const goToPay = async() => {
 							</view>
 						</view>
 						<view class="right">
+							<view class="text">
+								<uv-badge :isDot="hasNotice"></uv-badge>
+							</view>
 							<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
 						</view>
 					</view>
