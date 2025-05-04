@@ -596,6 +596,9 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         if (topicSubject == null) {
             return null;
         }
+        // 修改题目专题浏览次数+1
+        topicSubject.setViewCount(topicSubject.getViewCount() + 1);
+        topicSubjectMapper.updateById(topicSubject);
         TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = new TopicSubjectDetailAndTopicVo();
         BeanUtils.copyProperties(topicSubject, topicSubjectDetailAndTopicVo);
         // 查询题目专题关系表
