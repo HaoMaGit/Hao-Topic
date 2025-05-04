@@ -20,7 +20,6 @@ onLoad((options) => {
 // 当前专题id
 const subjectId = ref(null)
 const goToTopic = (item) => {
-	console.log(subjectId.value);
 	
 	uni.navigateTo({
 		url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${subjectId.value}`

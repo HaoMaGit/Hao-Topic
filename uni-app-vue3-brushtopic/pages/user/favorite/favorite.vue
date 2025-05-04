@@ -3,12 +3,34 @@ import { ref, onMounted } from 'vue'
 import { apiQueryCollectionTopicList } from '@/api/topic/topic'
 import dyajs from 'dayjs'
 
+// 收藏列表
 const favoriteList = ref([
 ])
-
+// 查询收藏列表
 const getFavoriteList = () => {
+  uni.showLoading({
+    title: '加载中'
+  })
   apiQueryCollectionTopicList().then(res => {
     favoriteList.value = res.data
+  })
+  uni.hideLoading()
+}
+
+// 点击跳转题目
+const handleQuestion = (item) => {
+  // 判断专题id是否为空
+  if (!item.subjectId) {
+    // 该专题不存在或被禁用了
+    uni.showToast({
+      title: '该专题不存在或被禁用了',
+      icon: 'none'
+    })
+    return
+  }
+  // 跳转
+  uni.navigateTo({
+    url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${item.subjectId}`
   })
 }
 
@@ -27,7 +49,7 @@ onMounted(() => {
               <text class="title">{{ item.topicName }}</text>
               <uni-icons type="star-filled" size="20" color="#1677ff"></uni-icons>
             </view>
-            <view class="info-row">
+            <view class="info-row" @click="handleQuestion(item)">
               <view class="tags-row">
                 <view class="tag" v-for="(tag, index) in item.labelNames" :key="index">
                   {{ tag }}
