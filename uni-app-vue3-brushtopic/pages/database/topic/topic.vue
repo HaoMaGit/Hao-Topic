@@ -17,6 +17,7 @@ onLoad(async (options) => {
 	console.log(options.id);
 	console.log(options.subjectId);
 	currentTopicId.value = options.id
+	currentSubjectId.value = options.subjectId
 	// 设置导航标题
 	uni.setNavigationBarTitle({
 		title: options.name
@@ -42,12 +43,15 @@ onLoad(async (options) => {
 		uni.hideLoading()
 	}
 })
+
 // 当前题目列表详情
 const subjcetDetail = ref({})
 // 当前题目索引
 const currentIndex = ref(null)
 // 当前题目id
 const currentTopicId = ref(null)
+// 当前专题
+const currentSubjectId = ref(null)
 // 题目总数
 const total = ref(0)
 // 计算当前进度百分比
@@ -60,8 +64,8 @@ const getTopicList = async (subjectId) => {
 			subjcetDetail.value = res.data.topicNameVos
 			total.value = res.data.topicNameVos.length
 			// 找到当前题目的索引
-			const index = res.data.topicNameVos.findIndex(item => item.id === currentTopicId)
-			currentIndex.value = index !== -1 ? index + 1 : 1
+			currentIndex.value = res.data.topicNameVos.findIndex(item => item.id == currentTopicId.value)
+			currentIndex.value = currentIndex.value + 1
 			// 更新进度百分比
 			progressPercent.value = Math.floor((currentIndex.value / total.value) * 100)
 		}
@@ -91,27 +95,27 @@ const answer = ref({
 const role = ref(uni.getStorageSync('role'))
 // 查看答案
 const showAnswer = async () => {
-	if (topicDetail.value.isMember === 1) {
-		if (role.value == 0) {
-			uni.showToast({
-				title: '该题目答案需要会员才能查看哦',
-				icon: 'error',
-				duration: 2000
-			})
-			return
-		} else {
-			// 获取题目答案
-			const res = await apiQueryTopicAnswer(currentTopicId.value)
-			answer.value = res.data
-			if (isTabs.value) {
-				markDownContent.value = res.data.answer
-			} else {
-				markDownContent.value = res.data.aiAnswer
-			}
-			// 显示
-			isShowAnswer.value = true
-		}
+	console.log('查看答案');
+
+	// 如果是会员题目且用户不是会员
+	if (topicDetail.value.isMember === 1 && role.value == 0) {
+		uni.showToast({
+			title: '该题目答案需要会员才能查看哦',
+			icon: 'error',
+			duration: 2000
+		});
+		return;
 	}
+
+	// 统一获取题目答案
+	const res = await apiQueryTopicAnswer(currentTopicId.value);
+	answer.value = res.data;
+
+	// 根据 tab 切换展示对应答案
+	markDownContent.value = isTabs.value ? res.data.answer : res.data.aiAnswer;
+
+	// 显示答案区域
+	isShowAnswer.value = true;
 }
 // 答案
 const markDownContent = ref()
@@ -163,12 +167,36 @@ const handleCollect = async () => {
 
 // 题目列表遮罩
 const showRight = ref()
-// 下一题
-const nextQuestion = async (content) => {
-	// 更新题目的内容重新调用获取题目的接口
+
+// 上一题
+const prevTopic = async () => {
+	// 如果当前是第一题，提示已经是第一题
+	if (currentIndex.value <= 1) {
+		uni.showToast({
+			title: '已经是第一题了',
+			icon: 'none'
+		})
+		return
+	}
+	// 关闭当前页面跳转到topic
+	uni.redirectTo({
+		url: `/pages/database/topic/topic?id=${subjcetDetail.value[currentIndex.value - 2].id}&name=${subjcetDetail.value[currentIndex.value - 2].topicName}&subjectId=${currentSubjectId.value}`
+	})
 
 }
-
+// 下一题
+const nextTopic = () => {
+	if (currentIndex.value >= subjcetDetail.value.length) {
+		uni.showToast({
+			title: '已经是最后一题了',
+			icon: 'none'
+		})
+		return
+	}
+	uni.redirectTo({
+		url: `/pages/database/topic/topic?id=${subjcetDetail.value[currentIndex.value].id}&name=${subjcetDetail.value[currentIndex.value].topicName}&subjectId=${currentSubjectId.value}`
+	})
+}
 
 </script>
 <template>
@@ -252,7 +280,7 @@ const nextQuestion = async (content) => {
 				</view>
 				<view class="operation-bottom">
 					<view class="game-controls">
-						<view class="control-btn prev">
+						<view class="control-btn prev" @click="prevTopic">
 							<view class="btn-circle">
 								<uni-icons type="left" size="20" color="#999"></uni-icons>
 							</view>
@@ -262,7 +290,7 @@ const nextQuestion = async (content) => {
 								<uni-icons type="info" size="20" color="#fff"></uni-icons>
 							</view>
 						</view>
-						<view class="control-btn next" @click="nextQuestion">
+						<view class="control-btn next" @click="nextTopic">
 							<view class="btn-circle">
 								<uni-icons type="right" size="20" color="#fff"></uni-icons>
 							</view>
