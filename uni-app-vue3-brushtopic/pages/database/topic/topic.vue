@@ -7,6 +7,8 @@ import {
 } from '@dcloudio/uni-app'
 import { apiQuerySubjectDetail } from '@/api/topic/subject'
 import { apiQueryTopicDetail, apiQueryTopicAnswer } from '@/api/topic/topic'
+// 添加导入
+import FeedbackPopup from '@/components/feedbackPopup.vue'
 onLoad(async (options) => {
 	// 获取路径参数
 	console.log(options.name);
@@ -115,6 +117,15 @@ const handleTabs = () => {
 	}
 }
 
+// 反馈弹窗显示状态
+const showFeedback = ref(false)
+// 提交反馈
+const handleFeedbackSubmit = () => {
+	uni.showToast({
+		title: '提交成功',
+		icon: 'none'
+	})
+}
 
 // 题目列表遮罩
 const showRight = ref()
@@ -122,6 +133,8 @@ const showRight = ref()
 const nextQuestion = () => {
 	// 更新题目的内容重新调用获取题目的接口
 }
+
+
 </script>
 <template>
 	<!-- 题目列表 -->
@@ -136,6 +149,9 @@ const nextQuestion = () => {
 			</uni-list>
 		</scroll-view>
 	</uni-drawer>
+
+	<!-- 意见反馈的弹层 -->
+	<FeedbackPopup v-model:show="showFeedback" @submit="handleFeedbackSubmit" />
 
 	<view class="topic" v-if="topicDetail">
 		<view class="topic-box">
@@ -207,7 +223,7 @@ const nextQuestion = () => {
 							</view>
 						</view>
 						<view class="control-btn feedback">
-							<view class="btn-circle">
+							<view class="btn-circle" @click="showFeedback = true">
 								<uni-icons type="info" size="20" color="#fff"></uni-icons>
 							</view>
 						</view>
