@@ -2,7 +2,7 @@
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting';
-import { apiGetNoticeList } from '@/api/system/notice'
+import { apiGetNoticeList, apiGetNoticeHas } from '@/api/system/notice'
 const settingStore = useSettingStore()
 import Hao from '@/assets/images/H.png'
 import { ref, h, onMounted } from 'vue'
@@ -157,7 +157,16 @@ const handlePopoverChange = () => {
     getNoticeList()
   }
 }
+
+// 是否有通知
+const hasNotice = ref(false)
+// 查询是否有通知
+const getNotice = async () => {
+  const res = await apiGetNoticeHas()
+  hasNotice.value = res.data
+}
 onMounted(() => {
+  getNotice()
 })
 </script>
 <template>
@@ -249,7 +258,9 @@ onMounted(() => {
           </div>
         </div>
       </template>
-      <a-button :icon="h(BellOutlined)" shape="circle" @click="viewBell"></a-button>
+      <a-badge :dot="hasNotice" :offset="[-5, 2]">
+        <a-button :icon="h(BellOutlined)" shape="circle" @click="viewBell"></a-button>
+      </a-badge>
     </a-popover>
     <!-- 设置 -->
     <a-button @click="viewSetting" :icon="h(SettingOutlined)" shape="circle"></a-button>

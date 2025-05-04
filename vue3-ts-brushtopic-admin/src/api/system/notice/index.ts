@@ -8,3 +8,7 @@ export const apiGetNoticeList = () => {
   return request.get(prefix + "list");
 }
 
+// 查询是否有通知
+export const apiGetNoticeHas = () => {
+  return request.get(prefix + "has");
+}
