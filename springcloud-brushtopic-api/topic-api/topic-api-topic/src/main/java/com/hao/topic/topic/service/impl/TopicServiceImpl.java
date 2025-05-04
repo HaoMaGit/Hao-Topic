@@ -37,6 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -1300,8 +1304,22 @@ public class TopicServiceImpl implements TopicService {
                 }
                 // 获取分值
                 Double score = topicIdScoreMap.get(topicId.toString());
-                // 将时间戳转换成日期格式2025:11:20 09:09:09
-                topicCollectionVo.setCollectionTime(new Date(score.longValue()).toString());
+                if (score != null) {
+                    // 转换为毫秒时间戳
+                    Long timestamp = score.longValue();
+
+                    // 转换为 LocalDateTime（默认系统时区）
+                    LocalDateTime dateTime = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(timestamp),
+                            ZoneId.systemDefault()
+                    );
+
+                    // 定义格式并格式化时间
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    String formattedTime = dateTime.format(formatter);
+
+                    topicCollectionVo.setCollectionTime(formattedTime);
+                }
                 // 根据题目id查询题目标签题目关系表
                 LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, topicId);

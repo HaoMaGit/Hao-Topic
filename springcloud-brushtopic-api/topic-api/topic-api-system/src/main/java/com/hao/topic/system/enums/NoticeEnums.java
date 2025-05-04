@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 public enum NoticeEnums {
     MEMBER_PAY(0, "会员支付"),
     FEEDBACK(1, "意见反馈"),
-    REPLY(2, "回复内容");
+    REPLY(2, "回复内容"),
+    SUBJECT_FEEDBACK(3, "题目反馈");
     private Integer code;
     private String message;
 
@@ -34,4 +35,4 @@ public enum NoticeEnums {
         }
         return null;
     }
-}
+    }

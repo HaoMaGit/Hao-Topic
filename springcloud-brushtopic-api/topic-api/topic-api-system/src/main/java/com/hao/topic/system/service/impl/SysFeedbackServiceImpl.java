@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Description:
@@ -60,7 +61,7 @@ public class SysFeedbackServiceImpl extends ServiceImpl<SysFeedbackMapper, SysFe
         sysNotice.setAccount(currentName);
         sysNotice.setUserId(currentId);
         sysNotice.setContent(sysFeedback.getFeedbackContent());
-        sysNotice.setStatus(NoticeEnums.FEEDBACK.getCode());
+        sysNotice.setStatus(sysFeedback.getStatus());
         sysNoticeMapper.insert(sysNotice);
     }
 
