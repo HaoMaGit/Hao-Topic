@@ -19,7 +19,7 @@ const value = ref()
 const goToSubject = (item) => {
 	console.log(1);
 	uni.navigateTo({
-		url: `/pages/category/subject/subject?id=1&name=Java专题练习`
+		url: `/pages/database/subject/subject?id=1&name=Java专题练习`
 	})
 }
 </script>

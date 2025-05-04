@@ -17,7 +17,7 @@
 	})
 	const goToTopic = (item) => {
 		uni.navigateTo({
-			url: `/pages/category/topic/topic?id=1&name=Java专题练习`
+			url: `/pages/database/topic/topic?id=1&name=Java专题练习`
 		})
 	}
 </script>
