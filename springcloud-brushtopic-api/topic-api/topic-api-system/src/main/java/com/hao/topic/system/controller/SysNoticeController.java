@@ -2,6 +2,7 @@ package com.hao.topic.system.controller;
 
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.system.SysNoticeDto;
+import com.hao.topic.model.dto.system.SysNoticeReadDto;
 import com.hao.topic.model.vo.system.SysNoticeVo;
 import com.hao.topic.system.service.SysNoticeService;
 import lombok.AllArgsConstructor;
@@ -46,5 +47,14 @@ public class SysNoticeController {
     public Result has() {
         Boolean isHas = sysNoticeService.has();
         return Result.success(isHas);
+    }
+
+    /**
+     * 已读通知
+     */
+    @PutMapping("/read")
+    public Result read(@RequestBody SysNoticeReadDto sysNoticeReadDto) {
+        sysNoticeService.read(sysNoticeReadDto);
+        return Result.success();
     }
 }

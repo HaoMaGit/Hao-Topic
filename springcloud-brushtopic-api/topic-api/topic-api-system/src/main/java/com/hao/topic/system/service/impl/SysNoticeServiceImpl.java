@@ -2,11 +2,13 @@ package com.hao.topic.system.service.impl;
 
 import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.hao.topic.api.utils.constant.TimeUtils;
 import com.hao.topic.common.enums.ResultCodeEnum;
 import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.system.SysNoticeDto;
+import com.hao.topic.model.dto.system.SysNoticeReadDto;
 import com.hao.topic.model.entity.system.SysNotice;
 import com.hao.topic.model.vo.system.SysNoticeVo;
 import com.hao.topic.system.constant.NoticeConstant;
@@ -18,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -143,5 +143,22 @@ public class SysNoticeServiceImpl implements SysNoticeService {
             Long count = sysNoticeMapper.selectCount(sysNoticeLambdaQueryWrapper);
             return count > 0;
         }
+    }
+
+    /**
+     * 已读通知
+     *
+     * @param sysNoticeReadDto
+     */
+    public void read(SysNoticeReadDto sysNoticeReadDto) {
+        if (CollectionUtils.isEmpty(sysNoticeReadDto.getIdsList())) {
+            throw new TopicException(ResultCodeEnum.FAIL);
+        }
+        sysNoticeReadDto.getIdsList().forEach(item -> {
+            SysNotice sysNotice = new SysNotice();
+            sysNotice.setId(item);
+            sysNotice.setIsRead(1);
+            sysNoticeMapper.updateById(sysNotice);
+        });
     }
 }

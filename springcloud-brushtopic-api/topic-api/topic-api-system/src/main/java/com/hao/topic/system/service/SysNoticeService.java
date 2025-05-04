@@ -1,6 +1,7 @@
 package com.hao.topic.system.service;
 
 import com.hao.topic.model.dto.system.SysNoticeDto;
+import com.hao.topic.model.dto.system.SysNoticeReadDto;
 import com.hao.topic.model.vo.system.SysNoticeVo;
 
 import java.util.List;
@@ -16,5 +17,7 @@ public interface SysNoticeService {
     List<SysNoticeVo> list();
 
     Boolean has();
+
+    void read(SysNoticeReadDto idsList);
 
 }
