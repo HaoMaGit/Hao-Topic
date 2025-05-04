@@ -48,6 +48,8 @@ const currentIndex = ref(null)
 const currentTopicId = ref(null)
 // 题目总数
 const total = ref(0)
+// 计算当前进度百分比
+const progressPercent = ref(0)
 // 重新查询题目列表信息
 const getTopicList = async (subjectId) => {
 	const res = await apiQuerySubjectDetail(subjectId)
@@ -58,8 +60,10 @@ const getTopicList = async (subjectId) => {
 			// 找到当前题目的索引
 			const index = res.data.topicNameVos.findIndex(item => item.id === currentTopicId)
 			currentIndex.value = index !== -1 ? index + 1 : 1
+			// 更新进度百分比
+			progressPercent.value = Math.floor((currentIndex.value / total.value) * 100)
 		}
-	}        
+	}
 
 }
 // 题目详情
@@ -236,7 +240,7 @@ const nextQuestion = () => {
 							total
 						}})
 					</view>
-					<progress class="progress" :percent="20" activeColor="#1677ff" stroke-width="6" />
+					<progress class="progress" :percent="progressPercent" activeColor="#1677ff" stroke-width="6" />
 				</view>
 				<view class="operation-bottom">
 					<view class="game-controls">
@@ -394,7 +398,8 @@ const nextQuestion = () => {
 			}
 
 			.progress {
-				width: 40%;
+				padding-left: 3rpx;
+				width: 39%;
 			}
 		}
 
