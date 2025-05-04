@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiQueryFeedbackList } from '@/api/system/feedback'
+import { apiClearNotice } from '@/api/system/notice'
 
 // 反馈数据
 const feedbackList = ref([
@@ -12,8 +13,14 @@ const getFeedbackList = async () => {
 	uni.hideLoading()
 }
 
+// 清除通知
+const clearNotice = async () => {
+	await apiClearNotice()
+}
+
 onMounted(() => {
 	getFeedbackList()
+	clearNotice()
 })
 </script>
 

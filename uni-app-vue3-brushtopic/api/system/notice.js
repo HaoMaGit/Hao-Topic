@@ -19,3 +19,7 @@ export const apiRecordNotice = (data) =>
 export const apiGetNoticeHas = () => {
   return request.get(prefix + "has");
 }
+
+export const apiClearNotice = () => {
+  return request.put(prefix + "clear");
+}
