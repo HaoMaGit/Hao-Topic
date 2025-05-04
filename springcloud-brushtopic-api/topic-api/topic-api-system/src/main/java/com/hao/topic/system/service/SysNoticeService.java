@@ -14,4 +14,7 @@ public interface SysNoticeService {
     void recordNotice(SysNoticeDto sysNoticeDto);
 
     List<SysNoticeVo> list();
+
+    Boolean has();
+
 }

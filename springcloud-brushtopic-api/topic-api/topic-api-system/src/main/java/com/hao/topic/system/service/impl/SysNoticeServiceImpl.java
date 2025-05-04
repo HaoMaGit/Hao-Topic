@@ -108,10 +108,40 @@ public class SysNoticeServiceImpl implements SysNoticeService {
             if (today.equals(DateUtils.format(new Date(), "yyyy-MM-dd"))) {
                 sysNoticeVo.setTimeDesc(TimeUtils.formatTimeAgo(item.getCreateTime()));
             } else {
-                // 不是当天直接返回
-                sysNoticeVo.setTimeDesc(item.getCreateTime().toString());
+                // 不是当天直接返回 格式化一下
+                sysNoticeVo.setTimeDesc(DateUtils.format(item.getCreateTime(), "yyyy-MM-dd HH:mm:ss"));
             }
             return sysNoticeVo;
         }).toList();
+    }
+
+    /**
+     * 查询是否有通知
+     *
+     * @return
+     */
+    public Boolean has() {
+        // 获取当前登录用户
+        Long currentId = SecurityUtils.getCurrentId();
+        // 获取当前登录用户角色
+        String role = SecurityUtils.getCurrentRole();
+        if (role.equals("admin")) {
+            // 是管理员那就查全部
+            LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysNoticeLambdaQueryWrapper.orderByDesc(SysNotice::getCreateTime);
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getIsRead, 0);
+            Long count = sysNoticeMapper.selectCount(sysNoticeLambdaQueryWrapper);
+            return count > 0;
+        } else {
+            // 不是管理员那就查接收人是不是自己哦
+            LambdaQueryWrapper<SysNotice> sysNoticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getRecipientsId, currentId);
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getIsRead, 0);
+            sysNoticeLambdaQueryWrapper.orderByDesc(SysNotice::getCreateTime);
+            // 非管理员只能接受到2回复内容
+            sysNoticeLambdaQueryWrapper.eq(SysNotice::getStatus, NoticeEnums.REPLY.getCode());
+            Long count = sysNoticeMapper.selectCount(sysNoticeLambdaQueryWrapper);
+            return count > 0;
+        }
     }
 }

@@ -38,4 +38,13 @@ public class SysNoticeController {
         List<SysNoticeVo> sysNoticeVos = sysNoticeService.list();
         return Result.success(sysNoticeVos);
     }
+
+    /**
+     * 查询反馈通知是否有
+     */
+    @GetMapping("/has")
+    public Result has() {
+        Boolean isHas = sysNoticeService.has();
+        return Result.success(isHas);
+    }
 }
