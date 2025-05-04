@@ -2,7 +2,7 @@
 import { useUserStore } from '@/stores/modules/user'
 const userStore = useUserStore()
 import { useSettingStore } from '@/stores/modules/setting';
-import { apiGetNoticeList, apiGetNoticeHas } from '@/api/system/notice'
+import { apiGetNoticeList, apiGetNoticeHas, apiReadNotice } from '@/api/system/notice'
 const settingStore = useSettingStore()
 import Hao from '@/assets/images/H.png'
 import { ref, h, onMounted } from 'vue'
@@ -13,6 +13,10 @@ import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
 import { useRouter } from 'vue-router';
 const $router = useRouter()
+import {
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue';
+import Modal from 'ant-design-vue/es/modal/Modal';
 // 刷新
 const updateRefsh = () => {
   // 刷新页面
@@ -34,41 +38,6 @@ const fullScreen = () => {
     //变为不是全屏模式->退出全屏模式
     document.exitFullscreen()
   }
-}
-
-
-// 点击了已读
-const markAsRead = (index: number) => {
-  notifications.value[index].read = true
-}
-
-// 查看通知
-const viewBell = () => {
-  // TODO 查看通知
-}
-
-// 清空通知
-const clearBell = () => {
-  // Modal.confirm(
-  //   {
-  //     title: '确定要清除所有通知吗？清空后不可恢复！',
-  //     icon: createVNode(ExclamationCircleOutlined),
-
-  //   }
-  //   '',
-  //   '清空通知',
-  //   {
-  //     confirmButtonText: '确认',
-  //     cancelButtonText: '取消',
-  //     type: 'warning',
-  //   }
-  // )
-  //   .then(() => {
-  //     ElMessage({
-  //       type: 'success',
-  //       message: '清空通知成功',
-  //     })
-  //   })
 }
 
 // 查看个性化设置抽底
@@ -131,7 +100,6 @@ const getNoticeList = () => {
 
 // 映射一下类名
 const getClassName = (status: number) => {
-  console.log("========>", status);
 
   const map = <any>{
     0: 'member',
@@ -164,6 +132,33 @@ const hasNotice = ref(false)
 const getNotice = async () => {
   const res = await apiGetNoticeHas()
   hasNotice.value = res.data
+}
+
+// 点击了已读
+const markAsRead = async (index: number, id: number) => {
+  // 发送通知已读
+  await apiReadNotice([id])
+  notifications.value[index].read = true
+}
+// 全部已读
+const handleAllRead = async () => {
+  Modal.confirm({
+    title: '确定要全部已读吗？',
+    icon: h(ExclamationCircleOutlined),
+    content: '已读所有通知后不可恢复请仔细查看通知',
+    okText: '确定',
+    cancelText: '取消',
+    async onOk() {
+      await apiReadNotice(notifications.value.map(item => item.id))
+      // 关闭弹窗
+      isPopoverOpen.value = false
+      hasNotice.value = false
+      message.success("全部已读")
+    },
+    onCancel() {
+      console.log('Cancel');
+    },
+  });
 }
 onMounted(() => {
   getNotice()
@@ -226,7 +221,7 @@ onMounted(() => {
           <!-- 顶部标题和清除通知 -->
           <div class="bell-top">
             <span class="tz">通知</span>
-            <span class="clear" v-if="notifications.length > 0" @click="clearBell">清空</span>
+            <!-- <span class="clear" v-if="notifications.length > 0" @click="clearBell">清空</span> -->
           </div>
           <!-- 内容区域是通知信息 -->
           <div class="bell-content">
@@ -243,7 +238,7 @@ onMounted(() => {
                     <div class="notification-message">{{ item.account + ": " + item.content }}</div>
                   </div>
                   <div class="notification-actions">
-                    <a-button type="link" size="small" @click="markAsRead(index)" v-if="!item.read">
+                    <a-button type="link" size="small" @click="markAsRead(index, item.id)" v-if="!item.read">
                       已读
                     </a-button>
                   </div>
@@ -254,12 +249,12 @@ onMounted(() => {
           </div>
           <!-- 底部关闭通知 -->
           <div class="bell-bottom" v-if="notifications.length > 0">
-            <a-link type="primary">全部已读</a-link>
+            <a-link type="primary" @click="handleAllRead">全部已读</a-link>
           </div>
         </div>
       </template>
       <a-badge :dot="hasNotice" :offset="[-5, 2]">
-        <a-button :icon="h(BellOutlined)" shape="circle" @click="viewBell"></a-button>
+        <a-button :icon="h(BellOutlined)" shape="circle"></a-button>
       </a-badge>
     </a-popover>
     <!-- 设置 -->

@@ -12,3 +12,17 @@ export const apiGetNoticeList = () => {
 export const apiGetNoticeHas = () => {
   return request.get(prefix + "has");
 }
+
+/**
+ * 已读通知
+ * @returns 
+ */
+export const apiReadNotice = (idsList: any[]) => {
+  return request({
+    url: prefix + "read",
+    method: "put",
+    data: {
+      idsList: idsList
+    }
+  });
+}
