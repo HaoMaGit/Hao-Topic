@@ -11,6 +11,8 @@ import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
+import com.hao.topic.model.vo.topic.TopicAnswerVo;
+import com.hao.topic.model.vo.topic.TopicDetailVo;
 import com.hao.topic.topic.service.TopicService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -193,5 +195,22 @@ public class TopicController {
         topicService.updateAiAnswer(topic);
     }
 
+    /**
+     * 根据题目id查询题目详情和标签
+     */
+    @GetMapping("/detail/{id}")
+    public Result<TopicDetailVo> detail(@PathVariable Long id) {
+        TopicDetailVo topicDetailVo = topicService.detail(id);
+        return Result.success(topicDetailVo);
+    }
+
+    /**
+     * 获取答案
+     */
+    @GetMapping("/answer/{id}")
+    public Result<TopicAnswerVo> getAnswer(@PathVariable Long id) {
+        TopicAnswerVo topicAnswerVo = topicService.getAnswer(id);
+        return Result.success(topicAnswerVo);
+    }
 
 }

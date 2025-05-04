@@ -20,6 +20,8 @@ import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.excel.topic.*;
+import com.hao.topic.model.vo.topic.TopicAnswerVo;
+import com.hao.topic.model.vo.topic.TopicDetailVo;
 import com.hao.topic.model.vo.topic.TopicVo;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicService;
@@ -1102,6 +1104,60 @@ public class TopicServiceImpl implements TopicService {
         // 将答案封装
         topicDb.setAiAnswer(topic.getAiAnswer());
         topicMapper.updateById(topicDb);
+    }
+
+    /**
+     * 根据题目id查询题目详细信息和标签
+     *
+     * @param id
+     * @return
+     */
+    public TopicDetailVo detail(Long id) {
+        if (id == null) {
+            return null;
+        }
+        Topic topic = topicMapper.selectById(id);
+        if (topic == null) {
+            return null;
+        }
+        // 根据题目id查询题目标签题目关系表
+        LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, id);
+        List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(topicLabelTopics)) {
+            return null;
+        }
+        // 收集所有的id
+        List<Long> labelIds = topicLabelTopics.stream().map(TopicLabelTopic::getLabelId).toList();
+        // 存放标签名称
+        List<String> labelNames = new ArrayList<>();
+        // 查询
+        for (Long labelId : labelIds) {
+            LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLabelLambdaQueryWrapper.eq(TopicLabel::getId, labelId);
+            topicLabelLambdaQueryWrapper.eq(TopicLabel::getStatus, StatusEnums.NORMAL.getCode());
+            topicLabelLambdaQueryWrapper.orderByDesc(TopicLabel::getCreateTime);
+            TopicLabel topicLabel = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+            if (topicLabel != null) {
+                labelNames.add(topicLabel.getLabelName());
+            }
+        }
+        TopicDetailVo topicDetailVo = new TopicDetailVo();
+        BeanUtils.copyProperties(topic, topicDetailVo);
+        topicDetailVo.setLabelNames(labelNames);
+        return topicDetailVo;
+    }
+
+    /**
+     * 获取答案
+     *
+     * @param id
+     * @return
+     */
+    public TopicAnswerVo getAnswer(Long id) {
+        if(id == null){
+            throw new TopicException(ResultCodeEnum.TOPIC_ANSWER_NOT_EXIST);
+        }
     }
 
 }
