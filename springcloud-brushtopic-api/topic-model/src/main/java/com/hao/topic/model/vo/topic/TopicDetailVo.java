@@ -13,6 +13,7 @@ import java.util.List;
 public class TopicDetailVo {
 
     private String topicName;
+    private Boolean isCollected;
     private Integer isMember;
     List<String> labelNames;
 

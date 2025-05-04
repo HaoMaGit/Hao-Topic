@@ -1146,7 +1146,24 @@ public class TopicServiceImpl implements TopicService {
         TopicDetailVo topicDetailVo = new TopicDetailVo();
         BeanUtils.copyProperties(topic, topicDetailVo);
         topicDetailVo.setLabelNames(labelNames);
+        // 查询这个题目id是否在redis
+        boolean topicCollected = isTopicCollected(topic.getId());
+        topicDetailVo.setIsCollected(topicCollected);
         return topicDetailVo;
+    }
+
+    public boolean isTopicCollected(Long topicId) {
+        // 当前用户id
+        Long userId = SecurityUtils.getCurrentId();
+        // 收藏key
+        String key = RedisConstant.USER_COLLECTIONS_PREFIX + userId;
+        // 题目id
+        String value = String.valueOf(topicId);
+
+        // 查询 score，如果存在则返回非 null
+        Double score = stringRedisTemplate.opsForZSet().score(key, value);
+
+        return score != null;
     }
 
     /**
