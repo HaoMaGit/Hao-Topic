@@ -1284,6 +1284,20 @@ public class TopicServiceImpl implements TopicService {
             if (topic != null) {
                 TopicCollectionVo topicCollectionVo = new TopicCollectionVo();
                 BeanUtils.copyProperties(topic, topicCollectionVo);
+                // 根据题目id查询专题
+                LambdaQueryWrapper<TopicSubjectTopic> topicSubjectTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicSubjectTopicLambdaQueryWrapper.eq(TopicSubjectTopic::getTopicId, topicId);
+                TopicSubjectTopic topicSubjectTopic = topicSubjectTopicMapper.selectOne(topicSubjectTopicLambdaQueryWrapper);
+                if (topicSubjectTopic != null) {
+                    LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                    topicSubjectLambdaQueryWrapper.eq(TopicSubject::getId, topicSubjectTopic.getSubjectId());
+                    topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+                    // 查询专题
+                    TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                    if (topicSubject != null) {
+                        topicCollectionVo.setSubjectId(topicSubject.getId());
+                    }
+                }
                 // 获取分值
                 Double score = topicIdScoreMap.get(topicId.toString());
                 // 将时间戳转换成日期格式2025:11:20 09:09:09

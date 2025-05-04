@@ -12,6 +12,7 @@ import java.util.List;
 @Data
 public class TopicCollectionVo {
     private Long id;
+    private Long subjectId;
     private String topicName;
     private String collectionTime;
     List<String> labelNames;
