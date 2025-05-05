@@ -7,10 +7,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
 import com.hao.topic.ai.constant.ResultConstant;
+import com.hao.topic.ai.enums.AiStatusEnums;
 import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
@@ -89,6 +91,30 @@ public class ModelServiceImpl implements ModelService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 随机鼓励语
+     */
+    private static final String[] ENCOURAGEMENTS = {
+            "💪 加油！你能行的！",
+            "✨ 你可以的，相信自己！",
+            "🔥 别放弃，再想想看～",
+            "🌟 你已经很棒了，继续加油！",
+            "🧠 慢慢来，答案就在前方～",
+            "🚀 再试一次，你离成功不远了！",
+            "💡 这道题对你来说不是问题！",
+            "🎯 坚持到底就是胜利！"
+    };
+
+    /**
+     * 获取随机鼓励语
+     *
+     * @return
+     */
+    private static String getRandomEncouragement() {
+        int index = (int) (Math.random() * ENCOURAGEMENTS.length);
+        return ENCOURAGEMENTS[index];
+    }
+
 
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
@@ -116,6 +142,219 @@ public class ModelServiceImpl implements ModelService {
                 .user(chatDto.getPrompt())
                 .stream()
                 .content();
+    }
+
+    // ============HaoAI系统模式==============
+
+    /**
+     * 系统模式
+     *
+     * @param chatDto
+     * @return
+     */
+    private Flux<String> systemModel(ChatDto chatDto) {
+        /**
+         * 系统模式查询所有的专题名称让ai发送给用户
+         */
+        // 获取当前用户Id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+
+        // 提示词
+        String prompt = null;
+
+        // 查询一下是否这个对话开始记录过了
+        AiHistory aiHistory = null;
+        Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
+        Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+        if (aiHistoryPageDb.getRecords().size() > 0) {
+            aiHistory = aiHistoryPageDb.getRecords().get(0);
+        }
+
+        // 处理对话逻辑
+        if (aiHistory == null) {
+            // 1.用户第一次对话需要输入专题名称
+            return sendRandomTopicToUser(chatDto, currentName, currentId);
+        } else {
+            // 2.用户不是第一次对话
+            /**
+             * 有3种可能
+             * 1.用户重新输入专题名称
+             * 2.用户输入答案
+             */
+            // 2.1获取上一条记录的状态
+            Integer status = aiHistory.getStatus();
+            // 2.2上一条记录是ai提出问题
+            if (AiStatusEnums.SEND_TOPIC.getCode().equals(status)) {
+                // 用户就得输入答案
+                prompt = "你提出面试题：" + aiHistory.getContent()
+                        + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
+                        + "用户输入'继续或者输入新的专题'：你才继续生成题目！";
+                // 用户输入答案后将状态改为评估答案
+                return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
+            }
+            // 2.3上一条记录是评估答案说明ai已经评估完了用户就得输入继续或者新专题
+            if (AiStatusEnums.EVALUATE_ANSWER.getCode().equals(status)) {
+                // 用户输入继续还是新专题
+                if ("继续".equals(chatDto.getPrompt())) {
+                    // 查询前1条发出的面试题
+                    List<AiHistory> aiHistoryList = aiHistoryMapper.selectList(new QueryWrapper<AiHistory>()
+                            .eq("user_id", currentId)
+                            .eq("status", AiStatusEnums.SEND_TOPIC.getCode())
+                            .eq("chat_id", chatDto.getChatId())
+                            .orderByDesc("create_time")
+                            .last("limit 1"));
+                    log.info("aiHistoryList: {}", aiHistoryList);
+                    // 将专题名称添加到prompt中
+                    chatDto.setPrompt(aiHistoryList.get(0).getTitle());
+                    // 继续将状态改为发送面试题并发送一道题目
+                    return sendRandomTopicToUser(chatDto, currentName, currentId);
+                } else {
+                    // 再次处理专题就改为发送面试题
+                    return sendRandomTopicToUser(chatDto, currentName, currentId);
+                }
+            }
+        }
+        return Flux.just(ResultConstant.SYSTEM_ERROR);
+    }
+
+    /**
+     * 处理系统模式
+     */
+    private Long disposeSystemModel(ChatDto chatDto) {
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+        // 获取当前角色
+        String role = SecurityUtils.getCurrentRole();
+        // 查询所有的专题
+        List<TopicSubjectVo> subject = topicFeignClient.getSubject(role, currentName);
+        log.info("subject:" + JSON.toJSONString(subject));
+        // 判断输入的内容专题是否存在专题中
+        if (CollectionUtils.isNotEmpty(subject)) {
+            List<TopicSubjectVo> list = subject.stream()
+                    .filter(topicSubjectVo ->
+                            topicSubjectVo.getSubjectName().equals(chatDto.getPrompt()))
+                    .toList();
+            if (CollectionUtils.isEmpty(list)) {
+                // 用户输入的专题系统中不存在这个专题
+                return null;
+            } else {
+                return list.get(0).getId();
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 根据专题名称和ID获取一道随机题目，并返回给用户
+     */
+    private Flux<String> sendRandomTopicToUser(ChatDto chatDto, String currentName, Long currentId) {
+        // 获取当前角色
+        String role = SecurityUtils.getCurrentRole();
+        // 再次处理专题就改为发送面试题
+        Long subjectId = disposeSystemModel(chatDto);
+        if (subjectId == null) {
+            // false表示用户输入的专题不存在系统中和会员自定义中
+            if (role.equals("member")) {
+                // 是会员
+                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT_OR_CUSTOM_TOPIC_SUBJECT);
+            } else {
+                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT);
+            }
+        }
+        // 查询该专题下的所有题目并随机返回一道题目
+        Topic randomTopic = getSubjectTopicList(subjectId);
+        if (randomTopic == null) {
+            return Flux.just(ResultConstant.SYSTEM_IS_COMPLETING_TOPIC);
+        }
+        // 构造提示语
+        String prompt = "### 【" + chatDto.getPrompt() + "】专题 💡\n\n" +
+                "## 面试题目：\n" +
+                "**" + randomTopic.getTopicName() + "**\n\n" +
+                "> " + getRandomEncouragement();
+
+        // 获取当前对话id
+        String chatId = chatDto.getChatId();
+        // 封装记录
+        AiHistory aiHistory = new AiHistory();
+        aiHistory.setChatId(chatId);
+        aiHistory.setAccount(currentName);
+        aiHistory.setUserId(currentId);
+        aiHistory.setContent(prompt);
+        if(chatDto.getMemoryId() == 1){
+            aiHistory.setParent(1);
+        }
+        aiHistory.setTitle(chatDto.getPrompt());
+        aiHistory.setStatus(AiStatusEnums.SEND_TOPIC.getCode());
+        aiHistoryMapper.insert(aiHistory);
+        return Flux.just(prompt);
+    }
+
+
+    /**
+     * 查询专题下所有的题目并随机返回一道题目
+     *
+     * @param subjectId
+     */
+    private Topic getSubjectTopicList(Long subjectId) {
+        List<Topic> topicList = topicFeignClient.getSubjectTopicList(subjectId);
+        if (CollectionUtils.isEmpty(topicList)) {
+            return null;
+        }
+
+        // 随机抽取一道题目
+        int randomIndex = (int) (Math.random() * topicList.size());
+        Topic selectedTopic = topicList.get(randomIndex);
+
+        log.info("随机抽取到题目：{}", selectedTopic.getTopicName());
+        return selectedTopic;
+    }
+
+    // =================================
+
+    /**
+     * 开启对话
+     *
+     * @param prompt
+     * @param status      记录状态
+     * @param aiHistory
+     * @param chatDto
+     * @param currentName
+     * @param currentId
+     * @return
+     */
+    public Flux<String> startChat(String prompt, AiHistory aiHistory, Integer status, ChatDto chatDto, String currentName, Long currentId) {
+        // 拼接信息
+        StringBuffer fullReply = new StringBuffer();
+
+        Flux<String> content = this.chatClient.prompt()
+                .user(prompt)
+                .stream()
+                .content();
+        Flux<String> stringFlux = content.flatMap(response -> {
+            fullReply.append(response);
+            return Flux.just(response);
+        }).doOnComplete(() -> {
+            log.info("执行完成保存历史记录");
+            // 获取当前对话id
+            String chatId = chatDto.getChatId();
+            aiHistory.setChatId(chatId);
+            aiHistory.setAccount(currentName);
+            aiHistory.setUserId(currentId);
+            aiHistory.setContent(fullReply.toString());
+            aiHistory.setTitle(chatDto.getPrompt());
+            aiHistory.setStatus(status);
+            aiHistory.setId(null);
+            aiHistoryMapper.insert(aiHistory);
+        });
+        return stringFlux;
     }
 
     /**
@@ -167,152 +406,6 @@ public class ModelServiceImpl implements ModelService {
             aiUserMapper.updateById(aiUser);
         }
     }
-
-
-    /**
-     * 系统模式
-     *
-     * @param chatDto
-     * @return
-     */
-    private Flux<String> systemModel(ChatDto chatDto) {
-        /**
-         * 系统模式查询所有的专题名称让ai发送给用户
-         */
-        // 1.获取当前角色
-        String role = SecurityUtils.getCurrentRole();
-        // 2.处理系统模式
-        Long subjectId = disposeSystemModel(chatDto);
-        if (subjectId == null) {
-            // false表示用户输入的专题不存在系统中和会员自定义中
-            if (role.equals("member")) {
-                // 1.是会员
-                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT_OR_CUSTOM_TOPIC_SUBJECT);
-            } else {
-                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT);
-            }
-        }
-        // 3.处理成功了查询该专题下的所有题目
-        getSubjectTopicList(chatDto.getPrompt(), subjectId);
-        return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT);
-        // 3.
-        // // 封装返回数据
-        // AiHistory aiHistory = new AiHistory();
-        // // 获取当前用户Id
-        // Long currentId = SecurityUtils.getCurrentId();
-        // // 当前账户
-        // String currentName = SecurityUtils.getCurrentName();
-        // // 提示词
-        // String prompt = null;
-        // // 判断是否为第一次
-        // if (chatDto.getMemoryId() == 1) {
-        //     prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
-        //     aiHistory.setParent(1);
-        // } else {
-        //     // 1开始 2回答 3继续 4回答 5继续 6回答 7继续
-        //     if (chatDto.getMemoryId() >= PromptConstant.START_CONTINUE_MEMORY_ID && (chatDto.getMemoryId() - PromptConstant.START_CONTINUE_MEMORY_ID) % PromptConstant.CONTINUE_INTERVAL == 0) {
-        //         // 奇数次memoryId（3, 5, 7, ...）需要输入继续
-        //         if (!chatDto.getContent().equals("继续")) {
-        //             return Flux.just("请输入'继续'");
-        //         }
-        //     }
-        //     // 分页
-        //     Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
-        //     // 添加上一次对话记忆 查询上一条数据
-        //     LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
-        //     aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
-        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
-        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
-        //     Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
-        //     if (aiHistoryPageDb.getRecords().size() > 0) {
-        //         AiHistory aiHistoryDb = aiHistoryPageDb.getRecords().get(0);
-        //         prompt = "你提出面试题：" + aiHistoryDb.getContent()
-        //                 + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-        //                 + "引导用户输入'继续'：你才继续生成题目！";
-        //     }
-        // }
-        // // 发起对话
-        // return startChat(prompt, aiHistory, chatDto, currentName, currentId);
-    }
-
-
-    /**
-     * 处理系统模式
-     */
-    private Long disposeSystemModel(ChatDto chatDto) {
-        // 当前账户
-        String currentName = SecurityUtils.getCurrentName();
-        // 获取当前角色
-        String role = SecurityUtils.getCurrentRole();
-        // 查询所有的专题
-        List<TopicSubjectVo> subject = topicFeignClient.getSubject(role, currentName);
-        log.info("subject:" + JSON.toJSONString(subject));
-        // 判断输入的内容专题是否存在专题中
-        if (CollectionUtils.isNotEmpty(subject)) {
-            List<TopicSubjectVo> list = subject.stream()
-                    .filter(topicSubjectVo ->
-                            topicSubjectVo.getSubjectName().equals(chatDto.getPrompt()))
-                    .toList();
-            if (CollectionUtils.isEmpty(list)) {
-                // 用户输入的专题系统中不存在这个专题
-                return null;
-            } else {
-                return list.get(0).getId();
-            }
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * 查询专题下所有的题目并随机返回一道题目
-     *
-     * @param subjectName
-     * @param subjectId
-     */
-    private void getSubjectTopicList(String subjectName, Long subjectId) {
-        List<Topic> topicList = topicFeignClient.getSubjectTopicList(subjectId);
-        log.info("topicList:" + JSON.toJSONString(topicList));
-
-    }
-
-    /**
-     * 开启对话
-     *
-     * @param prompt
-     * @param aiHistory
-     * @param chatDto
-     * @param currentName
-     * @param currentId
-     * @return
-     */
-    public Flux<String> startChat(String prompt, AiHistory aiHistory, ChatDto chatDto, String currentName, Long currentId) {
-        // 拼接信息
-        StringBuffer fullReply = new StringBuffer();
-
-        Flux<String> content = this.chatClient.prompt()
-                .user(prompt)
-                .stream()
-                .content();
-        return content.flatMap(response -> {
-            fullReply.append(response);
-            return Flux.just(response);
-        }).doOnComplete(() -> {
-            log.info("执行完成保存历史记录");
-            // 获取当前对话id
-            String chatId = chatDto.getChatId();
-            aiHistory.setChatId(chatId);
-            aiHistory.setAccount(currentName);
-            aiHistory.setUserId(currentId);
-            aiHistory.setContent(fullReply.toString());
-            aiHistory.setTitle(chatDto.getPrompt());
-            // TODO 分割到状态
-            // aiHistory.setAccuracy();
-            aiHistoryMapper.insert(aiHistory);
-        });
-    }
-
 
     /**
      * 获取历史记录

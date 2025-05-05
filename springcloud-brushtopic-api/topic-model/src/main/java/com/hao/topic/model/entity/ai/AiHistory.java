@@ -32,7 +32,7 @@ public class AiHistory {
     private String title;
     private String content;
     private String chatId;
-    private Integer accuracy;
+    private Integer status;
     private Integer parent;
 
 }
