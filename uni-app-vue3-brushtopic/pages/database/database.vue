@@ -64,6 +64,9 @@ const getSubject = async (categoryId) => {
 const searchValue = ref(null)
 // 搜索
 const handleSearch = () => {
+	if (!subject.value) {
+		return;
+	}
 	if (!searchValue.value || searchValue.value.trim('') === '') {
 		getSubject(categoryId.value)
 		return
