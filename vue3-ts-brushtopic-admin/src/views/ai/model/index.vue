@@ -200,17 +200,17 @@ const aiMode = reactive([
     label: '系统模式',
     value: 'system',
     icon: RobotOutlined,
-    desc: 'AI从系统题库中提取题目逐题提问并根据系统答案校验正确性'
+    desc: userStore.userInfo.identity === 1 ? 'AI从系统题库和会员自定义题库中提取题目逐题提问并根据系统答案校验正确性' : 'AI从系统题库中提取题目逐题提问并根据系统答案校验正确性'
   }, {
     label: '模型模式',
     value: 'model',
     icon: ApiOutlined,
-    desc: '完全使用AI生成的题目覆盖更开放或创新题型'
+    desc: '完全使用AI生成的题目并完全根据AI的答案校验正确性'
   }, {
     label: '混合模式',
     value: 'mix',
     icon: AppstoreOutlined,
-    desc: 'AI随机混合系统题库和AI自定义题目增加多样性'
+    desc: 'AI随机混合系统题库和AI自定义题目并根据系统答案或AI答案校验正确性'
   },
 ])
 // 当前选中的模式
@@ -222,7 +222,7 @@ const prompt = ref('')
 // 提示词 
 // 请输入题目答案，AI将自动判断并反馈给您
 // 系统模式需要输入题目分类，将会为你生成题目
-const placeholder = ref('请输入系统中的正确的题目分类，AI将自动生成题目')
+const placeholder = ref(userStore.userInfo.identity === 1 ? '请输入系统中和会员自定义的正确的题目专题，AI将自动生成题目' : '请输入系统中的正确的题目专题，AI将自动生成题目')
 // 初始化提示词
 const initPlaceholder = () => {
   // 判断是否有内容
@@ -230,10 +230,10 @@ const initPlaceholder = () => {
     placeholder.value = '请输入题目答案，AI将自动判断并反馈给您'
   }
   if (aiModeValue.value === 'system') {
-    placeholder.value = '请输入题目分类，AI将自动生成题目'
+    placeholder.value = '请输入题目专题，AI将自动生成题目'
     return
   } else if (aiModeValue.value === 'model' || aiModeValue.value === 'mix') {
-    placeholder.value = '请输入给AI你想刷的类型，AI将自动生成题目'
+    placeholder.value = '请输入给AI你想刷的题目类型，AI将自动生成题目'
     return
   }
 }
@@ -399,6 +399,8 @@ const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr
 const readAloudLoading = ref(false)
 // 朗读文字
 const readAloud = (content: string) => {
+  console.log('开始朗读', content);
+
   // 如果有正在播放的音频，先停止
   if (currentAudio) {
     currentAudio.pause();
@@ -409,13 +411,18 @@ const readAloud = (content: string) => {
   // 开始朗读
   isSpeaking.value = true
   // 调用语音合成模型
-  fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/tts?text=${content}`, {
-    method: "get",
+  fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/tts`, {
+    method: "post",
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     headers: {
+      "Content-Type": "application/json",
       "Authorization": userStore.token,
+
     },
+    body: JSON.stringify({
+      text: content
+    }),
   })
     .then(res => res.blob())
     .then(blob => {
