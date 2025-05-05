@@ -40,4 +40,7 @@ public interface TopicSubjectService {
     List<TopicSubjectWebVo> subject(Long categoryId);
 
     TopicSubjectDetailAndTopicVo subjectDetail(Long id);
+
+    List<TopicSubjectVo> getSubject(String role, String createBy);
+
 }

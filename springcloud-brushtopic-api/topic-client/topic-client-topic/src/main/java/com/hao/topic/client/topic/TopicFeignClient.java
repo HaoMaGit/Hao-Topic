@@ -5,9 +5,14 @@ import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicSubject;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 /**
  * Description:
@@ -47,6 +52,18 @@ public interface TopicFeignClient {
     @PutMapping("/topic/topic/audit")
     void auditTopic(@RequestBody Topic topic);
 
+    /**
+     * 修改答案
+     *
+     * @param topic
+     */
     @PutMapping("/topic/topic/answer")
     void updateAiAnswer(@RequestBody Topic topic);
+
+
+    /**
+     * ai查询全部专题或者会员专题
+     */
+    @GetMapping("/topic/subject/ai/subject/{role}/{createBy}")
+    public List<TopicSubjectVo> getSubject(@PathVariable String role, @PathVariable String createBy);
 }

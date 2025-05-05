@@ -18,7 +18,6 @@ import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.excel.topic.TopicSubjectExcel;
 import com.hao.topic.model.excel.topic.TopicSubjectExcelExport;
 import com.hao.topic.model.vo.system.TopicSubjectWebVo;
-import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import com.hao.topic.model.vo.topic.TopicNameVo;
 import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
@@ -624,5 +623,42 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         }
         topicSubjectDetailAndTopicVo.setTopicNameVos(topicNameVos);
         return topicSubjectDetailAndTopicVo;
+    }
+
+    /**
+     * 询全部专题或者会员专题
+     *
+     * @return
+     */
+    public List<TopicSubjectVo> getSubject(String role, String createBy) {
+        // 全部数据
+        List<TopicSubject> topicSubjectList = null;
+        // 会员数据
+        List<TopicSubject> topicSubjects = null;
+        // 查公共的数据
+        LambdaQueryWrapper<TopicSubject> subjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        subjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode())
+                .eq(TopicSubject::getCreateBy, "admin")
+                .orderByDesc(TopicSubject::getCreateTime);
+        topicSubjectList = topicSubjectMapper.selectList(subjectLambdaQueryWrapper);
+        if (role.equals("member")) {
+            // 是会员可以查自己专属的
+            // 为true说明开启了可以查自己的
+            LambdaQueryWrapper<TopicSubject> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+            lambdaQueryWrapper.orderByDesc(TopicSubject::getCreateTime);
+            lambdaQueryWrapper.eq(TopicSubject::getCreateBy, createBy);
+            topicSubjects = topicSubjectMapper.selectList(lambdaQueryWrapper);
+        }
+        // 判断会员数据是否为空
+        if (!CollectionUtils.isEmpty(topicSubjects)) {
+            // 不为空将会员数据放在全部数据的前面
+            topicSubjectList.addAll(0, topicSubjects);
+        }
+        return topicSubjectList.stream().map(topicSubject -> {
+            TopicSubjectVo topicSubjectVo = new TopicSubjectVo();
+            BeanUtils.copyProperties(topicSubject, topicSubjectVo);
+            return topicSubjectVo;
+        }).toList();
     }
 }

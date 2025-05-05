@@ -39,6 +39,7 @@ import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
+import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.ai.chat.client.ChatClient;
@@ -87,6 +88,7 @@ public class ModelServiceImpl implements ModelService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+
     public ModelServiceImpl(ChatClient chatClient) {
         this.chatClient = chatClient;
     }
@@ -99,6 +101,26 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     public Flux<String> chat(ChatDto chatDto) {
+        // 1.记录用户使用记录
+        recordAi();
+        // 2.校验模式
+        if (chatDto.getModel().equals(AiConstant.SYSTEM_MODEL)) {
+            // 系统模式
+            return systemModel(chatDto);
+        } else if (chatDto.getModel().equals(AiConstant.AI_MODEL)) {
+            // AI模式
+        }
+        // 混合模式
+        return this.chatClient.prompt()
+                .user(chatDto.getPrompt())
+                .stream()
+                .content();
+    }
+
+    /**
+     * 记录ai使用记录
+     */
+    private void recordAi() {
         // 获取当前用户Id
         Long currentId = SecurityUtils.getCurrentId();
         // 当前账户
@@ -143,21 +165,6 @@ public class ModelServiceImpl implements ModelService {
             aiUser.setRecentlyUsedTime(DateUtils.parseLocalDateTime(DateUtils.format(new Date())));
             aiUserMapper.updateById(aiUser);
         }
-
-        // 判断用户状态
-        // 校验模式
-        if (chatDto.getModel().equals(AiConstant.SYSTEM_MODEL)) {
-            // 系统模式
-            return systemModel(chatDto);
-
-        } else if (chatDto.getModel().equals(AiConstant.AI_MODEL)) {
-            // AI模式
-        }
-        // 混合模式
-        return this.chatClient.prompt()
-                .user(chatDto.getPrompt())
-                .stream()
-                .content();
     }
 
 
@@ -168,42 +175,76 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     private Flux<String> systemModel(ChatDto chatDto) {
-        // 封装返回数据
-        AiHistory aiHistory = new AiHistory();
-        // 获取当前用户Id
-        Long currentId = SecurityUtils.getCurrentId();
+        /**
+         * 系统模式查询所有的专题名称让ai发送给用户
+         */
+        // 1.处理系统模式
+        disposeSystemModel(chatDto);
+        // // 封装返回数据
+        // AiHistory aiHistory = new AiHistory();
+        // // 获取当前用户Id
+        // Long currentId = SecurityUtils.getCurrentId();
+        // // 当前账户
+        // String currentName = SecurityUtils.getCurrentName();
+        // // 提示词
+        // String prompt = null;
+        // // 判断是否为第一次
+        // if (chatDto.getMemoryId() == 1) {
+        //     prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
+        //     aiHistory.setParent(1);
+        // } else {
+        //     // 1开始 2回答 3继续 4回答 5继续 6回答 7继续
+        //     if (chatDto.getMemoryId() >= PromptConstant.START_CONTINUE_MEMORY_ID && (chatDto.getMemoryId() - PromptConstant.START_CONTINUE_MEMORY_ID) % PromptConstant.CONTINUE_INTERVAL == 0) {
+        //         // 奇数次memoryId（3, 5, 7, ...）需要输入继续
+        //         if (!chatDto.getContent().equals("继续")) {
+        //             return Flux.just("请输入'继续'");
+        //         }
+        //     }
+        //     // 分页
+        //     Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
+        //     // 添加上一次对话记忆 查询上一条数据
+        //     LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+        //     aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
+        //     aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
+        //     Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+        //     if (aiHistoryPageDb.getRecords().size() > 0) {
+        //         AiHistory aiHistoryDb = aiHistoryPageDb.getRecords().get(0);
+        //         prompt = "你提出面试题：" + aiHistoryDb.getContent()
+        //                 + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
+        //                 + "引导用户输入'继续'：你才继续生成题目！";
+        //     }
+        // }
+        // // 发起对话
+        // return startChat(prompt, aiHistory, chatDto, currentName, currentId);
+        return null;
+    }
+
+    /**
+     * 处理系统模式
+     */
+    private void disposeSystemModel(ChatDto chatDto) {
         // 当前账户
         String currentName = SecurityUtils.getCurrentName();
-        // 提示词
-        String prompt = null;
-        // 判断是否为第一次
-        if (chatDto.getMemoryId() == 1) {
-            prompt = PromptConstant.INTRODUCTION + "用户输入：" + chatDto.getPrompt();
-            aiHistory.setParent(1);
-        } else {
-            // 1开始 2回答 3继续 4回答 5继续 6回答 7继续
-            if (chatDto.getMemoryId() >= PromptConstant.START_CONTINUE_MEMORY_ID && (chatDto.getMemoryId() - PromptConstant.START_CONTINUE_MEMORY_ID) % PromptConstant.CONTINUE_INTERVAL == 0) {
-                // 奇数次memoryId（3, 5, 7, ...）需要输入继续
-                if (!chatDto.getContent().equals("继续")) {
-                    return Flux.just("请输入'继续'");
-                }
-            }
-            // 分页
-            Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
-            // 添加上一次对话记忆 查询上一条数据
-            LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
-            aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
-            aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
-            aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
-            Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
-            if (aiHistoryPageDb.getRecords().size() > 0) {
-                AiHistory aiHistoryDb = aiHistoryPageDb.getRecords().get(0);
-                prompt = "你提出面试题：" + aiHistoryDb.getContent()
-                        + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-                        + "引导用户输入'继续'：你才继续生成题目！";
-            }
-        }
+        // 获取当前角色
+        String role = SecurityUtils.getCurrentRole();
+        // 查询所有的专题
+        List<TopicSubjectVo> subject = topicFeignClient.getSubject(role, currentName);
+        log.info("subject:" + JSON.toJSONString(subject));
+    }
+
+    /**
+     * 开启对话
+     *
+     * @param prompt
+     * @param aiHistory
+     * @param chatDto
+     * @param currentName
+     * @param currentId
+     * @return
+     */
+    public Flux<String> startChat(String prompt, AiHistory aiHistory, ChatDto chatDto, String currentName, Long currentId) {
         // 拼接信息
         StringBuffer fullReply = new StringBuffer();
 
@@ -211,7 +252,7 @@ public class ModelServiceImpl implements ModelService {
                 .user(prompt)
                 .stream()
                 .content();
-        Flux<String> stringFlux = content.flatMap(response -> {
+        return content.flatMap(response -> {
             fullReply.append(response);
             return Flux.just(response);
         }).doOnComplete(() -> {
@@ -227,7 +268,6 @@ public class ModelServiceImpl implements ModelService {
             // aiHistory.setAccuracy();
             aiHistoryMapper.insert(aiHistory);
         });
-        return stringFlux;
     }
 
 
@@ -319,7 +359,6 @@ public class ModelServiceImpl implements ModelService {
 
         return result;
     }
-
 
 
     /**
