@@ -1,14 +1,23 @@
 <script setup>
 import {
-	ref, computed
+	ref, computed, onMounted
 } from 'vue'
 import { getTimeOfDay } from '@/utils/time'
-// 点击了排名
-const tapRanking = () => {
-	uni.navigateTo({
-		url: '/pages/index/ranking/ranking'
-	})
+import { apiQueryWebHomeCount } from '@/api/home/index'
+
+// 数据对象
+const webHomeCount = ref({})
+// 获取数据
+const getWebHomeCount = async () => {
+	uni.showLoading()
+	const res = await apiQueryWebHomeCount()
+	webHomeCount.value = res.data
+	uni.hideLoading()
 }
+
+onMounted(() => {
+	getWebHomeCount()
+})
 
 // 用户信息
 const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
@@ -42,6 +51,15 @@ const getTextColor = computed(() => {
 	}
 	return textColorMap[role.value] || gradientMap[0]
 })
+
+
+// 点击了排名
+const tapRanking = () => {
+	uni.navigateTo({
+		url: '/pages/index/ranking/ranking'
+	})
+}
+
 </script>
 <template>
 	<view class="content" :style="{ background: getPageGradient }">
@@ -57,20 +75,21 @@ const getTextColor = computed(() => {
 			<!-- 统计刷题区域 -->
 			<view class="content-bottom" :style="{ color: getTextColor }">
 				<view class="count">
-					今日已刷次数<text class="weight" style="color: #8a9ba8;">10</text>
+					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{webHomeCount.todayCount}}</text>
 				</view>
 				<view class="count">
-					今日已刷题<text class="weight" :style="{ color: getTextColor }">10</text>
+					今日已刷题<text class="weight" :style="{ color: getTextColor }">{{ webHomeCount.todayTopicCount }}</text>
 				</view>
 				<view class="count">
-					共刷题<text class="weight" style="color: #1677ff;">30/<span
-							style="color: #0056b3;font-weight: bold;">100</span></text>
+					共刷题<text class="weight" style="color: #1677ff;">{{ webHomeCount.totalTopicRecordCount }}/<span
+							style="color: #0056b3;font-weight: bold;">{{ webHomeCount.totalTopicCount }}</span></text>
 				</view>
 			</view>
 			<!-- 排名 -->
 			<view class="content-db" @click="tapRanking">
 				<view class="text-box">
-					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第3名 / 总3人</text>
+					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第{{ webHomeCount.rank }}名 / 总{{
+						webHomeCount?.userCount }}人</text>
 				</view>
 				<uni-icons type="arrow-right" size="24" :color="getTextColor" class="clickable-icon"></uni-icons>
 				<image class="rank-img" src="../../static/images/zzjb.png" mode="aspectFill"></image>

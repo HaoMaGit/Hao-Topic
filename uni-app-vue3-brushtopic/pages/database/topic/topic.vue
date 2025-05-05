@@ -52,7 +52,8 @@ const countTopic = async () => {
 	await apiCountTopic({
 		topicId: currentTopicId.value,
 		subjectId: currentSubjectId.value,
-		nickname: userInfo.nickname
+		nickname: userInfo.value.nickname,
+		avatar: userInfo.value.avatar,
 	})
 }
 
