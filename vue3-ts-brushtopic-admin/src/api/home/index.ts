@@ -11,8 +11,15 @@ export const apiAdminHomeCount = () => {
         method: "get",
     })
 }
-
-
+/**
+ * 管理员首页右侧分类数据
+ */
+export const apiAdminHomeCategory = () => {
+    return request({
+        url: prefix + "adminHomeCategory",
+        method: "get",
+    })
+}
 
 
 

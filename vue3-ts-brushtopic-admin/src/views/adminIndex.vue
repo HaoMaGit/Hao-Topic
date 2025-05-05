@@ -6,26 +6,13 @@ import * as echarts from 'echarts';
 // 导入 settingStore
 import { useSettingStore } from '@/stores/modules/setting';
 const settingStore = useSettingStore();
-import { apiAdminHomeCount } from '@/api/home'
+import { apiAdminHomeCount, apiAdminHomeCategory } from '@/api/home'
 import type { AdminLeftDataType } from '@/api/home/type';
 // 分类实例
 const categoryChart = ref(null)
-const categoryData = [
-  { name: '哈希表', value: 60 },
-  { name: '数组', value: 80 },
-  { name: '动态规划', value: 90 },
-  { name: '队列', value: 40 },
-  { name: '短阵', value: 50 },
-  { name: '堆（优先队列）', value: 70 },
-  { name: '栈', value: 55 },
-  { name: '双指针', value: 65 },
-  { name: '并查集', value: 45 },
-  { name: '单调栈', value: 50 },
-  { name: '单调1栈', value: 50 },
-  { name: '单调23栈', value: 50 },
-];
-// 初始化气泡图
 const initBubbleChart = () => {
+  console.log(rightData.value);
+
   const myChart = echarts.init(categoryChart.value);
   const option = {
     animationDurationUpdate: function (idx: number) {
@@ -73,10 +60,10 @@ const initBubbleChart = () => {
         borderWidth: 1,    // 添加边框
         borderColor: '#fff'
       },
-      data: categoryData.map((cat) => ({
-        name: cat.name,
-        value: cat.value,
-        symbolSize: cat.value * 1.05, // value越大，球越大
+      data: rightData.value.map((cat: any) => ({
+        name: cat.categoryName,
+        value: cat.count,
+        symbolSize: (cat.count === 0 ? 5 : cat.count) * 10, // value越大，球越大
         draggable: true,
       }))
     }]
@@ -413,19 +400,29 @@ watch(() => settingStore.isDark, () => {
 
 // 首页全部数据
 const leftData = ref<AdminLeftDataType>(); // 左侧数据
+const rightData = ref(); // 左侧数据
 // 获取左侧数据
 const getLeftData = async () => {
   const res = await apiAdminHomeCount();
-  console.log("================>", res);
   if (res.data) {
     leftData.value = res.data
+  }
+}
+// 获取右侧数据
+const getRightData = async () => {
+  const res = await apiAdminHomeCategory();
+  if (res.data) {
+    rightData.value = res.data
+    if (rightData.value) {
+      initBubbleChart();
+    }
   }
 }
 
 
 onMounted(() => {
   getLeftData()
-  initBubbleChart();
+  getRightData()
   initProblemTrendChart();
   initUserGrowthChart();
   initAiCallChart()
