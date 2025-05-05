@@ -7,6 +7,7 @@ import com.hao.topic.ai.service.ModelService;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.dto.ai.TtsDto;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import lombok.AllArgsConstructor;
@@ -73,9 +74,9 @@ public class ModelController {
     /**
      * 语音合成
      */
-    @GetMapping("tts")
-    public ResponseEntity<byte[]> tts(@RequestParam String text) {
-        return modelService.tts(text);
+    @PostMapping("tts")
+    public ResponseEntity<byte[]> tts(@RequestBody TtsDto ttsDto) {
+        return modelService.tts(ttsDto);
     }
 
     /**

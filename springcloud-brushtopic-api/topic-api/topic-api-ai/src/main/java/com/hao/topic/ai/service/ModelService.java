@@ -2,6 +2,7 @@ package com.hao.topic.ai.service;
 
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.dto.ai.TtsDto;
 import com.hao.topic.model.dto.audit.TopicAudit;
 import com.hao.topic.model.dto.audit.TopicAuditCategory;
 import com.hao.topic.model.dto.audit.TopicAuditLabel;
@@ -27,7 +28,7 @@ public interface ModelService {
 
     List<AiHistoryContent> getHistoryById(Long id);
 
-    ResponseEntity<byte[]> tts(String text);
+    ResponseEntity<byte[]> tts(TtsDto text);
 
     void deleteHistory(Long id);
 

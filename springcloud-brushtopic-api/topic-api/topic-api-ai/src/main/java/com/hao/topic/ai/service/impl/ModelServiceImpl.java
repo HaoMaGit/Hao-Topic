@@ -27,6 +27,7 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.dto.ai.AiHistoryDto;
 import com.hao.topic.model.dto.ai.ChatDto;
+import com.hao.topic.model.dto.ai.TtsDto;
 import com.hao.topic.model.dto.audit.TopicAudit;
 import com.hao.topic.model.dto.audit.TopicAuditCategory;
 import com.hao.topic.model.dto.audit.TopicAuditLabel;
@@ -533,7 +534,7 @@ public class ModelServiceImpl implements ModelService {
      * @param text
      * @return
      */
-    public ResponseEntity<byte[]> tts(String text) {
+    public ResponseEntity<byte[]> tts(TtsDto text) {
         SpeechSynthesisParam param =
                 SpeechSynthesisParam.builder()
                         .apiKey(ttsProperties.getApiKey())
@@ -541,7 +542,7 @@ public class ModelServiceImpl implements ModelService {
                         .voice(ttsProperties.getVoice())
                         .build();
         SpeechSynthesizer synthesizer = new SpeechSynthesizer(param, null);
-        ByteBuffer audio = synthesizer.call(text); // 用前端传入的text
+        ByteBuffer audio = synthesizer.call(text.getText()); // 用前端传入的text
 
         byte[] audioBytes = audio.array();
 
