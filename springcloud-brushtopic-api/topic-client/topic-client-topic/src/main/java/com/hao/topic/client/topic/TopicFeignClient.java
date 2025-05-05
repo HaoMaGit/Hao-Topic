@@ -64,6 +64,12 @@ public interface TopicFeignClient {
     /**
      * ai查询全部专题或者会员专题
      */
-    @GetMapping("/topic/subject/ai/subject/{role}/{createBy}")
+    @GetMapping("/topic/ai/subject/{role}/{createBy}")
     public List<TopicSubjectVo> getSubject(@PathVariable String role, @PathVariable String createBy);
+
+    /**
+     * ai查询专题下的所有题目
+     */
+    @GetMapping("/topic/ai/topicList/{subjectId}")
+    List<Topic> getSubjectTopicList(@PathVariable Long subjectId);
 }

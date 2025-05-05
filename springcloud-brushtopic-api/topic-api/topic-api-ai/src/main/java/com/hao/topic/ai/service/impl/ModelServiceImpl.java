@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hao.topic.ai.constant.AiConstant;
 import com.hao.topic.ai.constant.PromptConstant;
+import com.hao.topic.ai.constant.ResultConstant;
 import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
@@ -178,8 +179,23 @@ public class ModelServiceImpl implements ModelService {
         /**
          * 系统模式查询所有的专题名称让ai发送给用户
          */
-        // 1.处理系统模式
-        disposeSystemModel(chatDto);
+        // 1.获取当前角色
+        String role = SecurityUtils.getCurrentRole();
+        // 2.处理系统模式
+        Long subjectId = disposeSystemModel(chatDto);
+        if (subjectId == null) {
+            // false表示用户输入的专题不存在系统中和会员自定义中
+            if (role.equals("member")) {
+                // 1.是会员
+                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT_OR_CUSTOM_TOPIC_SUBJECT);
+            } else {
+                return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT);
+            }
+        }
+        // 3.处理成功了查询该专题下的所有题目
+        getSubjectTopicList(chatDto.getPrompt(), subjectId);
+        return Flux.just(ResultConstant.PLEASE_INPUT_TOPIC_SUBJECT);
+        // 3.
         // // 封装返回数据
         // AiHistory aiHistory = new AiHistory();
         // // 获取当前用户Id
@@ -218,13 +234,13 @@ public class ModelServiceImpl implements ModelService {
         // }
         // // 发起对话
         // return startChat(prompt, aiHistory, chatDto, currentName, currentId);
-        return null;
     }
+
 
     /**
      * 处理系统模式
      */
-    private void disposeSystemModel(ChatDto chatDto) {
+    private Long disposeSystemModel(ChatDto chatDto) {
         // 当前账户
         String currentName = SecurityUtils.getCurrentName();
         // 获取当前角色
@@ -232,6 +248,33 @@ public class ModelServiceImpl implements ModelService {
         // 查询所有的专题
         List<TopicSubjectVo> subject = topicFeignClient.getSubject(role, currentName);
         log.info("subject:" + JSON.toJSONString(subject));
+        // 判断输入的内容专题是否存在专题中
+        if (CollectionUtils.isNotEmpty(subject)) {
+            List<TopicSubjectVo> list = subject.stream()
+                    .filter(topicSubjectVo ->
+                            topicSubjectVo.getSubjectName().equals(chatDto.getPrompt()))
+                    .toList();
+            if (CollectionUtils.isEmpty(list)) {
+                // 用户输入的专题系统中不存在这个专题
+                return null;
+            } else {
+                return list.get(0).getId();
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 查询专题下所有的题目并随机返回一道题目
+     *
+     * @param subjectName
+     * @param subjectId
+     */
+    private void getSubjectTopicList(String subjectName, Long subjectId) {
+        List<Topic> topicList = topicFeignClient.getSubjectTopicList(subjectId);
+        log.info("topicList:" + JSON.toJSONString(topicList));
+
     }
 
     /**

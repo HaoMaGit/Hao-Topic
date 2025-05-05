@@ -200,12 +200,5 @@ public class TopicSubjectController {
     }
 
 
-    /**
-     * 查询全部专题或者会员专题
-     */
-    @GetMapping("/ai/subject/{role}/{createBy}")
-    public List<TopicSubjectVo> aiSubject(@PathVariable String role, @PathVariable String createBy) {
-        List<TopicSubjectVo> topicSubjectVos = topicSubjectService.getSubject(role, createBy);
-        return topicSubjectVos;
-    }
+
 }

@@ -8,7 +8,6 @@ import com.hao.topic.model.excel.topic.TopicExcelExport;
 import com.hao.topic.model.vo.topic.TopicAnswerVo;
 import com.hao.topic.model.vo.topic.TopicCollectionVo;
 import com.hao.topic.model.vo.topic.TopicDetailVo;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

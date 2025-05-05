@@ -41,6 +41,5 @@ public interface TopicSubjectService {
 
     TopicSubjectDetailAndTopicVo subjectDetail(Long id);
 
-    List<TopicSubjectVo> getSubject(String role, String createBy);
 
 }

@@ -14,7 +14,6 @@ import com.hao.topic.common.exception.TopicException;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.audit.TopicAudit;
-import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.topic.TopicDto;
 import com.hao.topic.model.dto.topic.TopicListDto;
 import com.hao.topic.model.dto.topic.TopicRecordCountDto;
@@ -1468,4 +1467,6 @@ public class TopicServiceImpl implements TopicService {
         userInfo.put("role", currentRole);
         stringRedisTemplate.opsForHash().putAll(RedisConstant.USER_RANK_PREFIX + userId, userInfo);
     }
+
+
 }
