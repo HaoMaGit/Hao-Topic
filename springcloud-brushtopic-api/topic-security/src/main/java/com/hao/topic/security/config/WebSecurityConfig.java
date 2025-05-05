@@ -73,6 +73,8 @@ public class WebSecurityConfig {
                         .pathMatchers("/security/user/count").permitAll()       // 退出接口不需要权限
                         .pathMatchers("/security/user/**").permitAll()       // 用户相关的远程接口不要权限 用角色权限一样的
                         .pathMatchers("/ai/model/**").permitAll()          // 流式接口不需要权限
+                        .pathMatchers("/ai/model/count").permitAll()          // 流式接口不需要权限
+                        .pathMatchers("/ai/model/countDate").permitAll()          // 流式接口不需要权限
                         .anyExchange().authenticated()                     // 其他所有接口都需要认证
                 )
 

@@ -47,4 +47,5 @@ public interface ModelService {
 
     void generateAnswer(TopicAudit topicAudit);
 
+    Long count(String date);
 }

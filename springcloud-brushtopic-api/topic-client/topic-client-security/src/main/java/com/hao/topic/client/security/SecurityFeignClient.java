@@ -82,6 +82,9 @@ public interface SecurityFeignClient {
     @PostMapping("/security/user/import")
     String importExcel(@RequestBody List<SysUserExcel> excelVoList, @RequestParam("updateSupport") Boolean updateSupport);
 
+    @GetMapping("/security/user/count/{date}")
+    public Long countDate(@PathVariable String date);
+
     @GetMapping("/security/user/count")
     public Long count();
 }

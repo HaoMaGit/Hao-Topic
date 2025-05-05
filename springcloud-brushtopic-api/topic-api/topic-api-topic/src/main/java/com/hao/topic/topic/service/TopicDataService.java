@@ -17,4 +17,5 @@ public interface TopicDataService {
 
     TopicUserRankVo userRank(Integer type);
 
+    Map<String, Object> adminHomeCount();
 }

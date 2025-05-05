@@ -56,4 +56,12 @@ public class TopicDataController {
      */
 
 
+    /**
+     * 管理员首页左侧顶部系统数据
+     */
+    @GetMapping("/adminHomeCount")
+    public Result<Map<String, Object>> adminHomeData() {
+        Map<String, Object> map = topicDataService.adminHomeCount();
+        return Result.success(map);
+    }
 }

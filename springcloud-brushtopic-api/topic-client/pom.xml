@@ -15,6 +15,7 @@
         <module>topic-client-system</module>
         <module>topic-client-security</module>
         <module>topic-client-topic</module>
+        <module>topic-client-ai</module>
     </modules>
 
     <properties>

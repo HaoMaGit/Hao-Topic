@@ -1,7 +1,9 @@
 package com.hao.topic.security.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.common.constant.ExceptionConstant;
 import com.hao.topic.common.result.Result;
+import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.entity.system.SysUser;
@@ -11,6 +13,7 @@ import com.hao.topic.model.vo.system.UserInfoVo;
 import com.hao.topic.security.dto.*;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
+import com.hao.topic.security.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,6 +28,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.handler.DefaultWebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -255,6 +259,23 @@ public class SecurityController {
 
     /**
      * 查询用户数量
+     */
+    @GetMapping("/count/{date}")
+    public Long countDate(@PathVariable String date) {
+        // 获取当天的开始和结束时间
+        LocalDateTime start = DateUtils.parseStartOfDay(date);
+        LocalDateTime end = DateUtils.parseEndOfDay(date);
+
+        // 构建查询条件：createTime 在 [start, end] 范围内
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        wrapper.between(SysUser::getCreateTime, start, end);
+
+        return sysUserService.count(wrapper);
+    }
+
+    /**
+     * 查询总数
+     * @return
      */
     @GetMapping("/count")
     public Long count() {

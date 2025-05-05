@@ -928,4 +928,17 @@ public class ModelServiceImpl implements ModelService {
         aiAuditLogMapper.insert(aiLog);
     }
 
+    /**
+     * 统计ai使用次数
+     *
+     * @param date
+     * @return
+     */
+    public Long count(String date) {
+        Long count = aiRecordMapper.countAiFrequency(date);
+        if(count == null){
+            count = 0L;
+        }
+        return count;
+    }
 }

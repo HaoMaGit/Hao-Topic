@@ -1,15 +1,21 @@
 package com.hao.topic.topic.service.impl;
 
+import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.hao.ai.client.ai.AiFeignClient;
 import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.topic.Topic;
+import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicRecord;
+import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
+import com.hao.topic.topic.mapper.TopicLabelMapper;
 import com.hao.topic.topic.mapper.TopicMapper;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
+import com.hao.topic.topic.mapper.TopicSubjectMapper;
 import com.hao.topic.topic.service.TopicDataService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +41,9 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final TopicRecordMapper topicRecordMapper;
     private final TopicMapper topicMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final TopicSubjectMapper subjectMapper;
+    private final TopicLabelMapper topicLabelMapper;
+    private final AiFeignClient aiFeignClient;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -255,6 +264,7 @@ public class TopicDataServiceImpl implements TopicDataService {
         return topicUserRankVo;
     }
 
+
     /**
      * 将今日排行榜缓存数据写入redis
      */
@@ -284,5 +294,82 @@ public class TopicDataServiceImpl implements TopicDataService {
             // 存全部信息
             stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_PREFIX, String.valueOf(topicUserRankVo.getUserId()), topicUserRankVo.getScope());
         }
+    }
+
+
+    /**
+     * 管理员顶部左侧数据统计
+     *
+     * @return
+     */
+    public Map<String, Object> adminHomeCount() {
+        // 封装返回数据
+        Map<String, Object> map = new HashMap<>();
+        // 获取今日日期
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        // 获取昨日日期
+        String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        // 1.刷题总数和比昨日少或多多少
+        // 查询刷题次数总数
+        Long count = topicRecordMapper.countTopicFrequency(null);
+        // 查询今天的刷题总数
+        Long countTodayTopicFrequency = topicRecordMapper.countTopicFrequency(date);
+        countTodayTopicFrequency = countTodayTopicFrequency == null ? 0L : countTodayTopicFrequency;
+        // 查询昨天的刷题总数
+        Long countYesterdayTopicFrequency = topicRecordMapper.countTopicFrequency(yesterday);
+        countYesterdayTopicFrequency = countYesterdayTopicFrequency == null ? 0L : countYesterdayTopicFrequency;
+        // 计算差值（今天 - 昨天）
+        long topicGrowthRate = countTodayTopicFrequency - countYesterdayTopicFrequency;
+
+        // 2. AI调用总次数和比昨日少或多多少
+        Long aiCount = aiFeignClient.count();
+        // 查询今日
+        Long aLong1 = aiFeignClient.countDate(date);
+        // 查询昨日
+        Long aLong = aiFeignClient.countDate(yesterday);
+        // 计算差值（今天 - 昨天）
+        long aiGrowthRate = aLong1 - aLong;
+
+        // 3.用户总数和昨日幅度
+        // 统计用户数量
+        Long userCount = securityFeignClient.count();
+        // 统计今日用户数量
+        Long tCount = securityFeignClient.countDate(date);
+        // 统计昨日用户数量
+        Long yCount = securityFeignClient.countDate(yesterday);
+        // 计算差值（今天 - 昨天）
+        long userGrowthRate = tCount - yCount;
+
+        // 4.题目总数量
+        // 用户直接查询系统数量
+        LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicLambdaQueryWrapper.eq(Topic::getCreateBy, "admin");
+        topicLambdaQueryWrapper.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+        Long totalTopicCount = topicMapper.selectCount(topicLambdaQueryWrapper);
+
+        // 5.专题总数量
+        LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+        topicLambdaQueryWrapper.eq(Topic::getCreateBy, "admin");
+        Long totalSubjectCount = subjectMapper.selectCount(topicSubjectLambdaQueryWrapper);
+
+        // 6.标签总数量
+        LambdaQueryWrapper<TopicLabel> topicTagLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicTagLambdaQueryWrapper.eq(TopicLabel::getStatus, StatusEnums.NORMAL.getCode());
+        topicLambdaQueryWrapper.eq(Topic::getCreateBy, "admin");
+        Long topicLabelCount = topicLabelMapper.selectCount(topicTagLambdaQueryWrapper);
+
+        map.put("countTodayFrequency", count);
+        map.put("topicGrowthRate", topicGrowthRate);
+        map.put("userCount", userCount);
+        map.put("userGrowthRate", userGrowthRate);
+        map.put("totalTopicCount", totalTopicCount);
+        map.put("totalSubjectCount", totalSubjectCount);
+        map.put("topicLabelCount", topicLabelCount);
+        map.put("aiCount", aiCount);
+        map.put("aiGrowthRate", aiGrowthRate);
+
+        return map;
     }
 }
