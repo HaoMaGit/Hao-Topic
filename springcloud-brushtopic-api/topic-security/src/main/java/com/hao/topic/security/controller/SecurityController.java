@@ -253,4 +253,11 @@ public class SecurityController {
         return Result.success();
     }
 
+    /**
+     * 查询用户数量
+     */
+    @GetMapping("/count")
+    public Long count() {
+        return sysUserService.count();
+    }
 }

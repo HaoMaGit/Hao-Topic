@@ -25,7 +25,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 })
 @Import({MyMetaObjectHandler.class, MybatisPlusConfig.class})  // 直接导入配置类
 @ComponentScan({"com.hao.topic.api.utils", "com.hao.topic.common.auth"})
-@EnableFeignClients
+@EnableFeignClients(basePackages = {"com.hao.topic.client.security"})
 public class TopicTopicApplication {
     public static void main(String[] args) {
         SpringApplication.run(TopicTopicApplication.class, args);

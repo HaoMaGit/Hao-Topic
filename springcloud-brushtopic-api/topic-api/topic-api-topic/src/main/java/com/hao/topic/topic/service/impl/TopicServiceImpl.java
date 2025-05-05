@@ -39,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -1410,13 +1411,17 @@ public class TopicServiceImpl implements TopicService {
         } else {
             currentName = topicRecordCountDto.getNickname();
         }
+        // 当天日期
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         // 查询记录表
         LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicRecordLambdaQueryWrapper.eq(TopicRecord::getUserId, userId);
         topicRecordLambdaQueryWrapper.eq(TopicRecord::getTopicId, topicRecordCountDto.getTopicId());
+        // 查询今日
+        topicRecordLambdaQueryWrapper.eq(TopicRecord::getTopicTime, date);
         TopicRecord topicRecord = topicRecordMapper.selectOne(topicRecordLambdaQueryWrapper);
         if (topicRecord == null) {
-            // 插入到redis中
-            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_PREFIX, currentName + "&" + userId, 1);
+            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(userId), 1);
             // 说明是第一次
             topicRecord = new TopicRecord();
             topicRecord.setTopicId(topicRecordCountDto.getTopicId());
@@ -1424,13 +1429,32 @@ public class TopicServiceImpl implements TopicService {
             topicRecord.setCount(1L);
             topicRecord.setUserId(userId);
             topicRecord.setNickname(currentName);
+            topicRecord.setTopicTime(new Date());
             topicRecordMapper.insert(topicRecord);
         } else {
             // 更新分值
-            stringRedisTemplate.opsForZSet().incrementScore(RedisConstant.TOPIC_RANK_PREFIX, currentName + "&" + userId, 1);
+            stringRedisTemplate.opsForZSet().incrementScore(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(userId), 1);
             // 不是第一次刷这个题目
             topicRecord.setCount(topicRecord.getCount() + 1);
+            topicRecord.setTopicTime(new Date());
             topicRecordMapper.updateById(topicRecord);
         }
+        // 查询redis中是否有改用户的总榜key
+        Boolean aBoolean = stringRedisTemplate.hasKey(RedisConstant.TOPIC_RANK_PREFIX);
+        if (Boolean.TRUE.equals(aBoolean)) {
+            // 存在总榜，直接更新用户的做题总数
+            stringRedisTemplate.opsForZSet().incrementScore(
+                    RedisConstant.TOPIC_RANK_PREFIX,
+                    String.valueOf(userId),
+                    1);
+        } else {
+            // 不存在
+            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_PREFIX, String.valueOf(userId), 1);
+        }
+        // 存储用户信息到Hash
+        Map<String, String> userInfo = new HashMap<>();
+        userInfo.put("nickname", currentName);
+        userInfo.put("avatar", topicRecordCountDto.getAvatar());
+        stringRedisTemplate.opsForHash().putAll(RedisConstant.USER_RANK_PREFIX + userId, userInfo);
     }
 }

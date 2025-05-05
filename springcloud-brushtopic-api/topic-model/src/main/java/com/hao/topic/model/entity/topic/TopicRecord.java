@@ -26,7 +26,8 @@ public class TopicRecord {
     private Long subjectId;
     private Long count;
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Date createTime;
+    private Date topicTime;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
