@@ -256,7 +256,8 @@ const sendPrompt = async () => {
       memoryId: aiId.value,
       chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
       model: aiModeValue.value,
-      content: ''
+      content: '',
+      nickname: userStore.userInfo.nickname,
     })
     // 获取当前记录
     const currentRecord = messageList[messageList.length - 1]
