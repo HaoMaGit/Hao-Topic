@@ -1,13 +1,16 @@
 package com.hao.topic.topic.controller;
 
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
 import com.hao.topic.topic.service.TopicDataService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,8 +34,13 @@ public class TopicDataController {
     }
 
     /**
-     * TODO 查询排行榜
+     * 查询排行榜
      */
+    @GetMapping("/rank/{type}")
+    public Result<List<TopicUserRankVo>> rank(@PathVariable Integer type) {
+        List<TopicUserRankVo> topicUserRankVos = topicDataService.rank(type);
+        return Result.success(topicUserRankVos);
+    }
 
     /**
      * TODO 查询每日必刷

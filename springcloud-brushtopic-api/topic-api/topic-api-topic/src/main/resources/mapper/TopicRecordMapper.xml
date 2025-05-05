@@ -8,7 +8,7 @@
                      SUM(count)                             AS total_count,
                      RANK() OVER (ORDER BY SUM(count) DESC) AS `rank`
               FROM topic_record
-              GROUP BY user_id, nickname) AS ranked_users
+              GROUP BY user_id) AS ranked_users
         WHERE user_id = #{userId};
     </select>
 </mapper>

@@ -3,21 +3,27 @@ package com.hao.topic.topic.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.security.SecurityFeignClient;
+import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.entity.topic.TopicRecord;
+import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import com.hao.topic.topic.mapper.TopicMapper;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
 import com.hao.topic.topic.service.TopicDataService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Description:
@@ -31,6 +37,7 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final SecurityFeignClient securityFeignClient;
     private final TopicRecordMapper topicRecordMapper;
     private final TopicMapper topicMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -92,5 +99,64 @@ public class TopicDataServiceImpl implements TopicDataService {
                 "totalTopicRecordCount", totalTopicRecordCount.size(),
                 "todayCount", todayCount
         );
+    }
+
+    /**
+     * 查询排行榜
+     *
+     * @param type
+     * @return
+     */
+    public List<TopicUserRankVo> rank(Integer type) {
+        if (type == null) {
+            return null;
+        }
+        // 封装返回数据
+        List<TopicUserRankVo> rankList = new ArrayList<>();
+        if (type == 1) {
+            // 今日
+            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String todayKey = RedisConstant.TOPIC_RANK_TODAY_PREFIX + date;
+            // 获取排名前100的用户ID和分数
+            Set<ZSetOperations.TypedTuple<String>> tuples = stringRedisTemplate.opsForZSet()
+                    .reverseRangeWithScores(todayKey, 0, 99);
+            getRankVo(rankList, tuples);
+        } else {
+            // 总排行榜
+            // 获取排名前100的用户ID和分数
+            Set<ZSetOperations.TypedTuple<String>> tuples = stringRedisTemplate.opsForZSet()
+                    .reverseRangeWithScores(RedisConstant.TOPIC_RANK_PREFIX, 0, 99);
+            getRankVo(rankList, tuples);
+        }
+        return rankList;
+    }
+
+    private void getRankVo(List<TopicUserRankVo> rankList, Set<ZSetOperations.TypedTuple<String>> tuples) {
+        if (tuples != null) {
+            // 遍历排名100的用户
+            for (ZSetOperations.TypedTuple<String> tuple : tuples) {
+                // 获取用户ID和分数
+                String userId = tuple.getValue();
+                Double score = tuple.getScore();
+                log.info("用户ID:{},分数:{}", userId, score);
+                // 从Hash中获取用户详细信息
+                Map<Object, Object> userInfo = stringRedisTemplate.opsForHash()
+                        .entries(RedisConstant.USER_RANK_PREFIX + userId);
+
+                // 封装
+                TopicUserRankVo topicUserRankVo = new TopicUserRankVo();
+                if (score != null) {
+                    topicUserRankVo.setScope(score.longValue());
+                }
+                if (userInfo.get("avatar") == null) {
+                    topicUserRankVo.setAvatar(null);
+                } else {
+                    topicUserRankVo.setAvatar((String) userInfo.get("avatar"));
+                }
+                topicUserRankVo.setNickname((String) userInfo.get("nickname"));
+
+                rankList.add(topicUserRankVo);
+            }
+        }
     }
 }

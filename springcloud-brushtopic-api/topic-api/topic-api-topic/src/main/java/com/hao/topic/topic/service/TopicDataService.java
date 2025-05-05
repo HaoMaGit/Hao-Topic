@@ -1,5 +1,8 @@
 package com.hao.topic.topic.service;
 
+import com.hao.topic.model.vo.topic.TopicUserRankVo;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,4 +13,5 @@ import java.util.Map;
 public interface TopicDataService {
     Map<String, Object> webHomeCount();
 
+    List<TopicUserRankVo> rank(Integer type);
 }
