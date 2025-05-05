@@ -16,14 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Description:
@@ -87,18 +85,25 @@ public class TopicDataServiceImpl implements TopicDataService {
             totalTopicCount = topicMapper.selectCount(topicLambdaQueryWrapper);
         }
         // 统计用户已刷总数
+        Long totalTopicRecordCountSize = null;
         LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
         topicRecordLambdaQueryWrapper1.eq(TopicRecord::getUserId, userId);
         topicRecordLambdaQueryWrapper1.groupBy(TopicRecord::getTopicId);
         List<TopicRecord> totalTopicRecordCount = topicRecordMapper.selectList(topicRecordLambdaQueryWrapper1);
-        return Map.of(
-                "userCount", count,
-                "rank", rank,
-                "todayTopicCount", todayTopicCount,
-                "totalTopicCount", totalTopicCount,
-                "totalTopicRecordCount", totalTopicRecordCount.size(),
-                "todayCount", todayCount
-        );
+        if (CollectionUtils.isEmpty(totalTopicRecordCount)) {
+            totalTopicRecordCountSize = 0L;
+        } else {
+            totalTopicRecordCountSize = (long) totalTopicRecordCount.size();
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("userCount", count);
+        map.put("rank", rank);
+        map.put("todayTopicCount", todayTopicCount);
+        map.put("totalTopicCount", totalTopicCount);
+        map.put("totalTopicRecordCount", totalTopicRecordCountSize);
+        map.put("todayCount", todayCount);
+
+        return map;
     }
 
     /**
@@ -131,6 +136,13 @@ public class TopicDataServiceImpl implements TopicDataService {
         return rankList;
     }
 
+
+    /**
+     * 获取排行榜数据
+     *
+     * @param rankList
+     * @param tuples
+     */
     private void getRankVo(List<TopicUserRankVo> rankList, Set<ZSetOperations.TypedTuple<String>> tuples) {
         if (tuples != null) {
             // 遍历排名100的用户
@@ -154,9 +166,61 @@ public class TopicDataServiceImpl implements TopicDataService {
                     topicUserRankVo.setAvatar((String) userInfo.get("avatar"));
                 }
                 topicUserRankVo.setNickname((String) userInfo.get("nickname"));
+                if (userId != null) {
+                    topicUserRankVo.setUserId(Long.valueOf(userId));
+                }
 
                 rankList.add(topicUserRankVo);
             }
         }
     }
+
+    /**
+     * 获取当前用户排名信息
+     *
+     * @return TopicUserRankVo 包含用户排名、昵称、头像、分数等信息
+     */
+    public TopicUserRankVo userRank(Integer type) {
+        // 获取当前登录用户id
+        Long userId = SecurityUtils.getCurrentId();
+        if (userId == null) {
+            return null;
+        }
+
+        String key;
+        if (type == 1) {
+            // 今日排行榜 Key
+            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            key = RedisConstant.TOPIC_RANK_TODAY_PREFIX + date;
+        } else {
+            // 总排行榜 Key
+            key = RedisConstant.TOPIC_RANK_PREFIX;
+        }
+
+        // 查询用户排名（注意：reverseRank 是从高到低排序）
+        Long rank = stringRedisTemplate.opsForZSet().reverseRank(key, userId.toString());
+
+        // 查询用户积分
+        Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+
+        // 如果用户不在排行榜中（可能没有刷题记录）
+        if (rank == null || score == null) {
+            return null;
+        }
+
+        // 获取用户详细信息
+        Map<Object, Object> userInfo = stringRedisTemplate.opsForHash()
+                .entries(RedisConstant.USER_RANK_PREFIX + userId);
+
+        // 封装返回对象
+        TopicUserRankVo topicUserRankVo = new TopicUserRankVo();
+        topicUserRankVo.setUserId(userId);
+        topicUserRankVo.setNickname((String) userInfo.get("nickname"));
+        topicUserRankVo.setAvatar((String) userInfo.get("avatar"));
+        topicUserRankVo.setScope(score.longValue());
+        topicUserRankVo.setRank(rank + 1);
+
+        return topicUserRankVo;
+    }
+
 }

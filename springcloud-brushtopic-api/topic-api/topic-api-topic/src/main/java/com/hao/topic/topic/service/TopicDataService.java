@@ -14,4 +14,7 @@ public interface TopicDataService {
     Map<String, Object> webHomeCount();
 
     List<TopicUserRankVo> rank(Integer type);
+
+    TopicUserRankVo userRank(Integer type);
+
 }

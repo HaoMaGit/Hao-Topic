@@ -12,4 +12,6 @@ public class TopicUserRankVo {
     private String avatar;
     private String nickname;
     private Long scope;
+    private Long userId;
+    private Long rank;
 }

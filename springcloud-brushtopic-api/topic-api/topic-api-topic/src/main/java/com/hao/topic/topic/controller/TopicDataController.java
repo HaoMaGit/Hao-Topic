@@ -43,6 +43,15 @@ public class TopicDataController {
     }
 
     /**
+     * 获取当前用户排名信息
+     */
+    @GetMapping("/userRank/{type}")
+    public Result<TopicUserRankVo> userRank(@PathVariable Integer type) {
+        TopicUserRankVo topicUserRankVo = topicDataService.userRank(type);
+        return Result.success(topicUserRankVo);
+    }
+
+    /**
      * TODO 查询每日必刷
      */
 
