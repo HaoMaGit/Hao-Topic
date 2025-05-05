@@ -169,6 +169,7 @@ public class TopicDataServiceImpl implements TopicDataService {
                 if (userId != null) {
                     topicUserRankVo.setUserId(Long.valueOf(userId));
                 }
+                topicUserRankVo.setRole((String) userInfo.get("role"));
 
                 rankList.add(topicUserRankVo);
             }
@@ -219,6 +220,7 @@ public class TopicDataServiceImpl implements TopicDataService {
         topicUserRankVo.setAvatar((String) userInfo.get("avatar"));
         topicUserRankVo.setScope(score.longValue());
         topicUserRankVo.setRank(rank + 1);
+        topicUserRankVo.setRole((String) userInfo.get("role"));
 
         return topicUserRankVo;
     }

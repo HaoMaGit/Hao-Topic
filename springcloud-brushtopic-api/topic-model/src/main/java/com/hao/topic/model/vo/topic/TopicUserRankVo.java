@@ -14,4 +14,5 @@ public class TopicUserRankVo {
     private Long scope;
     private Long userId;
     private Long rank;
+    private String role;
 }

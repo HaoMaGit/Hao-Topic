@@ -1403,6 +1403,8 @@ public class TopicServiceImpl implements TopicService {
         }
         // 当前登录id
         Long userId = SecurityUtils.getCurrentId();
+        // 获取用户身份
+        String currentRole = SecurityUtils.getCurrentRole();
         String currentName;
         // 判断当前名称
         if (StringUtils.isEmpty(topicRecordCountDto.getNickname())) {
@@ -1421,7 +1423,6 @@ public class TopicServiceImpl implements TopicService {
         topicRecordLambdaQueryWrapper.eq(TopicRecord::getTopicTime, date);
         TopicRecord topicRecord = topicRecordMapper.selectOne(topicRecordLambdaQueryWrapper);
         if (topicRecord == null) {
-            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(userId), 1);
             // 说明是第一次
             topicRecord = new TopicRecord();
             topicRecord.setTopicId(topicRecordCountDto.getTopicId());
@@ -1432,12 +1433,21 @@ public class TopicServiceImpl implements TopicService {
             topicRecord.setTopicTime(new Date());
             topicRecordMapper.insert(topicRecord);
         } else {
-            // 更新分值
-            stringRedisTemplate.opsForZSet().incrementScore(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(userId), 1);
             // 不是第一次刷这个题目
             topicRecord.setCount(topicRecord.getCount() + 1);
             topicRecord.setTopicTime(new Date());
             topicRecordMapper.updateById(topicRecord);
+        }
+        // 查询redis中是否有今日key
+        Boolean hasKey = stringRedisTemplate.hasKey(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date);
+        if (Boolean.TRUE.equals(hasKey)) {
+            // 存在今日，直接更新用户今日的做题总数
+            stringRedisTemplate.opsForZSet().incrementScore(
+                    RedisConstant.TOPIC_RANK_TODAY_PREFIX + date,
+                    String.valueOf(userId),
+                    1);
+        } else {
+            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(userId), 1);
         }
         // 查询redis中是否有改用户的总榜key
         Boolean aBoolean = stringRedisTemplate.hasKey(RedisConstant.TOPIC_RANK_PREFIX);
@@ -1455,6 +1465,7 @@ public class TopicServiceImpl implements TopicService {
         Map<String, String> userInfo = new HashMap<>();
         userInfo.put("nickname", currentName);
         userInfo.put("avatar", topicRecordCountDto.getAvatar());
+        userInfo.put("role", currentRole);
         stringRedisTemplate.opsForHash().putAll(RedisConstant.USER_RANK_PREFIX + userId, userInfo);
     }
 }
