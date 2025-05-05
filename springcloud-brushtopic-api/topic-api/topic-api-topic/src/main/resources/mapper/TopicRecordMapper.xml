@@ -11,4 +11,54 @@
               GROUP BY user_id) AS ranked_users
         WHERE user_id = #{userId};
     </select>
+    <select id="getCountRank" resultType="com.hao.topic.model.vo.topic.TopicUserRankVo">
+        SELECT ranked_users.rank AS `rank`,
+        ranked_users.user_id AS userId,
+        ranked_users.total_count AS scope,
+        COALESCE(NULLIF(users.nickname, ''), users.account) AS nickname,
+        users.avatar,
+        roles.role_key AS role,
+        ranked_users.topic_time as topicTime
+        FROM (SELECT user_id,
+        SUM(count) AS total_count,
+        topic_time,
+        RANK() OVER (ORDER BY SUM(count) DESC) AS `rank`
+        FROM topic_record
+        <where>
+            <if test="topicTime != null and topicTime != ''">
+                topic_time = #{topicTime}
+            </if>
+        </where>
+        GROUP BY user_id) AS ranked_users
+        JOIN sys_user AS users ON ranked_users.user_id = users.id
+        JOIN (SELECT user_id, MIN(role_id) AS role_id
+        FROM sys_user_role
+        GROUP BY user_id) AS user_roles ON users.id = user_roles.user_id
+        JOIN sys_role AS roles ON user_roles.role_id = roles.id order by `rank`
+    </select>
+    <select id="getUserCountRank" resultType="com.hao.topic.model.vo.topic.TopicUserRankVo">
+        SELECT ranked_users.rank AS `rank`,
+        ranked_users.user_id AS userId,
+        ranked_users.total_count AS scope,
+        ranked_users.topic_time as topicTime,
+        COALESCE(NULLIF(users.nickname, ''), users.account) AS nickname,
+        users.avatar,
+        roles.role_key AS role
+        FROM (SELECT user_id,
+        SUM(count) AS total_count,
+        topic_time,
+        RANK() OVER (ORDER BY SUM(count) DESC) AS `rank`
+        FROM topic_record
+        <where>
+            <if test="topicTime != null and topicTime != ''">
+                topic_time = #{topicTime}
+            </if>
+        </where>
+        GROUP BY user_id) AS ranked_users
+        JOIN sys_user AS users ON ranked_users.user_id = users.id
+        JOIN (SELECT user_id, MIN(role_id) AS role_id
+        FROM sys_user_role
+        GROUP BY user_id) AS user_roles ON users.id = user_roles.user_id
+        JOIN sys_role AS roles ON user_roles.role_id = roles.id where user_roles.user_id = #{userId}
+    </select>
 </mapper>

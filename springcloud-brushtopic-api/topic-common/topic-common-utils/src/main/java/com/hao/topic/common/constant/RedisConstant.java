@@ -30,6 +30,4 @@ public class RedisConstant {
     public static final String TOPIC_RANK_TODAY_PREFIX = "topic:rank:today:";
     // 用户排行信息
     public static final String USER_RANK_PREFIX = "user:rank:";
-    // 题目统计次数的key
-    public static final String TOPIC_COUNT_PREFIX = "topic:count:";
 }

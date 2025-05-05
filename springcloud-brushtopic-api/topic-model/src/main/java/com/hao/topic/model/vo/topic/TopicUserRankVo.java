@@ -15,4 +15,5 @@ public class TopicUserRankVo {
     private Long userId;
     private Long rank;
     private String role;
+    private String topicTime;
 }

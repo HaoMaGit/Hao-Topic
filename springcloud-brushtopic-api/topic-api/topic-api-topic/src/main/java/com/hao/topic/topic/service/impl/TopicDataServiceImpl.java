@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -125,12 +124,29 @@ public class TopicDataServiceImpl implements TopicDataService {
             // 获取排名前100的用户ID和分数
             Set<ZSetOperations.TypedTuple<String>> tuples = stringRedisTemplate.opsForZSet()
                     .reverseRangeWithScores(todayKey, 0, 99);
+            if (CollectionUtils.isEmpty(tuples)) {
+                // 为空查数据库
+                List<TopicUserRankVo> countRank = topicRecordMapper.getCountRank(date);
+                if (CollectionUtils.isNotEmpty(countRank)) {
+                    readRankTodayCache(countRank);
+                }
+                return countRank;
+            }
             getRankVo(rankList, tuples);
         } else {
             // 总排行榜
             // 获取排名前100的用户ID和分数
             Set<ZSetOperations.TypedTuple<String>> tuples = stringRedisTemplate.opsForZSet()
                     .reverseRangeWithScores(RedisConstant.TOPIC_RANK_PREFIX, 0, 99);
+            if (CollectionUtils.isEmpty(tuples)) {
+                // 为空查数据库
+                List<TopicUserRankVo> countRank = topicRecordMapper.getCountRank(null);
+                if (CollectionUtils.isNotEmpty(countRank)) {
+                    readRankTodayCache(countRank);
+                    readRankCache(countRank);
+                }
+                return countRank;
+            }
             getRankVo(rankList, tuples);
         }
         return rankList;
@@ -187,11 +203,11 @@ public class TopicDataServiceImpl implements TopicDataService {
         if (userId == null) {
             return null;
         }
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
         String key;
         if (type == 1) {
             // 今日排行榜 Key
-            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             key = RedisConstant.TOPIC_RANK_TODAY_PREFIX + date;
         } else {
             // 总排行榜 Key
@@ -200,12 +216,26 @@ public class TopicDataServiceImpl implements TopicDataService {
 
         // 查询用户排名（注意：reverseRank 是从高到低排序）
         Long rank = stringRedisTemplate.opsForZSet().reverseRank(key, userId.toString());
+        if (type == 1) {
+            // 判断用户排名是否为空
+            if (rank == null) {
+                //  为空查数据库
+                return topicRecordMapper.getUserCountRank(date, userId);
+            }
+        } else {
+            // 判断用户排名是否为空
+            if (rank == null) {
+                //  为空查数据库
+                return topicRecordMapper.getUserCountRank(null, userId);
+            }
+        }
+
 
         // 查询用户积分
         Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
 
         // 如果用户不在排行榜中（可能没有刷题记录）
-        if (rank == null || score == null) {
+        if (score == null) {
             return null;
         }
 
@@ -225,4 +255,34 @@ public class TopicDataServiceImpl implements TopicDataService {
         return topicUserRankVo;
     }
 
+    /**
+     * 将今日排行榜缓存数据写入redis
+     */
+    public void readRankTodayCache(List<TopicUserRankVo> countRank) {
+        // 获取今日日期
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        // 存入redis
+        for (TopicUserRankVo topicUserRankVo : countRank) {
+            // 存储用户信息到Hash
+            Map<String, String> userInfo = new HashMap<>();
+            userInfo.put("nickname", topicUserRankVo.getNickname());
+            userInfo.put("avatar", topicUserRankVo.getAvatar());
+            userInfo.put("role", topicUserRankVo.getRole());
+            stringRedisTemplate.opsForHash().putAll(RedisConstant.USER_RANK_PREFIX + topicUserRankVo.getUserId(), userInfo);
+            // 存今日信息
+            if (date.equals(topicUserRankVo.getTopicTime())) {
+                stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_TODAY_PREFIX + date, String.valueOf(topicUserRankVo.getUserId()), topicUserRankVo.getScope());
+            }
+        }
+    }
+
+    /**
+     * 将总排行榜缓存数据写入redis
+     */
+    public void readRankCache(List<TopicUserRankVo> countRank) {
+        for (TopicUserRankVo topicUserRankVo : countRank) {
+            // 存全部信息
+            stringRedisTemplate.opsForZSet().add(RedisConstant.TOPIC_RANK_PREFIX, String.valueOf(topicUserRankVo.getUserId()), topicUserRankVo.getScope());
+        }
+    }
 }
