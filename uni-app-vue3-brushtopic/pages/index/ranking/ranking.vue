@@ -58,6 +58,16 @@ const getPageGradient = computed(() => {
 	}
 	return gradientMap[role.value] || gradientMap[0]
 })
+// 映射身份颜色
+const getRoleTextColor = (userRole) => {
+	console.log("==========>", userRole);
+	const colors = {
+		'admin': '#564021',
+		'member': '#712a07',
+		'user': '#203c71'
+	};
+	return colors[userRole] || colors[0];
+}
 </script>
 <template>
 	<view class="ranking">
@@ -78,7 +88,8 @@ const getPageGradient = computed(() => {
 						</image>
 						<uv-avatar v-else size="69" style="border: 4rpx solid #C0C0C0;" :text="top3[1]?.nickname.charAt(0)"
 							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name">{{ top3[1]?.nickname }}</text>
+						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[1]?.role) }">{{ top3[1]?.nickname
+							}}</text>
 						<text class="top-item-score">{{ top3[1]?.scope }}</text>
 					</view>
 					<view class="top-item" :style="{ paddingBottom: '20rpx', opacity: top3[0] ? 1 : 0 }">
@@ -87,7 +98,8 @@ const getPageGradient = computed(() => {
 						</image>
 						<uv-avatar v-else size="69.6" style="border: 4rpx solid #FFD700;" :text="top3[0]?.nickname.charAt(0)"
 							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name">{{ top3[0]?.nickname }}</text>
+						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[0]?.role) }">{{ top3[0]?.nickname
+							}}</text>
 						<text class="top-item-score">{{ top3[0]?.scope }}</text>
 					</view>
 					<view class="top-item" :style="{ opacity: top3[2] ? 1 : 0 }">
@@ -96,7 +108,8 @@ const getPageGradient = computed(() => {
 						</image>
 						<uv-avatar v-else size="69.6" style="border: 4rpx solid #CD7F32;" :text="top3[2]?.nickname.charAt(0)"
 							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name">{{ top3[2]?.nickname }}</text>
+						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[2]?.role) }">{{ top3[2]?.nickname
+							}}</text>
 						<text class="top-item-score">{{ top3[2]?.scope }}</text>
 					</view>
 				</view>
@@ -112,21 +125,21 @@ const getPageGradient = computed(() => {
 								</image>
 								<uv-avatar v-else size="69" style="border: 4rpx solid #C0C0C0;" :text="item.nickname.charAt(0)"
 									fontSize="18" randomBgColor></uv-avatar>
-								<text>{{ item.nickname }}</text>
+								<text :style="{ color: getRoleTextColor(item.role) }">{{ item.nickname }}</text>
 							</view>
 							<text class="ranking-list-score">{{ item.scope }}</text>
 						</view>
 						<uv-empty v-else text="还没有人上榜～快去刷题，成为第一个霸榜的人！🔥" icon="../../../static/images/empty.png"></uv-empty>
 					</scroll-view>
 					<!-- 当前排名 -->
-					<view class="current-ranking">
+					<view class="current-ranking" v-if="currentRank">
 						<text class="ranking-list-number current">{{ currentRank?.rank }}</text>
 						<view class="ranking-list-nickname ">
 							<image v-if="currentRank?.avatar" :src="currentRank?.avatar">
 							</image>
 							<uv-avatar size="10" v-else :text="currentRank?.nickname.charAt(0)" fontSize="18"
 								randomBgColor></uv-avatar>
-							<text>{{ currentRank?.nickname }}</text>
+							<text :style="{ color: getRoleTextColor(currentRank.role) }">{{ currentRank?.nickname }}</text>
 						</view>
 						<text class="ranking-list-score">{{ currentRank?.scope }}</text>
 					</view>
