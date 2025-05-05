@@ -1,15 +1,26 @@
 <script setup>
 import {
-	ref
+	ref, computed
 } from 'vue'
 // 筛选
 const screen = ref(true)
 const list = ref([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
 const current = ref(0)
+// 当前身份
+const role = ref(uni.getStorageSync('role'))
+// 修改渐变背景计算属性，使上面更深，下面更浅
+const getPageGradient = computed(() => {
+	const gradientMap = {
+		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
+		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
+		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
+	}
+	return gradientMap[role.value] || gradientMap[0]
+})
 </script>
 <template>
 	<view class="ranking">
-		<view class="ranking-box">
+		<view class="ranking-box" :style="{ background: getPageGradient }">
 			<!-- 顶部切换总排行榜和当天排行 -->
 			<view class="page">
 				<view class="tab">
@@ -75,7 +86,6 @@ const current = ref(0)
 
 	.ranking-box {
 		.page {
-			background: #f9f9f9;
 			padding-bottom: 20rpx;
 
 			.tab {

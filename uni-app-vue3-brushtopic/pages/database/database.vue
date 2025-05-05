@@ -25,13 +25,22 @@ const goToSubject = (item) => {
 }
 
 // 是否开启会员自定义题目
-const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
+const isCustomQuestion = ref(null)
 // 获取分类名称和id
 const category = ref([])
 // 当前分类id
 const categoryId = ref(0)
 // 查询分类数据
 const getCategory = async () => {
+	const custorm = uni.getStorageSync('isCustomQuestion')
+	console.log(custorm);
+	if (custorm !== null && custorm !== undefined) {
+		isCustomQuestion.value = custorm
+	} else {
+		isCustomQuestion.value = true
+	}
+	console.log(isCustomQuestion.value);
+
 	uni.showLoading({
 		title: '加载中'
 	});

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed ,onMounted} from 'vue'
 import { clearStorage } from '@/utils/auth'
 import { apiUpdateNicknameAndEmail, apiSaveUserAvatar, apiLogout } from '@/api/auth'
 // 头像的样式
@@ -121,7 +121,17 @@ const logout = () => {
 }
 
 // 开启自定义题目
-const isCustomQuestion = ref(uni.getStorageSync('isCustomQuestion') || true)
+const isCustomQuestion = ref(true)
+onMounted(() => {
+	const custorm = uni.getStorageSync('isCustomQuestion')
+	console.log(custorm);
+	if (custorm !== null && custorm !== undefined) {
+		isCustomQuestion.value = custorm
+	} else {
+		isCustomQuestion.value = true
+	}
+	console.log(isCustomQuestion.value);
+})
 // 修改开关
 const asyncChange = async (e) => {
 	console.log("===========>", e);
