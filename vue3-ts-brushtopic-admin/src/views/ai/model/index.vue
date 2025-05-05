@@ -592,7 +592,7 @@ const pauseReply = () => {
               <!-- AI返回的内容 -->
               <div class="content-avatar">
                 <!-- 需要带一个头像 -->
-                <a-avatar class="avatar" :src="'http://114.116.233.218:9000/topic/H.png'"></a-avatar>
+                <img class="avatar" src="../../../assets/images/128.png" alt="">
                 <!-- 加载中的图标 -->
                 <LoadingOutlined v-if="!item.content" />
                 <div class="message-wrapper" v-else>
@@ -948,6 +948,10 @@ const pauseReply = () => {
       margin-bottom: 10px;
 
       .avatar {
+        width: 31px;
+        height: 31px;
+        border-radius: 50%;
+        object-fit: cover;
         margin-right: 5px;
       }
 
