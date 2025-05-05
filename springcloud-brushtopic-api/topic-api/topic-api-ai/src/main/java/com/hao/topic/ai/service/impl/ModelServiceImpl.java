@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -240,9 +241,6 @@ public class ModelServiceImpl implements ModelService {
     public List<AiHistoryListVo> getHistory(AiHistoryDto aiHistoryDto) {
         // 获取当前用户id
         Long currentId = SecurityUtils.getCurrentId();
-        if (currentId == null) {
-            throw new TopicException(ResultCodeEnum.AI_HISTORY_ERROR);
-        }
         // 设置分页参数
         Page<AiHistory> aiHistoryPage = new Page<>(aiHistoryDto.getPageNum(), aiHistoryDto.getPageSize());
         // 设置分页条件
@@ -251,7 +249,7 @@ public class ModelServiceImpl implements ModelService {
         aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1); // 表示第一条数据
         aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
         // 判断title是否存在
-        if (StringUtils.isNotBlank(aiHistoryDto.getTitle())) {
+        if (!StringUtils.isEmpty(aiHistoryDto.getTitle())) {
             aiHistoryLambdaQueryWrapper.like(AiHistory::getTitle, aiHistoryDto.getTitle());
         }
         // 开始查询
@@ -276,27 +274,53 @@ public class ModelServiceImpl implements ModelService {
             aiHistoryListVo.setAiHistoryVos(list);
             aiHistoryListVo.setDate(AiConstant.DAY_HISTORY);
         }
-        // 封装其他日期的数据
-        AiHistoryListVo aiHistoryListVoAll = new AiHistoryListVo();
-        // 开始封装
-        List<AiHistoryVo> otherRecords = records.stream().filter(aiHistory -> {
+        // 全部数据
+        List<AiHistoryListVo> aiHistoryListVos = new ArrayList<>();
+        // 获取所有的日期
+        List<String> dates = records.stream().map(aiHistory -> {
             // 获取当前记录的创建时间
-            String createTime = DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
-            return !createTime.equals(today);
-        }).map(aiHistory -> {
-            aiHistoryListVoAll.setDate(DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd"));
-            AiHistoryVo aiHistoryVo = new AiHistoryVo();
-            BeanUtils.copyProperties(aiHistory, aiHistoryVo);
-            return aiHistoryVo;
-        }).toList();
-        if (!otherRecords.isEmpty()) {
-            aiHistoryListVoAll.setAiHistoryVos(otherRecords);
-            // 合并到一起
-            return List.of(aiHistoryListVo, aiHistoryListVoAll);
-        } else {
-            return List.of(aiHistoryListVo);
+            return DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
+        }).distinct().toList();
+
+
+        // 遍历日期
+        for (String date : dates) {
+            AiHistoryListVo aiHistoryListVoResult = new AiHistoryListVo();
+            aiHistoryListVoResult.setDate(date);
+            // 根据日期获取所有的数据
+            List<AiHistory> aiHistories = records.stream().filter(aiHistory -> {
+                // 获取当前记录的创建时间
+                String createTime = DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
+                return createTime.equals(date);
+            }).toList();
+            // 转换返回数据
+            List<AiHistoryVo> aiHistoryVos = aiHistories.stream().map(aiHistory -> {
+                AiHistoryVo aiHistoryVo = new AiHistoryVo();
+                BeanUtils.copyProperties(aiHistory, aiHistoryVo);
+                return aiHistoryVo;
+            }).toList();
+            // 设置返回数据
+            aiHistoryListVoResult.setAiHistoryVos(aiHistoryVos);
+            aiHistoryListVos.add(aiHistoryListVoResult);
         }
+
+        // 构建最终返回结果列表
+        List<AiHistoryListVo> result = new ArrayList<>();
+
+        // 添加当天数据（如果存在）
+        if (CollectionUtils.isNotEmpty(aiHistoryListVo.getAiHistoryVos())) {
+            result.add(aiHistoryListVo);
+        }
+
+        // 添加其他日期的数据（如果存在）
+        if (!aiHistoryListVos.isEmpty()) {
+            result.addAll(aiHistoryListVos);
+        }
+
+        return result;
     }
+
+
 
     /**
      * 根据记录id获取到对话历史记录
