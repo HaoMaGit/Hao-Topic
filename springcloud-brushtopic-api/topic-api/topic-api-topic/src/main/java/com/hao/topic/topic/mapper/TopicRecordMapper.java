@@ -20,4 +20,6 @@ public interface TopicRecordMapper extends BaseMapper<TopicRecord> {
     List<TopicUserRankVo> getCountRank(String topicTime);
 
     TopicUserRankVo getUserCountRank(String topicTime, Long userId);
+
+    Long countTopicFrequency(String date);
 }

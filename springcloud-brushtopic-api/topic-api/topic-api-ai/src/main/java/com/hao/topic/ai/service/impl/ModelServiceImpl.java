@@ -15,6 +15,7 @@ import com.hao.topic.ai.constant.ResultConstant;
 import com.hao.topic.ai.enums.AiStatusEnums;
 import com.hao.topic.ai.mapper.AiAuditLogMapper;
 import com.hao.topic.ai.mapper.AiHistoryMapper;
+import com.hao.topic.ai.mapper.AiRecordMapper;
 import com.hao.topic.ai.mapper.AiUserMapper;
 import com.hao.topic.ai.properties.TtsProperties;
 import com.hao.topic.ai.service.ModelService;
@@ -34,6 +35,7 @@ import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.audit.TopicAuditSubject;
 import com.hao.topic.model.entity.ai.AiLog;
 import com.hao.topic.model.entity.ai.AiHistory;
+import com.hao.topic.model.entity.ai.AiRecord;
 import com.hao.topic.model.entity.ai.AiUser;
 import com.hao.topic.model.entity.system.SysRole;
 import com.hao.topic.model.entity.topic.Topic;
@@ -58,9 +60,9 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * Description:
@@ -91,6 +93,9 @@ public class ModelServiceImpl implements ModelService {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private AiRecordMapper aiRecordMapper;
 
     /**
      * 随机鼓励语
@@ -129,9 +134,11 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     public Flux<String> chat(ChatDto chatDto) {
-        // 1.记录用户使用记录
-        recordAi();
-        // 2.校验模式
+        // 1.记录ai使用记录
+        recordAi(chatDto.getNickname());
+        // 2.记录用户使用记录
+        recordAiUser();
+        // 3.校验模式
         if (chatDto.getModel().equals(AiConstant.SYSTEM_MODEL)) {
             // 系统模式
             return systemModel(chatDto);
@@ -144,6 +151,7 @@ public class ModelServiceImpl implements ModelService {
                 .stream()
                 .content();
     }
+
 
     // ============HaoAI系统模式==============
 
@@ -289,7 +297,7 @@ public class ModelServiceImpl implements ModelService {
         aiHistory.setAccount(currentName);
         aiHistory.setUserId(currentId);
         aiHistory.setContent(prompt);
-        if(chatDto.getMemoryId() == 1){
+        if (chatDto.getMemoryId() == 1) {
             aiHistory.setParent(1);
         }
         aiHistory.setTitle(chatDto.getPrompt());
@@ -361,7 +369,7 @@ public class ModelServiceImpl implements ModelService {
     /**
      * 记录ai使用记录
      */
-    private void recordAi() {
+    private void recordAiUser() {
         // 获取当前用户Id
         Long currentId = SecurityUtils.getCurrentId();
         // 当前账户
@@ -405,6 +413,40 @@ public class ModelServiceImpl implements ModelService {
             // 更新最近使用时间
             aiUser.setRecentlyUsedTime(DateUtils.parseLocalDateTime(DateUtils.format(new Date())));
             aiUserMapper.updateById(aiUser);
+        }
+    }
+
+
+    /**
+     * 记录ai使用记录
+     *
+     * @param nickname
+     */
+    private void recordAi(String nickname) {
+        if (StringUtils.isEmpty(nickname)) {
+            // 如果没有昵称用账户昵称
+            nickname = SecurityUtils.getCurrentName();
+        }
+        // 获取今日日期
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        // 根据用户id和今日日期查询是否有记录
+        LambdaQueryWrapper<AiRecord> aiRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiRecordLambdaQueryWrapper.eq(AiRecord::getAiTime, date);
+        aiRecordLambdaQueryWrapper.eq(AiRecord::getUserId, SecurityUtils.getCurrentId());
+        AiRecord aiRecord = aiRecordMapper.selectOne(aiRecordLambdaQueryWrapper);
+        if (aiRecord == null) {
+            // 说明是第一次直接插入
+            aiRecord = new AiRecord();
+            aiRecord.setUserId(SecurityUtils.getCurrentId());
+            aiRecord.setCount(1L);
+            aiRecord.setNickname(nickname);
+            aiRecord.setAiTime(new Date());
+            aiRecordMapper.insert(aiRecord);
+        } else {
+            // 说明不是第一次更新数量即可
+            aiRecord.setCount(aiRecord.getCount() + 1);
+            aiRecord.setAiTime(new Date());
+            aiRecordMapper.updateById(aiRecord);
         }
     }
 

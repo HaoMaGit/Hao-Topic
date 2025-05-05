@@ -61,4 +61,15 @@
         GROUP BY user_id) AS user_roles ON users.id = user_roles.user_id
         JOIN sys_role AS roles ON user_roles.role_id = roles.id where user_roles.user_id = #{userId}
     </select>
+
+    <!-- 统计今日刷题总数 -->
+    <select id="countTopicFrequency" resultType="java.lang.Long">
+        select sum(count) as count
+        from topic_record
+        <where>
+            <if test="date != null and date != ''">
+                topic_time= #{date}
+            </if>
+        </where>
+    </select>
 </mapper>

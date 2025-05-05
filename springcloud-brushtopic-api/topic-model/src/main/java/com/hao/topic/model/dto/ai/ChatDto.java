@@ -19,4 +19,6 @@ public class ChatDto {
     private String content;
     // 记忆id
     private Long memoryId;
+    // 昵称用于渲染
+    private String nickname;
 }
