@@ -1,6 +1,8 @@
 package com.hao.topic.topic.controller;
 
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
+import com.hao.topic.model.vo.topic.TopicCategoryVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
 import com.hao.topic.topic.service.TopicDataService;
@@ -63,5 +65,14 @@ public class TopicDataController {
     public Result<Map<String, Object>> adminHomeData() {
         Map<String, Object> map = topicDataService.adminHomeCount();
         return Result.success(map);
+    }
+
+    /**
+     * 管理员首页右侧分类数据
+     */
+    @GetMapping("/adminHomeCategory")
+    public Result<List<TopicCategoryDataVo>> adminHomeCategory() {
+        List<TopicCategoryDataVo> list = topicDataService.adminHomeCategory();
+        return Result.success(list);
     }
 }

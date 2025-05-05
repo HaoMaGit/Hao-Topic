@@ -1,5 +1,6 @@
 package com.hao.topic.topic.service;
 
+import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
 
 import java.util.List;
@@ -18,4 +19,8 @@ public interface TopicDataService {
     TopicUserRankVo userRank(Integer type);
 
     Map<String, Object> adminHomeCount();
+
+    List<TopicCategoryDataVo> adminHomeCategory();
+
+
 }

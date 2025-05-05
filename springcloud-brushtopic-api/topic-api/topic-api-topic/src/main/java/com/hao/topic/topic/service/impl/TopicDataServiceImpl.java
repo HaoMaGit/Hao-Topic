@@ -7,15 +7,10 @@ import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
-import com.hao.topic.model.entity.topic.Topic;
-import com.hao.topic.model.entity.topic.TopicLabel;
-import com.hao.topic.model.entity.topic.TopicRecord;
-import com.hao.topic.model.entity.topic.TopicSubject;
+import com.hao.topic.model.entity.topic.*;
+import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
-import com.hao.topic.topic.mapper.TopicLabelMapper;
-import com.hao.topic.topic.mapper.TopicMapper;
-import com.hao.topic.topic.mapper.TopicRecordMapper;
-import com.hao.topic.topic.mapper.TopicSubjectMapper;
+import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicDataService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +39,9 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final TopicSubjectMapper subjectMapper;
     private final TopicLabelMapper topicLabelMapper;
     private final AiFeignClient aiFeignClient;
+    private final TopicCategoryMapper topicCategoryMapper;
+    private final TopicCategorySubjectMapper topicCategorySubjectMapper;
+    private final TopicSubjectMapper topicSubjectMapper;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -371,5 +369,50 @@ public class TopicDataServiceImpl implements TopicDataService {
         map.put("aiGrowthRate", aiGrowthRate);
 
         return map;
+    }
+
+
+    /**
+     * 查询分类名称和分类名称下的题目总数量
+     *
+     * @return
+     */
+    public List<TopicCategoryDataVo> adminHomeCategory() {
+        // 1.查询所有的分类
+        LambdaQueryWrapper<TopicCategory> topicCategoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicCategoryLambdaQueryWrapper.eq(TopicCategory::getStatus, StatusEnums.NORMAL.getCode());
+        topicCategoryLambdaQueryWrapper.eq(TopicCategory::getCreateBy, "admin");
+        List<TopicCategory> topicCategoryList = topicCategoryMapper.selectList(topicCategoryLambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(topicCategoryList)) {
+            return null;
+        }
+        // 2.查询分类专题表
+        return topicCategoryList.stream().map(topicCategory -> {
+            TopicCategoryDataVo topicCategoryDataVo = new TopicCategoryDataVo();
+            topicCategoryDataVo.setCategoryName(topicCategory.getCategoryName());
+            LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getCategoryId, topicCategory.getId());
+            List<TopicCategorySubject> topicCategorySubjects = topicCategorySubjectMapper.selectList(topicCategorySubjectLambdaQueryWrapper);
+            if (CollectionUtils.isEmpty(topicCategorySubjects)) {
+                topicCategoryDataVo.setCount(0L);
+                return topicCategoryDataVo;
+            }
+            Long count = 0L;
+            // 3.查询专题表
+            for (TopicCategorySubject topicCategorySubject : topicCategorySubjects) {
+                LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getId, topicCategorySubject.getSubjectId());
+                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getCreateBy, "admin");
+                TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                if (topicSubject != null) {
+                    // 查询题目转
+                    count += topicSubject.getTopicCount();
+                }
+            }
+
+            topicCategoryDataVo.setCount(count);
+            return topicCategoryDataVo;
+        }).toList();
     }
 }
