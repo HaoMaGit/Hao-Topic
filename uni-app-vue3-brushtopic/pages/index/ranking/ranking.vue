@@ -2,28 +2,46 @@
 import {
 	ref, computed, onMounted
 } from 'vue'
-import { apiQueryRank } from '@/api/home'
+import { apiQueryRank, apiQueryUserRank } from '@/api/home'
 // 筛选
 const screen = ref(true)
 
 // 排行榜
 const rankList = ref()
 // 前3
-const top3 = ref()
+const top3 = ref([])
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+// 当前用户排行榜
+const currentRank = ref()
 // 查询排行榜
 const getRank = async (type) => {
 	uni.showLoading()
 	const res = await apiQueryRank(type)
-	rankList.value = res.data
-	// 提取前三个
-	top3.value = rankList.value.slice(0, 3)
+	if (res.data) {
+		rankList.value = res.data
+		// 提取前三个
+		top3.value = rankList.value.slice(0, 3)
+		// 提取剩余的
+		rankList.value = rankList.value.slice(3);
+	}
 	uni.hideLoading()
 }
+// 获取当前用户排名
+const getUserRank = async (type) => {
+	const res = await apiQueryUserRank(type)
+	if (res.data) {
+		currentRank.value = res.data
+	}
+}
+
 onMounted(() => {
 	if (screen.value === true) {
 		getRank(1)
+		getUserRank(1)
 	} else {
 		getRank(2)
+		getUserRank(2)
 	}
 })
 
@@ -47,12 +65,14 @@ const getPageGradient = computed(() => {
 			<!-- 顶部切换总排行榜和当天排行 -->
 			<view class="page">
 				<view class="tab">
-					<view :class="{ 'tab-active': screen }" @click="screen = true, getRank(1)"><text>日排行</text></view>
-					<view :class="{ 'tab-active': !screen }" @click="screen = false, getRank(2)"><text>总排行</text></view>
+					<view :class="{ 'tab-active': screen }" @click="screen = true, getRank(1), getUserRank(1)"><text>日排行</text>
+					</view>
+					<view :class="{ 'tab-active': !screen }" @click="screen = false, getRank(2), getUserRank(2)"><text>总排行</text>
+					</view>
 				</view>
 				<!-- top3 -->
 				<view class="top">
-					<view class="top-item" :style="{ opacity: top3[0] ? 1 : 0 }">
+					<view class="top-item" :style="{ opacity: top3[1] ? 1 : 0 }">
 						<image v-if="top3[1]?.avatar" class="top-item-avatar" :src="top3[1]?.avatar"
 							style="border: 4rpx solid #C0C0C0;">
 						</image>
@@ -62,7 +82,7 @@ const getPageGradient = computed(() => {
 						<text class="top-item-score">{{ top3[1]?.scope }}</text>
 					</view>
 					<view class="top-item" :style="{ paddingBottom: '20rpx', opacity: top3[0] ? 1 : 0 }">
-						<image v-if="null" class="top-item-avatar" :src="top3[0]?.avatar"
+						<image v-if="top3[0]?.avatar" class="top-item-avatar" :src="top3[0]?.avatar"
 							style="border: 4rpx solid #FFD700;">
 						</image>
 						<uv-avatar v-else size="69.6" style="border: 4rpx solid #FFD700;" :text="top3[0]?.nickname.charAt(0)"
@@ -71,10 +91,11 @@ const getPageGradient = computed(() => {
 						<text class="top-item-score">{{ top3[0]?.scope }}</text>
 					</view>
 					<view class="top-item" :style="{ opacity: top3[2] ? 1 : 0 }">
-						<image v-if="top3[2]?.avatar" class="top-item-avatar" :src="top3[2]?.avatar" style="border: 4rpx solid #CD7F32;">
+						<image v-if="top3[2]?.avatar" class="top-item-avatar" :src="top3[2]?.avatar"
+							style="border: 4rpx solid #CD7F32;">
 						</image>
 						<uv-avatar v-else size="69.6" style="border: 4rpx solid #CD7F32;" :text="top3[2]?.nickname.charAt(0)"
-						fontSize="18" randomBgColor></uv-avatar>
+							fontSize="18" randomBgColor></uv-avatar>
 						<text class="top-item-name">{{ top3[2]?.nickname }}</text>
 						<text class="top-item-score">{{ top3[2]?.scope }}</text>
 					</view>
@@ -83,25 +104,31 @@ const getPageGradient = computed(() => {
 					<scroll-view :scroll-top="0" scroll-y="true" style="height: 950rpx;" class="scroll-Y" @scrolltoupper="upper"
 						@scrolltolower="lower" @scroll="scroll">
 						<!-- 排行榜 -->
-						<view class="ranking-list-item" v-for="(item, key) in list" :key="key">
+						<view v-if="rankList && rankList.length !== 0" class="ranking-list-item" v-for="(item, key) in rankList"
+							:key="key">
 							<text class="ranking-list-number">{{ key + 4 }}</text>
 							<view class="ranking-list-nickname">
-								<image src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png">
+								<image v-if="item.avatar" :src="item.avatar">
 								</image>
-								<text>编号{{ key }}</text>
+								<uv-avatar v-else size="69" style="border: 4rpx solid #C0C0C0;" :text="item.nickname.charAt(0)"
+									fontSize="18" randomBgColor></uv-avatar>
+								<text>{{ item.nickname }}</text>
 							</view>
-							<text class="ranking-list-score">90</text>
+							<text class="ranking-list-score">{{ item.scope }}</text>
 						</view>
+						<uv-empty v-else text="还没有人上榜～快去刷题，成为第一个霸榜的人！🔥" icon="../../../static/images/empty.png"></uv-empty>
 					</scroll-view>
 					<!-- 当前排名 -->
 					<view class="current-ranking">
-						<text class="ranking-list-number">19</text>
-						<view class="ranking-list-nickname">
-							<image src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png">
+						<text class="ranking-list-number current">{{ currentRank?.rank }}</text>
+						<view class="ranking-list-nickname ">
+							<image v-if="currentRank?.avatar" :src="currentRank?.avatar">
 							</image>
-							<text>AI用户</text>
+							<uv-avatar size="10" v-else :text="currentRank?.nickname.charAt(0)" fontSize="18"
+								randomBgColor></uv-avatar>
+							<text>{{ currentRank?.nickname }}</text>
 						</view>
-						<text class="ranking-list-score">90</text>
+						<text class="ranking-list-score">{{ currentRank?.scope }}</text>
 					</view>
 				</view>
 			</view>
@@ -218,6 +245,7 @@ const getPageGradient = computed(() => {
 					padding: 0 10rpx 0 10rpx;
 					display: flex;
 					align-items: center;
+					justify-content: center;
 					font-size: 14px;
 					color: #1677ff;
 				}
@@ -250,6 +278,10 @@ const getPageGradient = computed(() => {
 					text {
 						width: auto;
 					}
+				}
+
+				.current {
+					padding-left: 40rpx;
 				}
 			}
 		}

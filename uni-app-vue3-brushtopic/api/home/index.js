@@ -13,3 +13,9 @@ export const apiQueryWebHomeCount = () =>
  */
 export const apiQueryRank = (type) =>
   request(prefix + 'rank/' + type)
+
+/**
+ * 获取当前用户排名信息
+ */
+export const apiQueryUserRank = (type) =>
+  request(prefix + 'userRank/' + type)

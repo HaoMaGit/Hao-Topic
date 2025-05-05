@@ -75,20 +75,20 @@ const tapRanking = () => {
 			<!-- 统计刷题区域 -->
 			<view class="content-bottom" :style="{ color: getTextColor }">
 				<view class="count">
-					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{webHomeCount.todayCount}}</text>
+					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{webHomeCount.todayCount || 0}}</text>
 				</view>
 				<view class="count">
-					今日已刷题<text class="weight" :style="{ color: getTextColor }">{{ webHomeCount.todayTopicCount }}</text>
+					今日已刷题<text class="weight" :style="{ color: getTextColor }">{{ webHomeCount.todayTopicCount || 0 }}</text>
 				</view>
 				<view class="count">
-					共刷题<text class="weight" style="color: #1677ff;">{{ webHomeCount.totalTopicRecordCount }}/<span
-							style="color: #0056b3;font-weight: bold;">{{ webHomeCount.totalTopicCount }}</span></text>
+					共刷题<text class="weight" style="color: #1677ff;">{{ webHomeCount.totalTopicRecordCount || 0 }}/<span
+							style="color: #0056b3;font-weight: bold;">{{ webHomeCount.totalTopicCount || 0 }}</span></text>
 				</view>
 			</view>
 			<!-- 排名 -->
 			<view class="content-db" @click="tapRanking">
 				<view class="text-box">
-					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第{{ webHomeCount.rank }}名 / 总{{
+					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第{{ webHomeCount.rank || 0 }}名 / 总{{
 						webHomeCount?.userCount }}人</text>
 				</view>
 				<uni-icons type="arrow-right" size="24" :color="getTextColor" class="clickable-icon"></uni-icons>
