@@ -7,3 +7,9 @@ const prefix = "/topic/data/"
  */
 export const apiQueryWebHomeCount = () =>
   request(prefix + 'webHomeCount')
+
+/**
+ * 查询排行榜
+ */
+export const apiQueryRank = (type) =>
+  request(prefix + 'rank/' + type)
