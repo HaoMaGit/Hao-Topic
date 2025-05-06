@@ -24,4 +24,11 @@
         GROUP BY d.date_value
         ORDER BY d.date_value;
     </select>
+
+    <!-- 根据用户ic查询用户ai使用总数 -->
+    <select id="countAi" resultType="java.lang.Long">
+        select sum(count)
+        from ai_record
+        where user_id = #{currentId}
+    </select>
 </mapper>

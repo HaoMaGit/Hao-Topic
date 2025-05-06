@@ -476,24 +476,7 @@ public class ModelServiceImpl implements ModelService {
         aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
         // 解析数据
         List<AiHistory> records = aiHistoryPage.getRecords();
-        // 获取当天日期
-        String today = DateUtils.format(new Date(), "yyyy-MM-dd");
-        // 封装当天数据
-        AiHistoryListVo aiHistoryListVo = new AiHistoryListVo();
-        // 筛选当天数据
-        List<AiHistoryVo> list = records.stream().filter(aiHistory -> {
-            // 获取当前记录的创建时间
-            String createTime = DateUtils.format(aiHistory.getCreateTime(), "yyyy-MM-dd");
-            return createTime.equals(today);
-        }).map(aiHistory -> {
-            AiHistoryVo aiHistoryVo = new AiHistoryVo();
-            BeanUtils.copyProperties(aiHistory, aiHistoryVo);
-            return aiHistoryVo;
-        }).toList();
-        if (CollectionUtils.isNotEmpty(list)) {
-            aiHistoryListVo.setAiHistoryVos(list);
-            aiHistoryListVo.setDate(AiConstant.DAY_HISTORY);
-        }
+
         // 全部数据
         List<AiHistoryListVo> aiHistoryListVos = new ArrayList<>();
         // 获取所有的日期
@@ -524,20 +507,8 @@ public class ModelServiceImpl implements ModelService {
             aiHistoryListVos.add(aiHistoryListVoResult);
         }
 
-        // 构建最终返回结果列表
-        List<AiHistoryListVo> result = new ArrayList<>();
 
-        // 添加当天数据（如果存在）
-        if (CollectionUtils.isNotEmpty(aiHistoryListVo.getAiHistoryVos())) {
-            result.add(aiHistoryListVo);
-        }
-
-        // 添加其他日期的数据（如果存在）
-        if (!aiHistoryListVos.isEmpty()) {
-            result.addAll(aiHistoryListVos);
-        }
-
-        return result;
+        return aiHistoryListVos;
     }
 
 
@@ -951,5 +922,19 @@ public class ModelServiceImpl implements ModelService {
     public List<TopicDataVo> countAiDay7() {
         List<TopicDataVo> topicDataVoList = aiRecordMapper.countAiDay7();
         return topicDataVoList;
+    }
+
+    /**
+     * 根据用户id查询ai使用总数
+     *
+     * @param currentId
+     * @return
+     */
+    public Long countAi(Long currentId) {
+        Long count = aiRecordMapper.countAi(currentId);
+        if(count == null){
+            count = 0L;
+        }
+        return count;
     }
 }

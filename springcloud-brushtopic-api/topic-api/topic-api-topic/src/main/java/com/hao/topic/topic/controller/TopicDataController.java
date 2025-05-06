@@ -104,4 +104,32 @@ public class TopicDataController {
         AiTrendVo aiTrendVo = topicDataService.aiTrend();
         return Result.success(aiTrendVo);
     }
+
+    /**
+     * 用户首页左侧顶部系统数据
+     */
+    @GetMapping("/userHomeCount")
+    public Result<Map<String, Object>> userHomeData() {
+        Map<String, Object> map = topicDataService.userHomeData();
+        return Result.success(map);
+    }
+    //
+    // /**
+    //  * 用户首页分类数量
+    //  */
+    // @GetMapping("/userHomeCategory")
+    // public Result<List<TopicCategoryDataVo>> userHomeCategory() {
+    //     // 1.查询所有的分类
+    //     // 2.查询专题下有多少个题目
+    //     // 3.查询用刷了这个分类下的多少题
+    // }
+    //
+    // /**
+    //  * 统计用户每日刷题次数
+    //  */
+    // @GetMapping("/userTopicCount")
+    // public Result<List<TopicDataVo>> userTopicCount() {
+    //     List<TopicDataVo> list = topicDataService.countUserDay15();
+    //     return Result.success(list);
+    // }
 }

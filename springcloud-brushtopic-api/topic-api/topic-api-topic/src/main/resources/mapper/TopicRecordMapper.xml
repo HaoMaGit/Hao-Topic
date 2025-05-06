@@ -103,5 +103,64 @@
         ORDER BY d.date_value;
     </select>
 
+    <!-- 统计用户刷题总数 -->
+    <select id="countTopicUserRecord" resultType="java.lang.Long">
+        select sum(count)
+        from topic_record
+        where user_id = #{currentId};
+    </select>
+
+    <!-- 根据日期查用户排名 -->
+    <select id="getDateRank" resultType="java.lang.Long">
+        SELECT `rank`
+        FROM (SELECT user_id,
+                     nickname,
+                     SUM(count)                             AS total_count,
+                     topic_time,
+                     RANK() OVER (ORDER BY SUM(count) DESC) AS `rank`
+              FROM topic_record
+              where topic_time = #{date}
+              GROUP BY user_id) AS ranked_users
+        WHERE user_id = #{currentId}
+    </select>
+
+    <!-- 统计用户最长连续刷题数量 -->
+    <select id="selectMaximumCount" resultType="java.lang.Long">
+        WITH user_days AS (SELECT user_id,
+                                  topic_time,
+                                  ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY topic_time)              AS rn,
+                                  DATE(topic_time) -
+                                  INTERVAL ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY topic_time) DAY AS grp
+                           FROM topic_record),
+             user_streaks AS (SELECT user_id,
+                                     COUNT(*) AS streak_length
+                              FROM user_days
+                              GROUP BY user_id, grp)
+        SELECT MAX(streak_length) AS max_streak_length
+        FROM user_streaks
+        where user_id = #{currentId}
+        GROUP BY user_id;
+    </select>
+
+    <!-- 查询用户最近刷题多少天 -->
+    <select id="selectRecentConsecutiveCount" resultType="java.lang.Long">
+        WITH user_days AS (SELECT topic_time,
+                                  DATE(topic_time) - INTERVAL ROW_NUMBER() OVER (ORDER BY topic_time) DAY AS grp
+                           FROM (SELECT DISTINCT topic_time
+                                 FROM topic_record
+                                 WHERE user_id = #{currentId}
+                                 ORDER BY topic_time) AS distinct_days),
+             streaks AS (SELECT grp,
+                                MIN(topic_time) AS start_date,
+                                MAX(topic_time) AS end_date,
+                                COUNT(*)        AS streak_length
+                         FROM user_days
+                         GROUP BY grp)
+        SELECT streak_length AS recent_streak_length
+        FROM streaks
+        ORDER BY end_date DESC
+        LIMIT 1;
+    </select>
+
 
 </mapper>

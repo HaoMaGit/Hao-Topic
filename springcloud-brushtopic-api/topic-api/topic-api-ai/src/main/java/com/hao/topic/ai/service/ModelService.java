@@ -52,4 +52,6 @@ public interface ModelService {
 
     List<TopicDataVo> countAiDay7();
 
+    Long countAi(Long currentId);
+
 }

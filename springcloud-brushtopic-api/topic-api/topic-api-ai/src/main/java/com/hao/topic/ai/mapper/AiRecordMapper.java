@@ -18,4 +18,5 @@ public interface AiRecordMapper extends BaseMapper<AiRecord> {
 
     List<TopicDataVo> countAiDay7();
 
+    Long countAi(Long currentId);
 }

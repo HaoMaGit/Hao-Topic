@@ -480,4 +480,92 @@ public class TopicDataServiceImpl implements TopicDataService {
         aiTrendVo.setCountList(countList);
         return aiTrendVo;
     }
+
+
+    /**
+     * 用户首页左侧顶部系统数据
+     *
+     * @return
+     */
+    public Map<String, Object> userHomeData() {
+        // 封装返回数据
+        Map<String, Object> map = new HashMap<>();
+        Long currentId = SecurityUtils.getCurrentId();
+        String role = SecurityUtils.getCurrentRole();
+        String currentName = SecurityUtils.getCurrentName();
+
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        // 1.用户已刷题次数
+        Long topicFrequencyCount = topicRecordMapper.countTopicUserRecord(currentId);
+
+        // 2.用户昨日和今日刷题次数
+        Long aLong = topicRecordMapper.countTopicFrequency(today);
+        Long aLong1 = topicRecordMapper.countTopicFrequency(yesterday);
+        // 计算差值（今天 - 昨天）
+        long topicFrequencyGrowthRate = aLong - aLong1;
+
+        // 3.刷题次数排名
+        // 统计用户排名
+        Long rank = topicRecordMapper.getRank(currentId);
+
+        // 4.昨日排名和今日排名
+        long todayRank = topicRecordMapper.getDateRank(currentId, today) == null ? 0L : topicRecordMapper.getDateRank(currentId, today);
+        long yesterdayRank = topicRecordMapper.getDateRank(currentId, yesterday) == null ? 0L : topicRecordMapper.getDateRank(currentId, yesterday);
+
+        // 计算差值
+        long rankGrowthRate = todayRank - yesterdayRank;
+
+        // 5.已刷题目
+        // 统计用户已刷总数
+        Long totalTopicRecordCountSize = null;
+        LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+        topicRecordLambdaQueryWrapper1.eq(TopicRecord::getUserId, currentId);
+        topicRecordLambdaQueryWrapper1.groupBy(TopicRecord::getTopicId);
+        List<TopicRecord> totalTopicRecordCount = topicRecordMapper.selectList(topicRecordLambdaQueryWrapper1);
+        if (CollectionUtils.isEmpty(totalTopicRecordCount)) {
+            totalTopicRecordCountSize = 0L;
+        } else {
+            totalTopicRecordCountSize = (long) totalTopicRecordCount.size();
+        }
+
+        // 6.总共题目数量
+        // 统计题目数量总数
+        Long totalTopicCount = null;
+        if (role.equals("user")) {
+            // 用户直接查询系统数量
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper.eq(Topic::getCreateBy, "admin");
+            topicLambdaQueryWrapper.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+            totalTopicCount = topicMapper.selectCount(topicLambdaQueryWrapper);
+        } else {
+            // 管理员和会员可以查自己的
+            LambdaQueryWrapper<Topic> topicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLambdaQueryWrapper.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+            topicLambdaQueryWrapper.in(Topic::getCreateBy, "admin", currentName);
+            totalTopicCount = topicMapper.selectCount(topicLambdaQueryWrapper);
+        }
+
+        // 7.用户ai总次数
+        Long aiCount = aiFeignClient.countAi(currentId);
+
+        // 8.最长连续刷题次数
+        Long maxConsecutiveCount = topicRecordMapper.selectMaximumCount(currentId);
+
+        // 9.最近连续刷题次数
+        Long recentConsecutiveCount = topicRecordMapper.selectRecentConsecutiveCount(currentId);
+
+        map.put("topicFrequencyCount", topicFrequencyCount);
+        map.put("topicFrequencyGrowthRate", topicFrequencyGrowthRate);
+        map.put("rank", rank);
+        map.put("rankGrowthRate", rankGrowthRate);
+        map.put("totalTopicRecordCountSize", totalTopicRecordCountSize);
+        map.put("totalTopicCount", totalTopicCount);
+        map.put("aiCount", aiCount == null ? 0L : aiCount);
+        map.put("maxConsecutiveCount", maxConsecutiveCount == null ? 0L : maxConsecutiveCount);
+        map.put("recentConsecutiveCount", recentConsecutiveCount == null ? 0L : recentConsecutiveCount);
+
+        return map;
+    }
 }

@@ -33,4 +33,6 @@ public interface TopicDataService {
 
     AiTrendVo aiTrend();
 
+    Map<String, Object> userHomeData();
+
 }

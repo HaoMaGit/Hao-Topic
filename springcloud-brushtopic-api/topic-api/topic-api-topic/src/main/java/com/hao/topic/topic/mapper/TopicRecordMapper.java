@@ -7,7 +7,6 @@ import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Description:
@@ -29,4 +28,11 @@ public interface TopicRecordMapper extends BaseMapper<TopicRecord> {
 
     List<TopicDataVo> countUserDay15();
 
+    Long countTopicUserRecord(Long currentId);
+
+    Long getDateRank(Long currentId, String date);
+
+    Long selectMaximumCount(Long currentId);
+
+    Long selectRecentConsecutiveCount(Long currentId);
 }

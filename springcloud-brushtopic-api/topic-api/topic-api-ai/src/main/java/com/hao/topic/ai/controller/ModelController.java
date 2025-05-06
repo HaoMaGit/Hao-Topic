@@ -136,4 +136,15 @@ public class ModelController {
     List<TopicDataVo> countAiDay7() {
         return modelService.countAiDay7();
     }
+
+    /**
+     * 根据用户id查询ai使用总数
+     *
+     * @param currentId
+     * @return
+     */
+    @GetMapping("/countAi/{currentId}")
+    Long countAi(@PathVariable Long currentId) {
+        return modelService.countAi(currentId);
+    }
 }

@@ -34,4 +34,7 @@ public interface AiFeignClient {
     @GetMapping("/ai/model/countAiDay7")
     List<TopicDataVo> countAiDay7();
 
+    @GetMapping("/ai/model/countAi/{currentId}")
+    Long countAi(@PathVariable Long currentId);
+
 }
