@@ -10,3 +10,9 @@ export interface AdminLeftDataType {
   aiCount: number,
   aiGrowthRate: number;
 }
+
+export interface TopicTrendType {
+  dateList: any[],
+  countUserList: any[],
+  countTopicList: any[]
+}

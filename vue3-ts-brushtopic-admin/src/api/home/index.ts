@@ -22,4 +22,13 @@ export const apiAdminHomeCategory = () => {
 }
 
 
+/**
+ * 统计题目15日的趋势图
+ */
+export const apiTopicTrend = () => {
+    return request({
+        url: prefix + "topicTrend",
+        method: "get",
+    })
+}
 

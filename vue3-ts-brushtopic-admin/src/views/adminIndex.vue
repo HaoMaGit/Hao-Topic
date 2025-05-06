@@ -6,13 +6,12 @@ import * as echarts from 'echarts';
 // 导入 settingStore
 import { useSettingStore } from '@/stores/modules/setting';
 const settingStore = useSettingStore();
-import { apiAdminHomeCount, apiAdminHomeCategory } from '@/api/home'
-import type { AdminLeftDataType } from '@/api/home/type';
+import { apiAdminHomeCount, apiAdminHomeCategory, apiTopicTrend } from '@/api/home'
+import type { AdminLeftDataType, TopicTrendType } from '@/api/home/type';
 // 分类实例
 const categoryChart = ref(null)
+// 气泡图
 const initBubbleChart = () => {
-  console.log(rightData.value);
-
   const myChart = echarts.init(categoryChart.value);
   const option = {
     animationDurationUpdate: function (idx: number) {
@@ -105,7 +104,7 @@ const initProblemTrendChart = () => {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+      data: middleData.value?.dateList,
       axisLine: {
         lineStyle: {
           color: '#E0E6F1'
@@ -160,7 +159,7 @@ const initProblemTrendChart = () => {
         emphasis: {
           focus: 'series'
         },
-        data: [10, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330]
+        data: middleData.value?.countUserList
       },
       {
         name: '题目数量',
@@ -187,7 +186,7 @@ const initProblemTrendChart = () => {
         emphasis: {
           focus: 'series'
         },
-        data: [220, 182, 191, 34, 290, 330, 310, 320, 301, 334, 390, 430]
+        data: middleData.value?.countTopicList
       }
     ]
   };
@@ -401,6 +400,7 @@ watch(() => settingStore.isDark, () => {
 // 首页全部数据
 const leftData = ref<AdminLeftDataType>(); // 左侧数据
 const rightData = ref(); // 左侧数据
+const middleData = ref<TopicTrendType>(); // 中间数据
 // 获取左侧数据
 const getLeftData = async () => {
   const res = await apiAdminHomeCount();
@@ -419,11 +419,27 @@ const getRightData = async () => {
   }
 }
 
+// 获取中间部分数据
+const getMiddleData = async () => {
+  const res = await apiTopicTrend();
+  if (res.data) {
+    middleData.value = res.data
+    initProblemTrendChart();
+  }
+}
 
+
+// 统一异步执行请求
+const initData = () => {
+  Promise.all([
+    getLeftData(),
+    getRightData(),
+    getMiddleData()
+  ])
+
+}
 onMounted(() => {
-  getLeftData()
-  getRightData()
-  initProblemTrendChart();
+  initData()
   initUserGrowthChart();
   initAiCallChart()
 });
@@ -475,7 +491,7 @@ onMounted(() => {
                         <ArrowUpOutlined /> {{ leftData?.topicGrowthRate }}次
                       </span>
                       <span class="bottom-magnitude" v-else>
-                        <ArrowDownOutlined /> {{ Math.abs(leftData?.topicGrowthRate) }}次
+                        <ArrowDownOutlined /> {{ Math.abs(leftData?.topicGrowthRate ?? 0) }}次
                       </span>
                     </template>
                   </a-statistic>
@@ -491,7 +507,7 @@ onMounted(() => {
                         <ArrowUpOutlined /> {{ leftData.aiGrowthRate }}次
                       </span>
                       <span class="bottom-magnitude" v-else>
-                        <ArrowDownOutlined /> {{ Math.abs(leftData?.aiGrowthRate) }}次
+                        <ArrowDownOutlined /> {{ Math.abs(leftData?.aiGrowthRate ?? 0) }}次
                       </span>
                     </template>
                   </a-statistic>
@@ -507,7 +523,7 @@ onMounted(() => {
                         <ArrowUpOutlined /> {{ leftData?.userGrowthRate }}名
                       </span>
                       <span class="bottom-magnitude">
-                        <ArrowDownOutlined /> {{ Math.abs(leftData?.userGrowthRate) }}名
+                        <ArrowDownOutlined /> {{ Math.abs(leftData?.userGrowthRate ?? 0) }}名
                       </span>
                     </template>
                   </a-statistic>
