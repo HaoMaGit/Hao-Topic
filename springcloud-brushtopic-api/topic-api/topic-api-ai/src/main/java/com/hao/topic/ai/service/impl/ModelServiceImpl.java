@@ -144,7 +144,7 @@ public class ModelServiceImpl implements ModelService {
             // 系统模式
             return systemModel(chatDto);
         } else if (chatDto.getModel().equals(AiConstant.AI_MODEL)) {
-            // TODO AI模式
+            //  AI模式
             return aiModel(chatDto);
         }
         // TODO 混合模式
@@ -165,7 +165,7 @@ public class ModelServiceImpl implements ModelService {
 
     // =========================================
 
-    // TODO ============HaoAI模型模式==============
+    //  ============HaoAI模型模式==============
     private Flux<String> aiModel(ChatDto chatDto) {
         /**
          * 模型模式根据用户输入的题目类型进行发送面试题
@@ -175,28 +175,88 @@ public class ModelServiceImpl implements ModelService {
         // 当前账户
         String currentName = SecurityUtils.getCurrentName();
 
-        // 1.校验用户输入的题目类型是否合法
-        // 1.1.不合法直接返回用户提示信息
-        // 1.2.合法开始随机抽取题目
-
-
         // 提示词
         String prompt = null;
-
-        // 查询一下是否这个对话开始记录过了
-        AiHistory aiHistory = null;
-        Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
-        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
-        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
-        Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
-        if (aiHistoryPageDb.getRecords().size() > 0) {
-            aiHistory = aiHistoryPageDb.getRecords().get(0);
+        // 查询当前对话记录
+        AiHistory aiHistory = getCurrentHistory(chatDto);
+        // 处理对话逻辑
+        if (aiHistory == null) {
+            // 1.用户第一次对话需要题目类型的校验
+            return verifyPrompt(chatDto, null);
+        } else {
+            // 2.说明ai已经给用户返回题目了所有得校验用户输入的答案是否正确
+            // 2.1获取上一条记录的状态
+            Integer status = aiHistory.getStatus();
+            // 2.2上一条记录是ai提出问题
+            if (AiStatusEnums.SEND_TOPIC.getCode().equals(status)) {
+                // 用户就得输入答案
+                prompt = "你提出面试题：" + aiHistory.getContent()
+                        + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
+                        + "用户输入'继续或者输入新的题目类型'：你才继续生成题目！";
+                // 用户输入答案后将状态改为评估答案
+                return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
+            }
+            // 2.3上一条记录是评估答案说明ai已经评估完了用户就得输入继续或者新专题
+            if (AiStatusEnums.EVALUATE_ANSWER.getCode().equals(status)) {
+                // 用户输入继续还是新专题
+                if ("继续".equals(chatDto.getPrompt())) {
+                    // 查询前1条发出的面试题
+                    List<AiHistory> aiHistoryList = aiHistoryMapper.selectList(new QueryWrapper<AiHistory>()
+                            .eq("user_id", currentId)
+                            .eq("status", AiStatusEnums.SEND_TOPIC.getCode())
+                            .eq("chat_id", chatDto.getChatId())
+                            .orderByDesc("create_time")
+                            .last("limit 1"));
+                    log.info("aiHistoryList: {}", aiHistoryList);
+                    // 将题目类型添加到prompt中
+                    chatDto.setPrompt(aiHistoryList.get(0).getTitle());
+                    // 继续将状态改为发送面试题并发送一道题目
+                    return verifyPrompt(chatDto, aiHistoryList.get(0).getContent());
+                } else {
+                    // 再次处理就改为发送面试题
+                    return verifyPrompt(chatDto, aiHistory.getContent());
+                }
+            }
         }
         return null;
     }
+
+    /**
+     * 校验用户输入的题目类型
+     *
+     * @param chatDto
+     * @return
+     */
+    private Flux<String> verifyPrompt(ChatDto chatDto, String topic) {
+        String prompt = null;
+        if (topic != null) {
+            prompt = PromptConstant.CHECK_TOPIC_TYPE + "上次出的面试题【：" + topic + "】" + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+        } else {
+            prompt = PromptConstant.CHECK_TOPIC_TYPE + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+        }
+        // 发起对话
+        String content = this.chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+        log.info("verifyPrompt================>?: {}", content);
+        // 没通过
+        if (content != null && content.equalsIgnoreCase("false")) {
+            // 返回一个提示信息给用户
+            return Flux.just("❌请输入正确的题目类型\uD83D\uDE0A");
+        }
+        // 通过了返回题目
+        // 构造提示语
+        prompt = "### 【" + chatDto.getPrompt() + "】类型 💡\n\n" +
+                "## 面试题目：\n" +
+                "**" + content + "**\n\n" +
+                "> " + getRandomEncouragement();
+        // 保存
+        saveHistory(chatDto, prompt);
+        // 返回
+        return Flux.just(prompt);
+    }
+
 
     // ======================================
 
@@ -220,18 +280,7 @@ public class ModelServiceImpl implements ModelService {
         // 提示词
         String prompt = null;
 
-        // 查询一下是否这个对话开始记录过了
-        AiHistory aiHistory = null;
-        Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
-        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
-        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
-        Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
-        if (aiHistoryPageDb.getRecords().size() > 0) {
-            aiHistory = aiHistoryPageDb.getRecords().get(0);
-        }
+        AiHistory aiHistory = getCurrentHistory(chatDto);
 
         // 处理对话逻辑
         if (aiHistory == null) {
@@ -251,7 +300,7 @@ public class ModelServiceImpl implements ModelService {
                 // 用户就得输入答案
                 prompt = "你提出面试题：" + aiHistory.getContent()
                         + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-                        + "用户输入'继续或者输入新的专题'：你才继续生成题目！";
+                        + "用户输入'继续或者输入新的面试题类型'：你才继续生成题目！";
                 // 用户输入答案后将状态改为评估答案
                 return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
             }
@@ -336,29 +385,7 @@ public class ModelServiceImpl implements ModelService {
                 "**" + randomTopic.getTopicName() + "**\n\n" +
                 "> " + getRandomEncouragement();
 
-        // 获取当前对话id
-        String chatId = chatDto.getChatId();
-        // 封装记录
-        AiHistory aiHistory = new AiHistory();
-        aiHistory.setChatId(chatId);
-        aiHistory.setAccount(currentName);
-        aiHistory.setUserId(currentId);
-        aiHistory.setContent(prompt);
-        // 查询这个对话记录有没有父级id
-        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatId);
-        aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1);
-        AiHistory aiHistoryDb = aiHistoryMapper.selectOne(aiHistoryLambdaQueryWrapper);
-        if (aiHistoryDb == null) {
-            aiHistory.setParent(1);
-        }
-        if (chatDto.getMemoryId() == 1) {
-            aiHistory.setParent(1);
-        }
-        aiHistory.setTitle(chatDto.getPrompt());
-        aiHistory.setStatus(AiStatusEnums.SEND_TOPIC.getCode());
-        aiHistory.setMode(chatDto.getModel());
-        aiHistoryMapper.insert(aiHistory);
+        saveHistory(chatDto, prompt);
         return Flux.just(prompt);
     }
 
@@ -421,6 +448,94 @@ public class ModelServiceImpl implements ModelService {
             aiHistoryMapper.insert(aiHistory);
         });
         return stringFlux;
+    }
+
+    /**
+     * 查询当前对话记录
+     *
+     * @param chatDto
+     * @return
+     */
+    private AiHistory getCurrentHistory(ChatDto chatDto) {
+        // 获取当前用户Id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+
+
+        // 查询一下是否这个对话开始记录过了
+        AiHistory aiHistory = null;
+        Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
+        Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+        if (aiHistoryPageDb.getRecords().size() > 0) {
+            aiHistory = aiHistoryPageDb.getRecords().get(0);
+        }
+
+        // 查询这个对话记录有没有父级id
+        LambdaQueryWrapper<AiHistory> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+        lambdaQueryWrapper.eq(AiHistory::getParent, 1);
+        lambdaQueryWrapper.orderByAsc(AiHistory::getCreateTime);
+        List<AiHistory> aiHistories = aiHistoryMapper.selectList(lambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(aiHistories)) {
+            if (aiHistory != null) {
+                aiHistory.setParent(1);
+            }
+        }
+        if (aiHistories.size() > 1) {
+            // 从第二条开始修改
+            aiHistories.remove(0);
+            // 修改那条多余的数据
+            aiHistories.forEach(aiHistory1 -> {
+                aiHistory1.setParent(0);
+                aiHistoryMapper.updateById(aiHistory1);
+            });
+        }
+        return aiHistory;
+    }
+
+    // 保存对话历史记录
+    private void saveHistory(ChatDto chatDto, String prompt) {
+        String currentName = SecurityUtils.getCurrentName();
+        Long currentId = SecurityUtils.getCurrentId();
+        // 获取当前对话id
+        String chatId = chatDto.getChatId();
+        // 封装记录
+        AiHistory aiHistory = new AiHistory();
+        aiHistory.setChatId(chatId);
+        aiHistory.setAccount(currentName);
+        aiHistory.setUserId(currentId);
+        aiHistory.setContent(prompt);
+        // 查询这个对话记录有没有父级id
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1);
+        aiHistoryLambdaQueryWrapper.orderByAsc(AiHistory::getCreateTime);
+        List<AiHistory> aiHistories = aiHistoryMapper.selectList(aiHistoryLambdaQueryWrapper);
+        if (CollectionUtils.isEmpty(aiHistories)) {
+            aiHistory.setParent(1);
+        }
+        if (aiHistories.size() > 1) {
+            // 从第二条开始修改
+            aiHistories.remove(0);
+            // 修改那条多余的数据
+            aiHistories.forEach(aiHistory1 -> {
+                aiHistory1.setParent(0);
+                aiHistoryMapper.updateById(aiHistory1);
+            });
+        }
+        if (chatDto.getMemoryId() == 1) {
+            aiHistory.setParent(1);
+        }
+        aiHistory.setTitle(chatDto.getPrompt());
+        aiHistory.setStatus(AiStatusEnums.SEND_TOPIC.getCode());
+        aiHistory.setMode(chatDto.getModel());
+        aiHistoryMapper.insert(aiHistory);
     }
 
     /**
