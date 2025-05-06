@@ -64,6 +64,7 @@ import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Description:
@@ -230,7 +231,18 @@ public class ModelServiceImpl implements ModelService {
     private Flux<String> verifyPrompt(ChatDto chatDto, String topic) {
         String prompt = null;
         if (topic != null) {
-            prompt = PromptConstant.CHECK_TOPIC_TYPE + "上次出的面试题【：" + topic + "】" + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+            String promptBuffer;
+            // 查询当前所有的历史记录
+            LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, SecurityUtils.getCurrentId());
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getStatus, AiStatusEnums.SEND_TOPIC.getCode());
+            aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+            List<AiHistory> aiHistoryList = aiHistoryMapper.selectList(aiHistoryLambdaQueryWrapper);
+            if(!CollectionUtils.isEmpty(aiHistoryList)){
+                // 封装所有的内容根据 "/n"拼接
+                promptBuffer = aiHistoryList.stream().map(AiHistory::getContent).collect(Collectors.joining("\n"));
+                prompt = PromptConstant.CHECK_TOPIC_TYPE + "当前对话记录已经出过的面试题【：" + promptBuffer + "】" + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+            }
         } else {
             prompt = PromptConstant.CHECK_TOPIC_TYPE + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
         }
