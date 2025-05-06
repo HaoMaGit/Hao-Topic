@@ -217,7 +217,7 @@ const aiMode = reactive([
     label: '混合模式',
     value: 'mix',
     icon: AppstoreOutlined,
-    desc: 'AI随机混合系统题库和AI自定义题目HaoAi会校验你的回答'
+    desc: 'AI随机混合系统题库和AI生成题目HaoAi会校验你的回答'
   },
 ])
 // 当前选中的模式
@@ -232,10 +232,6 @@ const prompt = ref('')
 const placeholder = ref(userStore.userInfo.identity === 1 ? '请输入系统中和会员自定义的正确的题目专题，AI将自动生成题目' : '请输入系统中的正确的题目专题，AI将自动生成题目')
 // 初始化提示词
 const initPlaceholder = () => {
-  // 判断是否有内容
-  if (messageList.length > 2) {
-    placeholder.value = '请输入题目答案，AI将自动判断并反馈给您'
-  }
   if (aiModeValue.value === 'system') {
     placeholder.value = '请输入题目专题，AI将自动生成题目'
     return
