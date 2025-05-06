@@ -43,3 +43,9 @@ export const apiUserTrend = () =>
 // 统计AI近7日的趋势图
 export const apiAiTrend = () =>
     request.get(prefix + "aiTrend");
+
+
+
+// 统计用户首页左上角数据
+export const apiUserHomeCount = () =>
+    request.get(prefix + "userHomeCount");

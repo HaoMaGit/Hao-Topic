@@ -16,3 +16,15 @@ export interface TopicTrendType {
   countUserList: any[],
   countTopicList: any[]
 }
+
+export interface UserHomeCount {
+  topicFrequencyCount: number,
+  topicFrequencyGrowthRate: number,
+  rank: number,
+  rankGrowthRate: number,
+  totalTopicRecordCountSize: number,
+  totalTopicCount: number,
+  aiCount: number,
+  maxConsecutiveCount: number,
+  recentConsecutiveCount: number
+}

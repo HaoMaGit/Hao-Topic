@@ -5,7 +5,8 @@ import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { getVirtulDataByYear, getYearDateRange, getDynamicDateRange } from '@/utils/date';
 import { getWaterBallSVG } from '@/utils/customer';
-
+import { apiUserHomeCount } from '@/api/home'
+import type { UserHomeCount } from '@/api/home/type';
 // 用户身份计算
 const getUserIdentity = () => {
   // 这里可以根据用户的刷题数量、连续天数等计算用户身份
@@ -274,8 +275,18 @@ watch(selectedYear, (val) => {
   }
 });
 
+const leftData = ref<UserHomeCount>() // 题目相关数据
+// 查询用户左上角题目数据
+const getLeftData = async () => {
+  const { data } = await apiUserHomeCount();
+  if (data) {
+    leftData.value = data;
+  }
+};
+
 // 组件挂载后初始化图表
 onMounted(() => {
+  getLeftData()
   initBubbleChart();
   initContributionChart();
 });
@@ -318,57 +329,63 @@ onMounted(() => {
             <a-col :span="16" class="user-data-col">
               <a-row :gutter="[16, 16]">
                 <a-col :span="12">
-                  <a-statistic title="已刷题次数" :value="1230" class=" stat-item">
+                  <a-statistic title="已刷题次数" :value="leftData?.topicFrequencyCount" class=" stat-item">
                     <template #prefix>
                       <BarChartOutlined />
                     </template>
                     <template #suffix>
                       <span>次</span>
-                      <span class="top-magnitude">
-                        <ArrowUpOutlined /> 10%
+                      <span class="top-magnitude" v-if="leftData && leftData.topicFrequencyGrowthRate > 0">
+                        <ArrowUpOutlined /> {{ leftData.topicFrequencyGrowthRate }}次
+                      </span>
+                      <span class="bottom-magnitude" v-else>
+                        <ArrowDownOutlined /> {{ Math.abs(leftData?.topicFrequencyGrowthRate ?? 0) }}次
                       </span>
                     </template>
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="刷题次数总排名" :value="1000" class="stat-item">
+                  <a-statistic title="刷题次数总排名" :value="leftData?.rank" class="stat-item">
                     <template #prefix>
                       <TrophyOutlined />
                     </template>
                     <template #suffix>
                       <span>名</span>
-                      <span class="bottom-magnitude">
-                        <arrow-down-outlined /> 10%
+                      <span class="top-magnitude" v-if="leftData && leftData.rankGrowthRate > 0">
+                        <ArrowUpOutlined /> {{ leftData?.rankGrowthRate }}名
+                      </span>
+                      <span class="bottom-magnitude" v-else>
+                        <ArrowDownOutlined />{{ Math.abs(leftData?.rankGrowthRate ?? 0) }}名
                       </span>
                     </template>
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="已刷题目" :value="30" class="stat-item">
+                  <a-statistic title="已刷题目" :value="leftData?.totalTopicRecordCountSize" class="stat-item">
                     <template #prefix>
                       <CheckCircleOutlined />
                     </template>
                     <template #suffix>
-                      <span>/300题</span>
+                      <span>/{{ leftData?.totalTopicCount }}题</span>
                     </template>
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="AI陪背次数" :value="40" suffix="次" class="stat-item">
+                  <a-statistic title="AI陪背次数" :value="leftData?.aiCount" suffix="次" class="stat-item">
                     <template #prefix>
                       <RobotOutlined />
                     </template>
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="最长连续刷题" :value="10" suffix="天" class="stat-item">
+                  <a-statistic title="最长连续刷题" :value="leftData?.maxConsecutiveCount" suffix="天" class="stat-item">
                     <template #prefix>
                       <CalendarOutlined />
                     </template>
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="最近连续刷题" :value="20" suffix="天" class="stat-item">
+                  <a-statistic title="最近连续刷题" :value="leftData?.recentConsecutiveCount" suffix="天" class="stat-item">
                     <template #prefix>
                       <HourglassOutlined />
                     </template>
@@ -402,7 +419,7 @@ onMounted(() => {
         <!-- 日历热力图 -->
         <div ref="contributionChart" class="contribution-chart"></div>
         <!-- 底部描述 -->
-        <div class="footer-description">每一次点击面试题就会统计刷题次数</div>
+        <div class="footer-description">每一次查看面试题就会统计刷题次数</div>
       </a-card>
     </div>
   </div>
