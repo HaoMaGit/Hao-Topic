@@ -221,7 +221,7 @@ const aiMode = reactive([
   },
 ])
 // 当前选中的模式
-const aiModeValue = ref('system')
+const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
 // 发送表单
 const promptInput = ref()
 // 发送的内容
@@ -251,6 +251,7 @@ const { VITE_SERVE, VITE_APP_BASE_API } = import.meta.env
 // 发送
 const sendPrompt = async () => {
   isReply.value = false
+  isSelectHistory.value = true
   if (prompt.value) {
     if (aiId.value === 0) {
       // 说明是第一次
@@ -266,6 +267,9 @@ const sendPrompt = async () => {
       content: '',
       nickname: userStore.userInfo.nickname,
     })
+    prompt.value = ''
+    await scrollToBottom()
+
     // 获取当前记录
     const currentRecord = messageList[messageList.length - 1]
     try {
@@ -293,7 +297,6 @@ const sendPrompt = async () => {
         // 返回一个可读流
         return response.body;
       }).then(async body => {
-        prompt.value = ''
         if (!body) {
           message.error("HaoAi回复出现点问题请稍后再试！")
           return
@@ -516,7 +519,13 @@ const handleAiModeChange = (ev: any) => {
       okText: '确定',
       cancelText: '取消',
       async onOk() {
-        aiModeValue.value = ev.target.value
+        message.success('创建成功')
+        setTimeout(() => {
+          // 创建一个新对话刷新界面
+          window.location.reload()
+        }, 100)
+        // 存入缓存中
+        localStorage.setItem('aiMode', ev.target.value)
       },
       onCancel() {
         console.log('Cancel');
