@@ -34,5 +34,6 @@ public class AiHistory {
     private String chatId;
     private Integer status;
     private Integer parent;
+    private String mode;
 
 }

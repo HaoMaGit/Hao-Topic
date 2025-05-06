@@ -144,15 +144,61 @@ public class ModelServiceImpl implements ModelService {
             // 系统模式
             return systemModel(chatDto);
         } else if (chatDto.getModel().equals(AiConstant.AI_MODEL)) {
-            // AI模式
+            // TODO AI模式
+            return aiModel(chatDto);
         }
-        // 混合模式
-        return this.chatClient.prompt()
-                .user(chatDto.getPrompt())
-                .stream()
-                .content();
+        // TODO 混合模式
+        return mixModel();
+    }
+    // TODO ============HaoAi混合模式==============
+
+    private Flux<String> mixModel() {
+        /**
+         * 混合模式用户输入题目类型从ai库中或者系统库中抽取
+         */
+        // 1.校验用户输入的题目专题是否在系统库中
+        // 1.1.不在校验用户输入的题目专题是否合法
+        // 1.2.在使用一个随机数随机抽取是否从系统还是ai库中抽取
+        // 1.3.抽取成功将题目发给用户
+        return null;
     }
 
+    // =========================================
+
+    // TODO ============HaoAI模型模式==============
+    private Flux<String> aiModel(ChatDto chatDto) {
+        /**
+         * 模型模式根据用户输入的题目类型进行发送面试题
+         */
+        // 获取当前用户Id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+
+        // 1.校验用户输入的题目类型是否合法
+        // 1.1.不合法直接返回用户提示信息
+        // 1.2.合法开始随机抽取题目
+
+
+        // 提示词
+        String prompt = null;
+
+        // 查询一下是否这个对话开始记录过了
+        AiHistory aiHistory = null;
+        Page<AiHistory> aiHistoryPage = new Page<>(1, 1);
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
+        aiHistoryLambdaQueryWrapper.orderByDesc(AiHistory::getCreateTime);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getUserId, currentId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getAccount, currentName);
+        Page<AiHistory> aiHistoryPageDb = aiHistoryMapper.selectPage(aiHistoryPage, aiHistoryLambdaQueryWrapper);
+        if (aiHistoryPageDb.getRecords().size() > 0) {
+            aiHistory = aiHistoryPageDb.getRecords().get(0);
+        }
+        return null;
+    }
+
+    // ======================================
 
     // ============HaoAI系统模式==============
 
@@ -298,11 +344,20 @@ public class ModelServiceImpl implements ModelService {
         aiHistory.setAccount(currentName);
         aiHistory.setUserId(currentId);
         aiHistory.setContent(prompt);
+        // 查询这个对话记录有没有父级id
+        LambdaQueryWrapper<AiHistory> aiHistoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatId);
+        aiHistoryLambdaQueryWrapper.eq(AiHistory::getParent, 1);
+        AiHistory aiHistoryDb = aiHistoryMapper.selectOne(aiHistoryLambdaQueryWrapper);
+        if (aiHistoryDb == null) {
+            aiHistory.setParent(1);
+        }
         if (chatDto.getMemoryId() == 1) {
             aiHistory.setParent(1);
         }
         aiHistory.setTitle(chatDto.getPrompt());
         aiHistory.setStatus(AiStatusEnums.SEND_TOPIC.getCode());
+        aiHistory.setMode(chatDto.getModel());
         aiHistoryMapper.insert(aiHistory);
         return Flux.just(prompt);
     }
@@ -361,6 +416,7 @@ public class ModelServiceImpl implements ModelService {
             aiHistory.setContent(fullReply.toString());
             aiHistory.setTitle(chatDto.getPrompt());
             aiHistory.setStatus(status);
+            aiHistory.setMode(chatDto.getModel());
             aiHistory.setId(null);
             aiHistoryMapper.insert(aiHistory);
         });
@@ -932,7 +988,7 @@ public class ModelServiceImpl implements ModelService {
      */
     public Long countAi(Long currentId) {
         Long count = aiRecordMapper.countAi(currentId);
-        if(count == null){
+        if (count == null) {
             count = 0L;
         }
         return count;

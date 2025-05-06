@@ -21,4 +21,5 @@ public class ChatDto {
     private Long memoryId;
     // 昵称用于渲染
     private String nickname;
+
 }

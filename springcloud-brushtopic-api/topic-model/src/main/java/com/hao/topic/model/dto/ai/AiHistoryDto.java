@@ -13,4 +13,6 @@ public class AiHistoryDto {
     private String title;
     private Integer pageNum;
     private Integer pageSize;
+    private String mode;
+
 }
