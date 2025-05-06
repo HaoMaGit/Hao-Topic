@@ -663,4 +663,17 @@ public class TopicDataServiceImpl implements TopicDataService {
         }
         return topicCategoryUserDataVos;
     }
+
+    /**
+     * 根据年份统计每日用户刷题次数
+     *
+     * @param date
+     * @return
+     */
+    public List<TopicDataVo> userTopicDateCount(String date) {
+        // 获取当前登录用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 开始查询
+        return topicRecordMapper.userTopicDateCount(date, currentId);
+    }
 }

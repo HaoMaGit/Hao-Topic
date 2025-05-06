@@ -122,13 +122,13 @@ public class TopicDataController {
         List<TopicCategoryUserDataVo> list = topicDataService.userHomeCategory();
         return Result.success(list);
     }
-    //
-    // /**
-    //  * 统计用户每日刷题次数
-    //  */
-    // @GetMapping("/userTopicCount")
-    // public Result<List<TopicDataVo>> userTopicCount() {
-    //     List<TopicDataVo> list = topicDataService.countUserDay15();
-    //     return Result.success(list);
-    // }
+
+    /**
+     * 根据年份统计用户每日刷题次数
+     */
+    @GetMapping("/userTopicCount/{date}")
+    public Result<List<TopicDataVo>> userTopicDateCount(@PathVariable String date) {
+        List<TopicDataVo> list = topicDataService.userTopicDateCount(date);
+        return Result.success(list);
+    }
 }

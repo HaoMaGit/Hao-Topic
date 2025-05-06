@@ -2,10 +2,7 @@ package com.hao.topic.topic.service;
 
 import com.hao.topic.model.vo.ai.AiTrendVo;
 import com.hao.topic.model.vo.system.SysUserTrentVo;
-import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
-import com.hao.topic.model.vo.topic.TopicCategoryUserDataVo;
-import com.hao.topic.model.vo.topic.TopicTrendVo;
-import com.hao.topic.model.vo.topic.TopicUserRankVo;
+import com.hao.topic.model.vo.topic.*;
 
 import java.util.List;
 import java.util.Map;
@@ -38,4 +35,5 @@ public interface TopicDataService {
 
     List<TopicCategoryUserDataVo> userHomeCategory();
 
+    List<TopicDataVo> userTopicDateCount(String date);
 }

@@ -35,4 +35,6 @@ public interface TopicRecordMapper extends BaseMapper<TopicRecord> {
     Long selectMaximumCount(Long currentId);
 
     Long selectRecentConsecutiveCount(Long currentId);
+
+    List<TopicDataVo> userTopicDateCount(String date, Long currentId);
 }

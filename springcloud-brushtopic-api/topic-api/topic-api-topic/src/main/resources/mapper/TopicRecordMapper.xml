@@ -162,5 +162,16 @@
         LIMIT 1;
     </select>
 
+    <!-- 根据年份查询用户每日刷题次数 -->
+    <select id="userTopicDateCount" resultType="com.hao.topic.model.vo.topic.TopicDataVo">
+        SELECT DATE(topic_time) AS date,
+               sum(count)       AS count
+        FROM topic_record
+        WHERE YEAR(topic_time) = #{date}
+          and user_id = #{currentId}
+        GROUP BY DATE(topic_time)
+        ORDER BY date;
+    </select>
+
 
 </mapper>
