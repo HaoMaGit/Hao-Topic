@@ -6,7 +6,7 @@ import * as echarts from 'echarts';
 // 导入 settingStore
 import { useSettingStore } from '@/stores/modules/setting';
 const settingStore = useSettingStore();
-import { apiAdminHomeCount, apiAdminHomeCategory, apiTopicTrend, apiUserTrend } from '@/api/home'
+import { apiAdminHomeCount, apiAdminHomeCategory, apiTopicTrend, apiUserTrend, apiAiTrend } from '@/api/home'
 import type { AdminLeftDataType, TopicTrendType } from '@/api/home/type';
 // 分类实例
 const categoryChart = ref(null)
@@ -218,7 +218,7 @@ const initUserGrowthChart = () => {
     grid: {
       top: '10%',
       left: '3%',
-      right: '4%',
+      right: '7%',
       bottom: '15%',
       containLabel: true
     },
@@ -313,22 +313,22 @@ const initAiCallChart = () => {
     grid: {
       top: '10%',
       left: '3%',
-      right: '4%',
+      right: '7%',
       bottom: '15%',
       containLabel: true
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      data: aiTrend.value.dateList,
       axisLine: {
         lineStyle: {
-          color: '#E0E6F1'
+          color: '#E0E6F1',
         }
       },
       axisLabel: {
-        color: '#666'
-      }
+        color: '#666',
+      },
     },
     yAxis: {
       type: 'value',
@@ -350,7 +350,7 @@ const initAiCallChart = () => {
     },
     series: [
       {
-        name: '用户增长',
+        name: '刷题次数',
         type: 'line',
         stack: 'Total',
         smooth: true,
@@ -378,7 +378,7 @@ const initAiCallChart = () => {
         emphasis: {
           focus: 'series'
         },
-        data: [120, 132, 101, 134, 90, 230, 210]
+        data: aiTrend.value.countList
       }
     ]
   };
@@ -402,6 +402,7 @@ const leftData = ref<AdminLeftDataType>(); // 左侧数据
 const rightData = ref(); // 左侧数据
 const middleData = ref<TopicTrendType>(); // 中间数据
 const userTrend = ref(); // 用户统计数据
+const aiTrend = ref(); // ai趋势数据
 // 获取左侧数据
 const getLeftData = async () => {
   const res = await apiAdminHomeCount();
@@ -435,6 +436,14 @@ const getUserTrendData = async () => {
     initUserGrowthChart();
   }
 }
+// 获取ai数据
+const getAiTrendData = async () => {
+  const res = await apiAiTrend();
+  if (res.data) {
+    aiTrend.value = res.data
+    initAiCallChart()
+  }
+}
 
 // 统一异步执行请求
 const initData = () => {
@@ -442,13 +451,13 @@ const initData = () => {
     getLeftData(),
     getRightData(),
     getMiddleData(),
-    getUserTrendData()
+    getUserTrendData(),
+    getAiTrendData()
   ])
 }
 
 onMounted(() => {
   initData()
-  initAiCallChart()
 });
 </script>
 <template>
