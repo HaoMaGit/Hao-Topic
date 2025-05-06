@@ -49,3 +49,9 @@ export const apiAiTrend = () =>
 // 统计用户首页左上角数据
 export const apiUserHomeCount = () =>
     request.get(prefix + "userHomeCount");
+
+
+
+// 用户首页分类数据
+export const apiUserHomeCategory = () =>
+    request.get(prefix + "userHomeCategory");

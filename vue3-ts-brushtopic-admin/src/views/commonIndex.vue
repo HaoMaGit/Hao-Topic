@@ -5,7 +5,7 @@ import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import { getVirtulDataByYear, getYearDateRange, getDynamicDateRange } from '@/utils/date';
 import { getWaterBallSVG } from '@/utils/customer';
-import { apiUserHomeCount } from '@/api/home'
+import { apiUserHomeCount, apiUserHomeCategory } from '@/api/home'
 import type { UserHomeCount } from '@/api/home/type';
 // 用户身份计算
 const getUserIdentity = () => {
@@ -21,21 +21,20 @@ const getUserIdentity = () => {
 
 // 分类实例
 const categoryChart = ref(null)
-const categoryData = [
-  { name: '哈希表', value: 60 },
-  { name: '数组', value: 80 },
-  { name: '动态规划', value: 90 },
-  { name: '队列', value: 40 },
-  { name: '短阵', value: 50 },
-  { name: '堆（优先队列）', value: 70 },
-  { name: '栈', value: 55 },
-  { name: '双指针', value: 15 },
-  { name: '并查集', value: 45 },
-  { name: '单调栈', value: 50 },
-  { name: '单调1栈', value: 50 },
-  { name: '单调23栈', value: 50 },
-];
-
+// const categoryData = [
+//   { name: '哈希表', value: 60 },
+//   { name: '数组', value: 80 },
+//   { name: '动态规划', value: 90 },
+//   { name: '队列', value: 40 },
+//   { name: '短阵', value: 50 },
+//   { name: '堆（优先队列）', value: 70 },
+//   { name: '栈', value: 55 },
+//   { name: '双指针', value: 15 },
+//   { name: '并查集', value: 45 },
+//   { name: '单调栈', value: 50 },
+//   { name: '单调1栈', value: 50 },
+//   { name: '单调23栈', value: 50 },
+// ];
 // 初始化气泡图
 const initBubbleChart = () => {
   const myChart = echarts.init(categoryChart.value);
@@ -52,9 +51,11 @@ const initBubbleChart = () => {
       },
       extraCssText: 'box-shadow: none;', // 关键：禁用阴影
       formatter: function (params: any) {
+        console.log("==========>", params);
+
         return `<div style="text-align: center;border: 1px solid #ccc; background-color: #fff; padding: 5px; border-radius: 4px;">
                   <strong style="color: #1a1a1a;">${params.name}</strong><br/>
-                  <span style="color: #1a1a1a;">${params.value}</span><span style="color: #b1b1b1;"> / 2081</span>
+                  <span style="color: #1a1a1a;">${params.value}</span><span style="color: #b1b1b1;"> / ${params.data.count}</span>
                 </div>`;
       }
     },
@@ -87,11 +88,12 @@ const initBubbleChart = () => {
           },
         },
       },
-      data: categoryData.map((cat) => ({
-        name: cat.name,
-        value: cat.value,
-        symbol: getWaterBallSVG(cat.value),
-        symbolSize: cat.value * 1.05, // value越大，球越大
+      data: rightData.value.map((cat: any) => ({
+        name: cat.categoryName,
+        value: cat.count,
+        count: cat.totalCount,
+        symbol: getWaterBallSVG(cat.count),
+        symbolSize: (cat.totalCount < 5 ? 5 : cat.totalCount) * 10, // value越大，球越大
         draggable: true,
       }))
     }]
@@ -276,6 +278,7 @@ watch(selectedYear, (val) => {
 });
 
 const leftData = ref<UserHomeCount>() // 题目相关数据
+const rightData = ref() // 分类相关数据
 // 查询用户左上角题目数据
 const getLeftData = async () => {
   const { data } = await apiUserHomeCount();
@@ -283,11 +286,24 @@ const getLeftData = async () => {
     leftData.value = data;
   }
 };
+// 查询用户分类相关数据
+const getRightData = async () => {
+  const { data } = await apiUserHomeCategory();
+  if (data) {
+    rightData.value = data;
+    initBubbleChart();
+  }
+};
 
+const initData = () => {
+  Promise.all([
+    getLeftData(),
+    getRightData()
+  ])
+}
 // 组件挂载后初始化图表
 onMounted(() => {
-  getLeftData()
-  initBubbleChart();
+  initData()
   initContributionChart();
 });
 </script>
