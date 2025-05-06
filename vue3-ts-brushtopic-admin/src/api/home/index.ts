@@ -32,3 +32,8 @@ export const apiTopicTrend = () => {
     })
 }
 
+
+
+// 统计用户15日的趋势图
+export const apiUserTrend = () =>
+    request.get(prefix + "userTrend");

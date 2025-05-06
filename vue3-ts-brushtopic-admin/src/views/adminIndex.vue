@@ -6,7 +6,7 @@ import * as echarts from 'echarts';
 // 导入 settingStore
 import { useSettingStore } from '@/stores/modules/setting';
 const settingStore = useSettingStore();
-import { apiAdminHomeCount, apiAdminHomeCategory, apiTopicTrend } from '@/api/home'
+import { apiAdminHomeCount, apiAdminHomeCategory, apiTopicTrend, apiUserTrend } from '@/api/home'
 import type { AdminLeftDataType, TopicTrendType } from '@/api/home/type';
 // 分类实例
 const categoryChart = ref(null)
@@ -225,7 +225,7 @@ const initUserGrowthChart = () => {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      data: userTrend.value.dateList,
       axisLine: {
         lineStyle: {
           color: '#E0E6F1'
@@ -283,7 +283,7 @@ const initUserGrowthChart = () => {
         emphasis: {
           focus: 'series'
         },
-        data: [120, 132, 101, 134, 90, 230, 210]
+        data: userTrend.value.countList
       }
     ]
   };
@@ -401,6 +401,7 @@ watch(() => settingStore.isDark, () => {
 const leftData = ref<AdminLeftDataType>(); // 左侧数据
 const rightData = ref(); // 左侧数据
 const middleData = ref<TopicTrendType>(); // 中间数据
+const userTrend = ref(); // 用户统计数据
 // 获取左侧数据
 const getLeftData = async () => {
   const res = await apiAdminHomeCount();
@@ -418,7 +419,6 @@ const getRightData = async () => {
     }
   }
 }
-
 // 获取中间部分数据
 const getMiddleData = async () => {
   const res = await apiTopicTrend();
@@ -427,20 +427,27 @@ const getMiddleData = async () => {
     initProblemTrendChart();
   }
 }
-
+// 获取用户数据
+const getUserTrendData = async () => {
+  const res = await apiUserTrend();
+  if (res.data) {
+    userTrend.value = res.data
+    initUserGrowthChart();
+  }
+}
 
 // 统一异步执行请求
 const initData = () => {
   Promise.all([
     getLeftData(),
     getRightData(),
-    getMiddleData()
+    getMiddleData(),
+    getUserTrendData()
   ])
-
 }
+
 onMounted(() => {
   initData()
-  initUserGrowthChart();
   initAiCallChart()
 });
 </script>
