@@ -12,6 +12,7 @@ import com.hao.topic.model.dto.ai.TtsDto;
 import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import com.hao.topic.security.utils.DateUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,5 +125,15 @@ public class ModelController {
     @GetMapping("/count")
     public Long count() {
         return modelService.count(null);
+    }
+
+    /**
+     * 查询近7日ai使用次数
+     *
+     * @return
+     */
+    @GetMapping("/countAiDay7")
+    List<TopicDataVo> countAiDay7() {
+        return modelService.countAiDay7();
     }
 }

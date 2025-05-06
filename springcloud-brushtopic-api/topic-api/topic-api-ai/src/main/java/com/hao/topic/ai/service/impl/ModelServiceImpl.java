@@ -45,6 +45,7 @@ import com.hao.topic.model.entity.topic.TopicSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
 import com.hao.topic.model.vo.ai.AiHistoryVo;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -936,9 +937,19 @@ public class ModelServiceImpl implements ModelService {
      */
     public Long count(String date) {
         Long count = aiRecordMapper.countAiFrequency(date);
-        if(count == null){
+        if (count == null) {
             count = 0L;
         }
         return count;
+    }
+
+    /**
+     * 查询ai近7日使用次数
+     *
+     * @return
+     */
+    public List<TopicDataVo> countAiDay7() {
+        List<TopicDataVo> topicDataVoList = aiRecordMapper.countAiDay7();
+        return topicDataVoList;
     }
 }

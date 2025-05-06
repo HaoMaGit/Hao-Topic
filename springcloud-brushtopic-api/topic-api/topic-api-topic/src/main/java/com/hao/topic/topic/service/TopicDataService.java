@@ -1,5 +1,6 @@
 package com.hao.topic.topic.service;
 
+import com.hao.topic.model.vo.ai.AiTrendVo;
 import com.hao.topic.model.vo.system.SysUserTrentVo;
 import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
 import com.hao.topic.model.vo.topic.TopicTrendVo;
@@ -29,5 +30,7 @@ public interface TopicDataService {
 
     SysUserTrentVo userTrend();
 
+
+    AiTrendVo aiTrend();
 
 }

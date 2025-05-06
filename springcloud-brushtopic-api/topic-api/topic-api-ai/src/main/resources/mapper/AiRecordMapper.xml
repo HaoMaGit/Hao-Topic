@@ -10,4 +10,18 @@
             </if>
         </where>
     </select>
+    <!-- 查询ai -->
+    <select id="countAiDay7" resultType="com.hao.topic.model.vo.topic.TopicDataVo">
+        WITH RECURSIVE dates AS (SELECT CURDATE() - INTERVAL 6 DAY AS date_value
+                                 UNION ALL
+                                 SELECT date_value + INTERVAL 1 DAY
+                                 FROM dates
+                                 WHERE date_value &lt; CURDATE())
+        SELECT d.date_value              AS date,
+               COALESCE(SUM(r.count), 0) AS count
+        FROM dates d
+                 LEFT JOIN ai_record r ON r.ai_time = d.date_value
+        GROUP BY d.date_value
+        ORDER BY d.date_value;
+    </select>
 </mapper>

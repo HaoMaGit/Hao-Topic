@@ -9,6 +9,7 @@ import com.hao.topic.model.dto.audit.TopicAuditLabel;
 import com.hao.topic.model.dto.audit.TopicAuditSubject;
 import com.hao.topic.model.vo.ai.AiHistoryContent;
 import com.hao.topic.model.vo.ai.AiHistoryListVo;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 
@@ -48,4 +49,7 @@ public interface ModelService {
     void generateAnswer(TopicAudit topicAudit);
 
     Long count(String date);
+
+    List<TopicDataVo> countAiDay7();
+
 }

@@ -1,6 +1,7 @@
 package com.hao.topic.topic.controller;
 
 import com.hao.topic.common.result.Result;
+import com.hao.topic.model.vo.ai.AiTrendVo;
 import com.hao.topic.model.vo.system.SysUserTrentVo;
 import com.hao.topic.model.vo.topic.*;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
@@ -96,6 +97,11 @@ public class TopicDataController {
 
 
     /**
-     * TODO AI调用次数趋势图
+     * AI调用次数趋势图
      */
+    @GetMapping("/aiTrend")
+    public Result<AiTrendVo> aiTrend() {
+        AiTrendVo aiTrendVo = topicDataService.aiTrend();
+        return Result.success(aiTrendVo);
+    }
 }
