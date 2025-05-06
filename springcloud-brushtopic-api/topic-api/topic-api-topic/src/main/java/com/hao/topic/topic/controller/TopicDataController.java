@@ -113,16 +113,15 @@ public class TopicDataController {
         Map<String, Object> map = topicDataService.userHomeData();
         return Result.success(map);
     }
-    //
-    // /**
-    //  * 用户首页分类数量
-    //  */
-    // @GetMapping("/userHomeCategory")
-    // public Result<List<TopicCategoryDataVo>> userHomeCategory() {
-    //     // 1.查询所有的分类
-    //     // 2.查询专题下有多少个题目
-    //     // 3.查询用刷了这个分类下的多少题
-    // }
+
+    /**
+     * 用户首页分类数量
+     */
+    @GetMapping("/userHomeCategory")
+    public Result<List<TopicCategoryUserDataVo>> userHomeCategory() {
+        List<TopicCategoryUserDataVo> list = topicDataService.userHomeCategory();
+        return Result.success(list);
+    }
     //
     // /**
     //  * 统计用户每日刷题次数

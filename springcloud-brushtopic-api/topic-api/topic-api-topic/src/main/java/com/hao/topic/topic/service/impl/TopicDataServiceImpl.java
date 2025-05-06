@@ -6,6 +6,7 @@ import com.hao.topic.api.utils.enums.StatusEnums;
 import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
+import com.hao.topic.common.utils.StringUtils;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.vo.ai.AiTrendVo;
 import com.hao.topic.model.vo.system.SysUserTrentVo;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Description:
@@ -408,7 +410,7 @@ public class TopicDataServiceImpl implements TopicDataService {
                 topicSubjectLambdaQueryWrapper.eq(TopicSubject::getCreateBy, "admin");
                 TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
                 if (topicSubject != null) {
-                    // 查询题目转
+                    // 查询题目
                     TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = topicSubjectService.subjectDetail(topicSubject.getId());
                     if (topicSubjectDetailAndTopicVo != null) {
                         if (CollectionUtils.isNotEmpty(topicSubjectDetailAndTopicVo.getTopicNameVos())) {
@@ -567,5 +569,98 @@ public class TopicDataServiceImpl implements TopicDataService {
         map.put("recentConsecutiveCount", recentConsecutiveCount == null ? 0L : recentConsecutiveCount);
 
         return map;
+    }
+
+    /**
+     * 查询用户分类数据
+     *
+     * @return
+     */
+    public List<TopicCategoryUserDataVo> userHomeCategory() {
+        // 封装返回数据
+        List<TopicCategoryUserDataVo> topicCategoryUserDataVos = new ArrayList<>();
+        Long currentId = SecurityUtils.getCurrentId();
+        String role = SecurityUtils.getCurrentRole();
+        String currentName = SecurityUtils.getCurrentName();
+        // 1.查询所有的分类
+        LambdaQueryWrapper<TopicCategory> topicCategoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (role.equals("user")) {
+            // 用户直接查询系统数量
+            topicCategoryLambdaQueryWrapper.eq(TopicCategory::getCreateBy, "admin");
+            topicCategoryLambdaQueryWrapper.eq(TopicCategory::getStatus, StatusEnums.NORMAL.getCode());
+        } else {
+            // 管理员和会员可以查自己的
+            topicCategoryLambdaQueryWrapper.eq(TopicCategory::getStatus, StatusEnums.NORMAL.getCode());
+            topicCategoryLambdaQueryWrapper.in(TopicCategory::getCreateBy, "admin", currentName);
+        }
+        // 查询分类
+        List<TopicCategory> topicCategories = topicCategoryMapper.selectList(topicCategoryLambdaQueryWrapper);
+        // 校验
+        if (CollectionUtils.isEmpty(topicCategories)) {
+            return null;
+        }
+        // 遍历分类
+        for (TopicCategory topicCategory : topicCategories) {
+            // 2.查询专题下有多少个题目
+            // 封装返回数据
+            TopicCategoryUserDataVo topicCategoryUserDataVo = new TopicCategoryUserDataVo();
+            // 根据分类id查询专题分类表
+            LambdaQueryWrapper<TopicCategorySubject> topicCategorySubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicCategorySubjectLambdaQueryWrapper.eq(TopicCategorySubject::getCategoryId, topicCategory.getId());
+            List<TopicCategorySubject> topicCategorySubjects = topicCategorySubjectMapper.selectList(topicCategorySubjectLambdaQueryWrapper);
+            // 封装分类名称
+            topicCategoryUserDataVo.setCategoryName(topicCategory.getCategoryName());
+            if (CollectionUtils.isEmpty(topicCategorySubjects)) {
+                continue;
+            }
+            long totalCount = 0L;
+            long count = 0L;
+            // 有专题id
+            for (TopicCategorySubject topicCategorySubject : topicCategorySubjects) {
+                // 根据专题id查询专题表
+                LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getId, topicCategorySubject.getSubjectId());
+                topicSubjectLambdaQueryWrapper.eq(TopicSubject::getStatus, StatusEnums.NORMAL.getCode());
+                TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
+                if (StringUtils.isNull(topicSubject)) {
+                    continue;
+                }
+                // 查询题目
+                TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = topicSubjectService.subjectDetail(topicSubject.getId());
+                if (topicSubjectDetailAndTopicVo != null) {
+                    if (CollectionUtils.isNotEmpty(topicSubjectDetailAndTopicVo.getTopicNameVos())) {
+                        totalCount += topicSubjectDetailAndTopicVo.getTopicNameVos().size();
+                        // 提出该专题下所有的题目id
+                        List<Long> topicSubjectIds = topicSubjectDetailAndTopicVo.getTopicNameVos().stream().map(TopicNameVo::getId).toList();
+                        // 3.查询用户刷了这个分类下的多少题
+                        // 查询用户刷的所有题目id
+                        LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                        topicRecordLambdaQueryWrapper.eq(TopicRecord::getUserId, currentId);
+                        topicRecordLambdaQueryWrapper.eq(TopicRecord::getSubjectId, topicCategorySubject.getSubjectId());
+                        List<TopicRecord> topicRecords = topicRecordMapper.selectList(topicRecordLambdaQueryWrapper);
+                        if (CollectionUtils.isNotEmpty(topicRecords)) {
+                            // 提取所有的题目id
+                            List<Long> topicIds = topicRecords.stream().map(TopicRecord::getTopicId).toList();
+                            if (CollectionUtils.isNotEmpty(topicIds)) {
+                                // 判断该专题下有多少个题目被刷过
+                                // 将 List 转换为 Set 以提高查找效率
+                                Set<Long> topicSubjectIdSet = new HashSet<>(topicSubjectIds);
+                                // 计算在 topicIds 中也出现在 topicSubjectIds 中的元素数量
+                                long matchingCount = topicIds.stream()
+                                        .filter(topicSubjectIdSet::contains)
+                                        .count();
+                                if (matchingCount != 0) {
+                                    count += matchingCount;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            topicCategoryUserDataVo.setTotalCount(totalCount);
+            topicCategoryUserDataVo.setCount(count);
+            topicCategoryUserDataVos.add(topicCategoryUserDataVo);
+        }
+        return topicCategoryUserDataVos;
     }
 }
