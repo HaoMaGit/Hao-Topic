@@ -35,5 +35,6 @@ public class AiHistory {
     private Integer status;
     private Integer parent;
     private String mode;
+    private String originalTitle;
 
 }

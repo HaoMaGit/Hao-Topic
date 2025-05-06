@@ -110,7 +110,19 @@ public class ModelServiceImpl implements ModelService {
             "🧠 慢慢来，答案就在前方～",
             "🚀 再试一次，你离成功不远了！",
             "💡 这道题对你来说不是问题！",
-            "🎯 坚持到底就是胜利！"
+            "🎯 坚持到底就是胜利！",
+            "🌈 每一次尝试都让你更接近成功！",
+            "🌻 你的努力正在开花结果！",
+            "⚡ 让智慧之光指引你前进！",
+            "🦸 你就是自己的超级英雄！",
+            "🌊 像海浪一样永不言弃！",
+            "🎯 专注目标，你一定能做到！",
+            "🚴 保持平衡，稳步前进！",
+            "🧩 每个难题都是成长的拼图！",
+            "🏆 冠军的潜力就在你心中！",
+            "🌠 梦想就在不远处等着你！",
+            "🦉 智慧正在你的脑中闪耀！",
+            "⏳ 时间会证明你的坚持！"
     };
 
     /**
@@ -188,12 +200,14 @@ public class ModelServiceImpl implements ModelService {
             // 2.说明ai已经给用户返回题目了所有得校验用户输入的答案是否正确
             // 2.1获取上一条记录的状态
             Integer status = aiHistory.getStatus();
+
             // 2.2上一条记录是ai提出问题
             if (AiStatusEnums.SEND_TOPIC.getCode().equals(status)) {
                 // 用户就得输入答案
                 prompt = "你提出面试题：" + aiHistory.getContent()
                         + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-                        + "用户输入'继续或者输入新的题目类型'：你才继续生成题目！";
+                        + "结尾最后一定要一定要返回下面这句话\n" +
+                        " > 请输入'**继续**'或者输入新的**题目类型**'";
                 // 用户输入答案后将状态改为评估答案
                 return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
             }
@@ -238,11 +252,16 @@ public class ModelServiceImpl implements ModelService {
             aiHistoryLambdaQueryWrapper.eq(AiHistory::getStatus, AiStatusEnums.SEND_TOPIC.getCode());
             aiHistoryLambdaQueryWrapper.eq(AiHistory::getChatId, chatDto.getChatId());
             List<AiHistory> aiHistoryList = aiHistoryMapper.selectList(aiHistoryLambdaQueryWrapper);
-            if(!CollectionUtils.isEmpty(aiHistoryList)){
+            if (!CollectionUtils.isEmpty(aiHistoryList)) {
                 // 封装所有的内容根据 "/n"拼接
-                promptBuffer = aiHistoryList.stream().map(AiHistory::getContent).collect(Collectors.joining("\n"));
-                prompt = PromptConstant.CHECK_TOPIC_TYPE + "当前对话记录已经出过的面试题【：" + promptBuffer + "】" + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+                promptBuffer = aiHistoryList.stream()
+                        .map(AiHistory::getOriginalTitle) // 映射到originalTitle
+                        .filter(title -> title != null && !title.trim().isEmpty()) // 过滤掉null和空字符串
+                        .collect(Collectors.joining("\n")); // 使用换行符连接
+                prompt = PromptConstant.CHECK_TOPIC_TYPE + "当前对话记录已经出过的面试题\n【：" + promptBuffer + "】" + "就不可以在出了\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
+
             }
+            log.info("verifyPrompt================>?: {}", prompt);
         } else {
             prompt = PromptConstant.CHECK_TOPIC_TYPE + "\n用户输入的面试题类型：【" + chatDto.getPrompt() + "】";
         }
@@ -263,8 +282,9 @@ public class ModelServiceImpl implements ModelService {
                 "## 面试题目：\n" +
                 "**" + content + "**\n\n" +
                 "> " + getRandomEncouragement();
+
         // 保存
-        saveHistory(chatDto, prompt);
+        saveHistory(chatDto, prompt, content);
         // 返回
         return Flux.just(prompt);
     }
@@ -312,7 +332,8 @@ public class ModelServiceImpl implements ModelService {
                 // 用户就得输入答案
                 prompt = "你提出面试题：" + aiHistory.getContent()
                         + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
-                        + "用户输入'继续或者输入新的面试题类型'：你才继续生成题目！";
+                        + "结尾最后一定要一定要返回下面这句话\n" +
+                        " > 请输入'**继续**'或者输入新的**题目类型**'";
                 // 用户输入答案后将状态改为评估答案
                 return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
             }
@@ -397,7 +418,7 @@ public class ModelServiceImpl implements ModelService {
                 "**" + randomTopic.getTopicName() + "**\n\n" +
                 "> " + getRandomEncouragement();
 
-        saveHistory(chatDto, prompt);
+        saveHistory(chatDto, prompt, null);
         return Flux.just(prompt);
     }
 
@@ -512,7 +533,7 @@ public class ModelServiceImpl implements ModelService {
     }
 
     // 保存对话历史记录
-    private void saveHistory(ChatDto chatDto, String prompt) {
+    private void saveHistory(ChatDto chatDto, String prompt, String originalTitle) {
         String currentName = SecurityUtils.getCurrentName();
         Long currentId = SecurityUtils.getCurrentId();
         // 获取当前对话id
@@ -547,6 +568,7 @@ public class ModelServiceImpl implements ModelService {
         aiHistory.setTitle(chatDto.getPrompt());
         aiHistory.setStatus(AiStatusEnums.SEND_TOPIC.getCode());
         aiHistory.setMode(chatDto.getModel());
+        aiHistory.setOriginalTitle(originalTitle);
         aiHistoryMapper.insert(aiHistory);
     }
 
