@@ -55,3 +55,7 @@ export const apiUserHomeCount = () =>
 // 用户首页分类数据
 export const apiUserHomeCategory = () =>
     request.get(prefix + "userHomeCategory");
+
+// 根据年份统计用户刷题次数
+export const apiUserTopicCount = (date: string) =>
+    request.get(prefix + "userTopicCount/" + date);

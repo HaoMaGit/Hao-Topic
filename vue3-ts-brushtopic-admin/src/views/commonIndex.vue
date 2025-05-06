@@ -3,9 +3,9 @@ import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
 import { ref, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
-import { getVirtulDataByYear, getYearDateRange, getDynamicDateRange } from '@/utils/date';
+import { getYearDateRange, getDynamicDateRange } from '@/utils/date';
 import { getWaterBallSVG } from '@/utils/customer';
-import { apiUserHomeCount, apiUserHomeCategory } from '@/api/home'
+import { apiUserHomeCount, apiUserHomeCategory, apiUserTopicCount } from '@/api/home'
 import type { UserHomeCount } from '@/api/home/type';
 // 用户身份计算
 const getUserIdentity = () => {
@@ -21,20 +21,6 @@ const getUserIdentity = () => {
 
 // 分类实例
 const categoryChart = ref(null)
-// const categoryData = [
-//   { name: '哈希表', value: 60 },
-//   { name: '数组', value: 80 },
-//   { name: '动态规划', value: 90 },
-//   { name: '队列', value: 40 },
-//   { name: '短阵', value: 50 },
-//   { name: '堆（优先队列）', value: 70 },
-//   { name: '栈', value: 55 },
-//   { name: '双指针', value: 15 },
-//   { name: '并查集', value: 45 },
-//   { name: '单调栈', value: 50 },
-//   { name: '单调1栈', value: 50 },
-//   { name: '单调23栈', value: 50 },
-// ];
 // 初始化气泡图
 const initBubbleChart = () => {
   const myChart = echarts.init(categoryChart.value);
@@ -114,15 +100,17 @@ const contributionChart = ref(null)
 // 生成动态数据
 function getVirtulData() {
   const { start, end } = getDynamicDateRange();
-  const dayTime = 3600 * 24 * 1000;
-  const data = [];
+  // 后台返回的数据格式
+  const backendData = trendData.value || [];
+  const data: any[] = [];
 
-  for (let time = start; time <= end; time += dayTime) {
+  // 将后台数据转换为echarts需要的格式
+  backendData.forEach((item: any) => {
     data.push([
-      echarts.format.formatTime('yyyy-MM-dd', time),
-      Math.floor(Math.random() * 100)
+      item.date,
+      item.count
     ]);
-  }
+  });
 
   // 数据验证日志
   console.log('数据时间范围:',
@@ -153,10 +141,12 @@ const initContributionChart = () => {
       left: 'center',
       pieces: [
         { min: 0, max: 10, color: '#e0f0ff', label: '0-10' },
-        { min: 11, max: 16, color: '#b3d8ff', label: '8-16' },
-        { min: 16, max: 24, color: '#80bfff', label: '16-24' },
-        { min: 24, max: 32, color: '#4da6ff', label: '24-32' },
-        { min: 32, max: 45, color: '#1677ff', label: '32-40' }
+        { min: 10, max: 30, color: '#b3d8ff', label: '10-30' },
+        { min: 30, max: 50, color: '#80bfff', label: '30-50' },
+        { min: 50, max: 80, color: '#4da6ff', label: '50-80' },
+        { min: 80, max: 120, color: '#1677ff', label: '80-120' },
+        { min: 120, max: 99999, color: '#0050b3', label: '120+' }
+
       ],
       show: true,
       textStyle: {
@@ -171,7 +161,7 @@ const initContributionChart = () => {
       range: [startStr, endStr], // 动态设置范围
       itemStyle: {
         borderWidth: 1,
-        borderColor: '#fff'
+        borderColor: '#d0e3ff'
       },
       yearLabel: { show: false },
       monthLabel: {
@@ -221,14 +211,17 @@ function renderContributionChart(year: number) {
       }
     },
     visualMap: {
-      min: 0,
-      max: 4,
       type: 'piecewise',
       orient: 'horizontal',
       left: 'center',
-      inRange: {
-        color: ['#e0f0ff', '#b3d8ff', '#80bfff', '#4da6ff', '#1677ff']
-      },
+      pieces: [
+        { min: 0, max: 10, color: '#e0f0ff', label: '0-10' },
+        { min: 10, max: 30, color: '#b3d8ff', label: '10-30' },
+        { min: 30, max: 50, color: '#80bfff', label: '30-50' },
+        { min: 50, max: 80, color: '#4da6ff', label: '50-80' },
+        { min: 80, max: 120, color: '#1677ff', label: '80-120' },
+        { min: 120, max: 99999, color: '#0050b3', label: '120+' }
+      ],
       show: true,
       textStyle: {
         color: '#8c8c8c' // 设置为你想要的颜色，如红色
@@ -242,7 +235,7 @@ function renderContributionChart(year: number) {
       range: [startStr, endStr],
       itemStyle: {
         borderWidth: 1,
-        borderColor: '#fff'
+        borderColor: '#d0e3ff'
       },
       yearLabel: { show: false },
       monthLabel: {
@@ -253,12 +246,12 @@ function renderContributionChart(year: number) {
         firstDay: 1,
         nameMap: 'cn',
         color: '#888'
-      }
+      },
     },
     series: [{
       type: 'heatmap',
       coordinateSystem: 'calendar',
-      data: getVirtulDataByYear(year)
+      data: trendData.value ? trendData.value.map((item: any) => [item.date, item.count]) : []
     }]
   };
   myChart.setOption(option);
@@ -269,16 +262,13 @@ function renderContributionChart(year: number) {
 
 
 // 监听年份变化，切换图表
-watch(selectedYear, (val) => {
-  if (val !== currentYear) {
-    renderContributionChart(val);
-  } else {
-    initContributionChart()
-  }
+watch(selectedYear, () => {
+  getTrendData()
 });
 
 const leftData = ref<UserHomeCount>() // 题目相关数据
 const rightData = ref() // 分类相关数据
+const trendData = ref() // 每日刷题次数数据
 // 查询用户左上角题目数据
 const getLeftData = async () => {
   const { data } = await apiUserHomeCount();
@@ -294,17 +284,30 @@ const getRightData = async () => {
     initBubbleChart();
   }
 };
+// 查询用户每日刷题数据
+const getTrendData = async () => {
+  const { data } = await apiUserTopicCount(String(selectedYear.value));
+  if (data) {
+    trendData.value = data;
+    // 获取数据后重新渲染热力图
+    if (selectedYear.value === currentYear) {
+      initContributionChart();
+    } else {
+      renderContributionChart(selectedYear.value);
+    }
+  }
+};
 
 const initData = () => {
   Promise.all([
     getLeftData(),
-    getRightData()
+    getRightData(),
+    getTrendData()
   ])
 }
 // 组件挂载后初始化图表
 onMounted(() => {
   initData()
-  initContributionChart();
 });
 </script>
 
