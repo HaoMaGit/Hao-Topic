@@ -18,6 +18,9 @@ import { message } from 'ant-design-vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
 import { apiGetManageList, apiGetHistoryDetail, apiRenameHistory, apiDeleteHistory } from '@/api/ai/model/index'
 import { Modal } from 'ant-design-vue'
+import {
+  ExclamationCircleOutlined
+} from '@ant-design/icons-vue';
 import type { AiHistoryDto } from '@/api/ai/model/type';
 // 引入系统设置
 const settingStore = useSettingStore()
@@ -42,7 +45,7 @@ const createReply = () => {
   setTimeout(() => {
     // 创建一个新对话刷新界面
     window.location.reload()
-  }, 500)
+  }, 100)
 }
 // 点击添加历史记录
 const searchHistory = (event: MouseEvent) => {
@@ -92,7 +95,8 @@ onMounted(() => {
 const chatLoading = ref(false)
 // 当前索引
 const activeIndex = ref<any>([])
-
+// 是否可以选择对话
+const isSelectHistory = ref(false)
 // 查询内容
 const getHistoryContent = async (id: number, index: number, historyIndex: number) => {
   chatLoading.value = true
@@ -104,6 +108,9 @@ const getHistoryContent = async (id: number, index: number, historyIndex: number
   activeIndex.value[historyIndex] = index
   // id:当前记录id
   const res = await apiGetHistoryDetail(id)
+  isSelectHistory.value = true
+  aiModeValue.value = res.data[0].mode
+
   // 封装内容
   const content = res.data.map((item: any) => {
     return {
@@ -200,17 +207,17 @@ const aiMode = reactive([
     label: '系统模式',
     value: 'system',
     icon: RobotOutlined,
-    desc: userStore.userInfo.identity === 1 ? 'AI从系统题库和会员自定义题库中提取题目逐题提问并根据系统答案校验正确性' : 'AI从系统题库中提取题目逐题提问并根据系统答案校验正确性'
+    desc: userStore.userInfo.identity === 1 ? 'AI从系统题库和会员自定义题库中随机提取题目HaoAi会校验你的回答' : 'AI从系统题库中随机提取题目HaoAi会校验你的回答'
   }, {
     label: '模型模式',
     value: 'model',
     icon: ApiOutlined,
-    desc: '完全使用AI生成的题目并完全根据AI的答案校验正确性'
+    desc: '完全使用AI生成的题目HaoAi会校验你的回答'
   }, {
     label: '混合模式',
     value: 'mix',
     icon: AppstoreOutlined,
-    desc: 'AI随机混合系统题库和AI自定义题目并根据系统答案或AI答案校验正确性'
+    desc: 'AI随机混合系统题库和AI自定义题目HaoAi会校验你的回答'
   },
 ])
 // 当前选中的模式
@@ -497,6 +504,30 @@ const pauseReply = () => {
     isReply.value = true
   }
 }
+
+// 选择了模式
+const handleAiModeChange = (ev: any) => {
+  if (isSelectHistory.value) {
+    // 为true说明已经在对话中了
+    Modal.confirm({
+      title: '切换对话模式',
+      icon: h(ExclamationCircleOutlined),
+      content: '当前已经开启对话，切换对话模式将会开启新的对话！',
+      okText: '确定',
+      cancelText: '取消',
+      async onOk() {
+        aiModeValue.value = ev.target.value
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  } else {
+    // 说明是新对话可以随便切换
+    aiModeValue.value = ev.target.value
+  }
+
+}
 </script>
 <template>
   <div class="model-body">
@@ -624,7 +655,7 @@ const pauseReply = () => {
             :placeholder="placeholder" />
           <div class="action-icons">
             <div class="left-icons">
-              <a-radio-group v-model:value="aiModeValue" button-style="solid">
+              <a-radio-group @change="handleAiModeChange" :value="aiModeValue" button-style="solid">
                 <a-tooltip v-for="(tag, index) in aiMode" :key="index" :title="tag.desc" placement="top">
                   <a-radio-button :value="tag.value">
                     <component :is="tag.icon" class="mode-icon" />
@@ -640,7 +671,6 @@ const pauseReply = () => {
               <template v-else>
                 <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" />
               </template>
-              <!-- <SendOutlined class="send-icon" :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()" /> -->
             </div>
           </div>
         </div>
