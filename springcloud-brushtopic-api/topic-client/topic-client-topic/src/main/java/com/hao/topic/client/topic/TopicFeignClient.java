@@ -1,10 +1,12 @@
 package com.hao.topic.client.topic;
 
 import com.hao.topic.common.auth.TokenInterceptor;
+import com.hao.topic.common.result.Result;
 import com.hao.topic.model.entity.topic.Topic;
 import com.hao.topic.model.entity.topic.TopicCategory;
 import com.hao.topic.model.entity.topic.TopicLabel;
 import com.hao.topic.model.entity.topic.TopicSubject;
+import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
 import com.hao.topic.model.vo.topic.TopicSubjectVo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,4 +74,7 @@ public interface TopicFeignClient {
      */
     @GetMapping("/topic/ai/topicList/{subjectId}")
     List<Topic> getSubjectTopicList(@PathVariable Long subjectId);
+
+
+
 }

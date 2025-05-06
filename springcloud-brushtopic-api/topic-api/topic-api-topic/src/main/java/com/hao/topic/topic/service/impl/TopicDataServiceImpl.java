@@ -9,9 +9,11 @@ import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.topic.*;
 import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
+import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicDataService;
+import com.hao.topic.topic.service.TopicSubjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -42,6 +44,7 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final TopicCategoryMapper topicCategoryMapper;
     private final TopicCategorySubjectMapper topicCategorySubjectMapper;
     private final TopicSubjectMapper topicSubjectMapper;
+    private final TopicSubjectService topicSubjectService;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -397,7 +400,7 @@ public class TopicDataServiceImpl implements TopicDataService {
                 topicCategoryDataVo.setCount(0L);
                 return topicCategoryDataVo;
             }
-            Long count = 0L;
+            long count = 0L;
             // 3.查询专题表
             for (TopicCategorySubject topicCategorySubject : topicCategorySubjects) {
                 LambdaQueryWrapper<TopicSubject> topicSubjectLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -407,7 +410,13 @@ public class TopicDataServiceImpl implements TopicDataService {
                 TopicSubject topicSubject = topicSubjectMapper.selectOne(topicSubjectLambdaQueryWrapper);
                 if (topicSubject != null) {
                     // 查询题目转
-                    count += topicSubject.getTopicCount();
+                    TopicSubjectDetailAndTopicVo topicSubjectDetailAndTopicVo = topicSubjectService.subjectDetail(topicSubject.getId());
+                    if (topicSubjectDetailAndTopicVo != null) {
+                        if (CollectionUtils.isNotEmpty(topicSubjectDetailAndTopicVo.getTopicNameVos())) {
+                            count += topicSubjectDetailAndTopicVo.getTopicNameVos().size();
+                        }
+                    }
+
                 }
             }
 
