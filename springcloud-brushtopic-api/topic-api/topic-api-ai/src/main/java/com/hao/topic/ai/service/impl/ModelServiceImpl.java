@@ -142,7 +142,7 @@ public class ModelServiceImpl implements ModelService {
 
 
     /**
-     * TODO 使用api发起对话
+     * 使用api发起对话
      *
      * @param chatDto
      * @return
@@ -160,19 +160,93 @@ public class ModelServiceImpl implements ModelService {
             //  AI模式
             return aiModel(chatDto);
         }
-        // TODO 混合模式
-        return mixModel();
+        //  混合模式
+        return mixModel(chatDto);
     }
-    // TODO ============HaoAi混合模式==============
+    //  ============HaoAi混合模式==============
 
-    private Flux<String> mixModel() {
+    private Flux<String> mixModel(ChatDto chatDto) {
         /**
          * 混合模式用户输入题目类型从ai库中或者系统库中抽取
          */
-        // 1.校验用户输入的题目专题是否在系统库中
-        // 1.1.不在校验用户输入的题目专题是否合法
-        // 1.2.在使用一个随机数随机抽取是否从系统还是ai库中抽取
-        // 1.3.抽取成功将题目发给用户
+        // 获取当前用户Id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 当前账户
+        String currentName = SecurityUtils.getCurrentName();
+        // 查询当前对话
+        AiHistory aiHistory = getCurrentHistory(chatDto);
+        // 提示词
+        String prompt = null;
+        // 处理对话逻辑
+        if (aiHistory == null) {
+            // 1.用户第一次对话
+            // 1.1.校验用户输入的题目专题是否在系统库中
+            Long subjectId = disposeSystemModel(chatDto);
+            // 1.2.不在校验用户输入的题目专题是否合法
+            if (subjectId == null) {
+                log.info("Hao-发ai题目");
+                return verifyPrompt(chatDto, null);
+            }
+            log.info("Hao-发系统题目");
+            // 1.3.存在发系统题目给用户
+            return sendRandomTopicToUser(chatDto);
+        } else {
+            // 不是第一次对话
+            // 2.说明ai已经给用户返回题目了所有得校验用户输入的答案是否正确
+            // 2.1获取上一条记录的状态
+            Integer status = aiHistory.getStatus();
+
+            // 2.2上一条记录是ai提出问题
+            if (AiStatusEnums.SEND_TOPIC.getCode().equals(status)) {
+                // 用户就得输入答案
+                prompt = "你提出面试题：" + aiHistory.getContent()
+                        + "用户回答：" + chatDto.getPrompt() + "  " + PromptConstant.EVALUATE
+                        + "结尾最后一定要一定要返回下面这句话\n" +
+                        " > 请输入'**继续**'或者输入新的**题目类型**'";
+                // 用户输入答案后将状态改为评估答案
+                return startChat(prompt, aiHistory, AiStatusEnums.EVALUATE_ANSWER.getCode(), chatDto, currentName, currentId);
+            }
+            // 2.3上一条记录是评估答案说明ai已经评估完了用户就得输入继续或者新专题
+            if (AiStatusEnums.EVALUATE_ANSWER.getCode().equals(status)) {
+                // 用户输入继续还是新专题
+                if ("继续".equals(chatDto.getPrompt())) {
+                    // 查询前1条发出的面试题
+                    List<AiHistory> aiHistoryList = aiHistoryMapper.selectList(new QueryWrapper<AiHistory>()
+                            .eq("user_id", currentId)
+                            .eq("status", AiStatusEnums.SEND_TOPIC.getCode())
+                            .eq("chat_id", chatDto.getChatId())
+                            .orderByDesc("create_time")
+                            .last("limit 1"));
+                    log.info("aiHistoryList: {}", aiHistoryList);
+                    // 将题目类型添加到prompt中
+                    chatDto.setPrompt(aiHistoryList.get(0).getTitle());
+                    // 校验用户输入的题目专题是否在系统库中
+                    Long subjectId = disposeSystemModel(chatDto);
+                    // 不在校验用户输入的题目专题是否合法
+                    if (subjectId != null) {
+                        log.info("Hao-发系统题目");
+                        // 存在发系统题目给用户
+                        return sendRandomTopicToUser(chatDto);
+                    }
+                    log.info("Hao-发ai题目");
+                    // 不存在
+                    // 继续将状态改为发送面试题并发送一道题目
+                    return verifyPrompt(chatDto, aiHistoryList.get(0).getContent());
+                } else {
+                    // 校验用户输入的题目专题是否在系统库中
+                    Long subjectId = disposeSystemModel(chatDto);
+                    // 不在校验用户输入的题目专题是否合法
+                    if (subjectId != null) {
+                        log.info("Hao-发系统题目");
+                        // 存在发系统题目给用户
+                        return sendRandomTopicToUser(chatDto);
+                    }
+                    log.info("Hao-发ai题目");
+                    // 再次处理就改为发送面试题
+                    return verifyPrompt(chatDto, aiHistory.getContent());
+                }
+            }
+        }
         return null;
     }
 
@@ -317,7 +391,7 @@ public class ModelServiceImpl implements ModelService {
         // 处理对话逻辑
         if (aiHistory == null) {
             // 1.用户第一次对话需要输入专题名称
-            return sendRandomTopicToUser(chatDto, currentName, currentId);
+            return sendRandomTopicToUser(chatDto);
         } else {
             // 2.用户不是第一次对话
             /**
@@ -352,10 +426,10 @@ public class ModelServiceImpl implements ModelService {
                     // 将专题名称添加到prompt中
                     chatDto.setPrompt(aiHistoryList.get(0).getTitle());
                     // 继续将状态改为发送面试题并发送一道题目
-                    return sendRandomTopicToUser(chatDto, currentName, currentId);
+                    return sendRandomTopicToUser(chatDto);
                 } else {
                     // 再次处理专题就改为发送面试题
-                    return sendRandomTopicToUser(chatDto, currentName, currentId);
+                    return sendRandomTopicToUser(chatDto);
                 }
             }
         }
@@ -363,7 +437,7 @@ public class ModelServiceImpl implements ModelService {
     }
 
     /**
-     * 处理系统模式
+     * 处理专题
      */
     private Long disposeSystemModel(ChatDto chatDto) {
         // 当前账户
@@ -393,7 +467,7 @@ public class ModelServiceImpl implements ModelService {
     /**
      * 根据专题名称和ID获取一道随机题目，并返回给用户
      */
-    private Flux<String> sendRandomTopicToUser(ChatDto chatDto, String currentName, Long currentId) {
+    private Flux<String> sendRandomTopicToUser(ChatDto chatDto) {
         // 获取当前角色
         String role = SecurityUtils.getCurrentRole();
         // 再次处理专题就改为发送面试题
