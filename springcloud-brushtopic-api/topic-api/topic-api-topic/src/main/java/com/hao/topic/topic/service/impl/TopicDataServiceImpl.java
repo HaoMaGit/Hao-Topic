@@ -7,6 +7,7 @@ import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.topic.*;
+import com.hao.topic.model.vo.system.SysUserTrentVo;
 import com.hao.topic.model.vo.topic.*;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicDataService;
@@ -445,5 +446,22 @@ public class TopicDataServiceImpl implements TopicDataService {
         topicTrendVo.setCountUserList(countUserList);
 
         return topicTrendVo;
+    }
+
+    /**
+     * 用户趋势图
+     *
+     * @return
+     */
+    public SysUserTrentVo userTrend() {
+        /// 获取用户数据
+        List<TopicDataVo> topicDataVoList = securityFeignClient.countUserDay7();
+        // 获取日期数据
+        List<String> dateList = topicDataVoList.stream().map(TopicDataVo::getDate).toList();
+        List<Integer> countList = topicDataVoList.stream().map(TopicDataVo::getCount).toList();
+        SysUserTrentVo sysUserTrentVo = new SysUserTrentVo();
+        sysUserTrentVo.setDateList(dateList);
+        sysUserTrentVo.setCountList(countList);
+        return sysUserTrentVo;
     }
 }

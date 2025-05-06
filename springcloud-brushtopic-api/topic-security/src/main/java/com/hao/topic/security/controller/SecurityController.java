@@ -10,6 +10,7 @@ import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import com.hao.topic.security.dto.*;
 import com.hao.topic.security.handle.AuthenticationSuccessHandler;
 import com.hao.topic.security.service.SysUserService;
@@ -275,10 +276,21 @@ public class SecurityController {
 
     /**
      * 查询总数
+     *
      * @return
      */
     @GetMapping("/count")
     public Long count() {
         return sysUserService.count();
+    }
+
+    /**
+     * 统计用户增长趋势
+     *
+     * @return
+     */
+    @GetMapping("/countUserDay7")
+    public List<TopicDataVo> countUserDay7() {
+        return sysUserService.countUserDay7();
     }
 }

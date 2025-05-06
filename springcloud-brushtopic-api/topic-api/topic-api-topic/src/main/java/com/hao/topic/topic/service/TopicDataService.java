@@ -1,5 +1,6 @@
 package com.hao.topic.topic.service;
 
+import com.hao.topic.model.vo.system.SysUserTrentVo;
 import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
 import com.hao.topic.model.vo.topic.TopicTrendVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
@@ -25,5 +26,8 @@ public interface TopicDataService {
 
 
     TopicTrendVo topicTrend();
+
+    SysUserTrentVo userTrend();
+
 
 }

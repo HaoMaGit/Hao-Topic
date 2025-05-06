@@ -1,10 +1,8 @@
 package com.hao.topic.topic.controller;
 
 import com.hao.topic.common.result.Result;
-import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
-import com.hao.topic.model.vo.topic.TopicCategoryVo;
-import com.hao.topic.model.vo.topic.TopicTrendVo;
-import com.hao.topic.model.vo.topic.TopicUserRankVo;
+import com.hao.topic.model.vo.system.SysUserTrentVo;
+import com.hao.topic.model.vo.topic.*;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
 import com.hao.topic.topic.service.TopicDataService;
 import lombok.AllArgsConstructor;
@@ -78,7 +76,7 @@ public class TopicDataController {
     }
 
     /**
-     *  刷题题目和刷题人数趋势图
+     * 刷题题目和刷题人数趋势图
      */
     @GetMapping("/topicTrend")
     public Result<TopicTrendVo> topicTrend() {
@@ -88,11 +86,16 @@ public class TopicDataController {
 
 
     /**
-     * TODO 用户增长趋势图
+     * 用户增长趋势图
      */
+    @GetMapping("/userTrend")
+    public Result<SysUserTrentVo> userTrend() {
+        SysUserTrentVo SysUserTrentVo = topicDataService.userTrend();
+        return Result.success(SysUserTrentVo);
+    }
 
 
     /**
-     * TODO  AI调用次数趋势图
+     * TODO AI调用次数趋势图
      */
 }

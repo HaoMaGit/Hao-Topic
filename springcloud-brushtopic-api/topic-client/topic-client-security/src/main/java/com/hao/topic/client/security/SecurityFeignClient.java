@@ -6,6 +6,7 @@ import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.*;
@@ -87,4 +88,8 @@ public interface SecurityFeignClient {
 
     @GetMapping("/security/user/count")
     public Long count();
+
+    @GetMapping("/security/user/countUserDay7")
+    List<TopicDataVo> countUserDay7();
+
 }

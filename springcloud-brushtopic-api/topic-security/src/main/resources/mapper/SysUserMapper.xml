@@ -74,4 +74,27 @@
           and is_deleted = 0
     </select>
 
+    <!-- 统计前7天的数据 -->
+    <select id="countUserDay7" resultType="com.hao.topic.model.vo.topic.TopicDataVo">
+        SELECT CURDATE() - INTERVAL (n) DAY AS date,
+               COALESCE(COUNT(u.id), 0)     AS count
+        FROM (SELECT 0 AS n
+              UNION ALL
+              SELECT 1
+              UNION ALL
+              SELECT 2
+              UNION ALL
+              SELECT 3
+              UNION ALL
+              SELECT 4
+              UNION ALL
+              SELECT 5
+              UNION ALL
+              SELECT 6) numbers
+                 LEFT JOIN sys_user u
+                           ON DATE(u.create_time) = CURDATE() - INTERVAL n DAY
+        GROUP BY date
+        ORDER BY date;
+    </select>
+
 </mapper>

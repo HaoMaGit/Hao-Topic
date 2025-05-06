@@ -21,6 +21,7 @@ import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.system.SysMenuVo;
 import com.hao.topic.model.vo.system.SysUserListVo;
 import com.hao.topic.model.vo.system.UserInfoVo;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import com.hao.topic.security.constant.EmailConstant;
 import com.hao.topic.security.constant.JwtConstant;
 import com.hao.topic.security.dto.RegisterDto;
@@ -740,5 +741,14 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         sysUserRole.setUserId(sysUserDb.getId());
         sysUserRole.setRoleId(2L);
         sysUserRoleMapper.insert(sysUserRole);
+    }
+
+    /**
+     * 统计用户日新增
+     *
+     * @return
+     */
+    public List<TopicDataVo> countUserDay7() {
+        return sysUserMapper.countUserDay7();
     }
 }
