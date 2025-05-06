@@ -1,8 +1,8 @@
 // 自定义水球图样式
-export function getWaterBallSVG(percent: number, color = '#4592ff', size = 100) {
+export function getWaterBallSVG(percent: number, count: number, color = '#4592ff', size = 100) {
   const h = size;
   const w = size;
-  const waterHeight = h * (1 - percent / 100);
+  const waterHeight = h * (1 - percent / count);
   const waveY = waterHeight;
   const wave = `M0,${waveY} Q${w / 4},${waveY - 8} ${w / 2},${waveY} T${w},${waveY} L${w},${h} L0,${h} Z`;
   // 使用clipPath裁剪水波到圆形区域
