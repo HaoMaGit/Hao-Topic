@@ -3,6 +3,7 @@ package com.hao.topic.topic.controller;
 import com.hao.topic.common.result.Result;
 import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
 import com.hao.topic.model.vo.topic.TopicCategoryVo;
+import com.hao.topic.model.vo.topic.TopicTrendVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import com.hao.topic.topic.mapper.TopicRecordMapper;
 import com.hao.topic.topic.service.TopicDataService;
@@ -75,4 +76,23 @@ public class TopicDataController {
         List<TopicCategoryDataVo> list = topicDataService.adminHomeCategory();
         return Result.success(list);
     }
+
+    /**
+     *  刷题题目和刷题人数趋势图
+     */
+    @GetMapping("/topicTrend")
+    public Result<TopicTrendVo> topicTrend() {
+        TopicTrendVo topicTrend = topicDataService.topicTrend();
+        return Result.success(topicTrend);
+    }
+
+
+    /**
+     * TODO 用户增长趋势图
+     */
+
+
+    /**
+     * TODO  AI调用次数趋势图
+     */
 }

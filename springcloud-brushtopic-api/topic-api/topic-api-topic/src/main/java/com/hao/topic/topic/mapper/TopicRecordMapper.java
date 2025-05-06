@@ -2,10 +2,12 @@ package com.hao.topic.topic.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.hao.topic.model.entity.topic.TopicRecord;
+import com.hao.topic.model.vo.topic.TopicDataVo;
 import com.hao.topic.model.vo.topic.TopicUserRankVo;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Description:
@@ -22,4 +24,9 @@ public interface TopicRecordMapper extends BaseMapper<TopicRecord> {
     TopicUserRankVo getUserCountRank(String topicTime, Long userId);
 
     Long countTopicFrequency(String date);
+
+    List<TopicDataVo> countTopicDay15();
+
+    List<TopicDataVo> countUserDay15();
+
 }

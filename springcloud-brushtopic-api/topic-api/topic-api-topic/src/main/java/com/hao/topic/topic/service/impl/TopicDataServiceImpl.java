@@ -1,6 +1,5 @@
 package com.hao.topic.topic.service.impl;
 
-import com.alibaba.fastjson2.util.DateUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hao.ai.client.ai.AiFeignClient;
 import com.hao.topic.api.utils.enums.StatusEnums;
@@ -8,9 +7,7 @@ import com.hao.topic.client.security.SecurityFeignClient;
 import com.hao.topic.common.constant.RedisConstant;
 import com.hao.topic.common.security.utils.SecurityUtils;
 import com.hao.topic.model.entity.topic.*;
-import com.hao.topic.model.vo.topic.TopicCategoryDataVo;
-import com.hao.topic.model.vo.topic.TopicSubjectDetailAndTopicVo;
-import com.hao.topic.model.vo.topic.TopicUserRankVo;
+import com.hao.topic.model.vo.topic.*;
 import com.hao.topic.topic.mapper.*;
 import com.hao.topic.topic.service.TopicDataService;
 import com.hao.topic.topic.service.TopicSubjectService;
@@ -423,5 +420,30 @@ public class TopicDataServiceImpl implements TopicDataService {
             topicCategoryDataVo.setCount(count);
             return topicCategoryDataVo;
         }).toList();
+    }
+
+    /**
+     * 刷题题目和刷题人数趋势图
+     *
+     * @return
+     */
+    public TopicTrendVo topicTrend() {
+        Map<String, Object> map = new HashMap<>();
+        // 查询近15日的刷题统计数据
+        List<TopicDataVo> topicDataTopicList = topicRecordMapper.countTopicDay15();
+        // 查询近15日的刷题人数数据
+        List<TopicDataVo> topicDataVoUserList = topicRecordMapper.countUserDay15();
+        // 映射日期
+        List<String> dateList = topicDataTopicList.stream().map(TopicDataVo::getDate).toList();
+        // 映射刷题数据
+        List<Integer> countTopicList = topicDataTopicList.stream().map(TopicDataVo::getCount).toList();
+        // 映射刷题人数数据
+        List<Integer> countUserList = topicDataVoUserList.stream().map(TopicDataVo::getCount).toList();
+        TopicTrendVo topicTrendVo = new TopicTrendVo();
+        topicTrendVo.setDateList(dateList);
+        topicTrendVo.setCountTopicList(countTopicList);
+        topicTrendVo.setCountUserList(countUserList);
+
+        return topicTrendVo;
     }
 }

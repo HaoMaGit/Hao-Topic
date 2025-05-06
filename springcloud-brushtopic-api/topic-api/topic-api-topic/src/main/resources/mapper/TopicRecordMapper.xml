@@ -72,4 +72,36 @@
             </if>
         </where>
     </select>
+
+    <!-- 统计15日的刷题数 -->
+    <select id="countTopicDay15" resultType="com.hao.topic.model.vo.topic.TopicDataVo">
+        WITH RECURSIVE dates AS (SELECT CURDATE() - INTERVAL 14 DAY AS date_value
+                                 UNION ALL
+                                 SELECT date_value + INTERVAL 1 DAY
+                                 FROM dates
+                                 WHERE date_value &lt; CURDATE())
+        SELECT d.date_value              AS date,
+               COALESCE(COUNT(up.id), 0) AS count
+        FROM dates d
+                 LEFT JOIN topic_record up ON DATE(up.topic_time) = d.date_value
+        GROUP BY d.date_value
+        ORDER BY d.date_value;
+    </select>
+
+    <!-- 统计15日的刷题人数 -->
+    <select id="countUserDay15" resultType="com.hao.topic.model.vo.topic.TopicDataVo">
+        WITH RECURSIVE dates AS (SELECT CURDATE() - INTERVAL 14 DAY AS date_value
+                                 UNION ALL
+                                 SELECT date_value + INTERVAL 1 DAY
+                                 FROM dates
+                                 WHERE date_value &lt; CURDATE())
+        SELECT d.date_value                            AS date,
+               COALESCE(COUNT(DISTINCT up.user_id), 0) AS count
+        FROM dates d
+                 LEFT JOIN topic_record up ON DATE(up.topic_time) = d.date_value
+        GROUP BY d.date_value
+        ORDER BY d.date_value;
+    </select>
+
+
 </mapper>
