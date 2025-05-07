@@ -434,7 +434,7 @@ const readAloud = (content: string) => {
       if (!res.ok) {
         throw new Error('语音合成请求失败');
       }
-      res.blob()
+      return res.blob()
     })
     .then((blob: any) => {
       readAloudLoading.value = false
