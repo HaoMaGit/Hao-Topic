@@ -505,6 +505,12 @@ public class TopicDataServiceImpl implements TopicDataService {
         // 2.用户昨日和今日刷题次数
         Long aLong = topicRecordMapper.countTopicFrequency(today);
         Long aLong1 = topicRecordMapper.countTopicFrequency(yesterday);
+        if (aLong == null) {
+            aLong = 0L;
+        }
+        if (aLong1 == null) {
+            aLong1 = 0L;
+        }
         // 计算差值（今天 - 昨天）
         long topicFrequencyGrowthRate = aLong - aLong1;
 
@@ -637,6 +643,7 @@ public class TopicDataServiceImpl implements TopicDataService {
                         LambdaQueryWrapper<TopicRecord> topicRecordLambdaQueryWrapper = new LambdaQueryWrapper<>();
                         topicRecordLambdaQueryWrapper.eq(TopicRecord::getUserId, currentId);
                         topicRecordLambdaQueryWrapper.eq(TopicRecord::getSubjectId, topicCategorySubject.getSubjectId());
+                        topicRecordLambdaQueryWrapper.groupBy(TopicRecord::getTopicId);
                         List<TopicRecord> topicRecords = topicRecordMapper.selectList(topicRecordLambdaQueryWrapper);
                         if (CollectionUtils.isNotEmpty(topicRecords)) {
                             // 提取所有的题目id
