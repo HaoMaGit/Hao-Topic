@@ -25,3 +25,11 @@ export const apiQueryUserRank = (type) =>
  */
 export const apiQueryTopicTodayVo = () =>
   request(prefix + 'topicTodayVo')
+
+/**
+ * 刷每日题目
+ * @param {} id 
+ * @returns 
+ */
+export const apiFlushTopic = (id) =>
+  request(prefix + 'flush/' + id)

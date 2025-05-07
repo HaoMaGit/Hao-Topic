@@ -3,7 +3,7 @@ import {
 	ref, computed, onMounted
 } from 'vue'
 import { getTimeOfDay } from '@/utils/time'
-import { apiQueryWebHomeCount,apiQueryTopicTodayVo } from '@/api/home/index'
+import { apiQueryWebHomeCount, apiQueryTopicTodayVo, apiFlushTopic } from '@/api/home/index'
 
 // 数据对象
 const webHomeCount = ref({})
@@ -68,20 +68,25 @@ const tapRanking = () => {
 }
 
 // 点击跳转题目
-const handleQuestion = (item) => {
-  // 判断专题id是否为空
-  if (!item.subjectId) {
-    // 该专题不存在或被禁用了
-    uni.showToast({
-      title: '该专题不存在或被禁用了',
-      icon: 'none'
-    })
-    return
-  }
-  // 跳转
-  uni.navigateTo({
-    url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${item.subjectId}`
-  })
+const handleQuestion = async (item) => {
+	// 判断专题id是否为空
+	if (!item.subjectId) {
+		// 该专题不存在或被禁用了
+		uni.showToast({
+			title: '该专题不存在或被禁用了',
+			icon: 'none'
+		})
+		return
+	}
+	uni.showLoading()
+	// 调用已刷接口
+	await apiFlushTopic(
+		item.id)
+	uni.hideLoading()
+	// 跳转
+	uni.navigateTo({
+		url: `/pages/database/topic/topic?id=${item.topicId}&name=${item.topicName}&subjectId=${item.subjectId}`
+	})
 }
 
 </script>
@@ -99,7 +104,7 @@ const handleQuestion = (item) => {
 			<!-- 统计刷题区域 -->
 			<view class="content-bottom" :style="{ color: getTextColor }">
 				<view class="count">
-					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{webHomeCount.todayCount || 0}}</text>
+					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{ webHomeCount.todayCount || 0 }}</text>
 				</view>
 				<view class="count">
 					今日已刷题<text class="weight" :style="{ color: getTextColor }">{{ webHomeCount.todayTopicCount || 0 }}</text>
@@ -130,16 +135,16 @@ const handleQuestion = (item) => {
 			<view class="list-box">
 				<view class="list-wrapper">
 					<view class="list-item" v-for="item in topicTodayVo" :key="item">
-						<view class="item-content"  @click="handleQuestion(item)">
+						<view class="item-content" @click="handleQuestion(item)">
 							<view class="item-right">
-								<text class="title">{{item.topicName}}</text>
+								<text class="title">{{ item.topicName }}</text>
 							</view>
 							<view class="info-row">
 								<view class="tags-row" v-for="tag in item.labelNames">
-									<view class="tag">{{tag}}</view>
+									<view class="tag">{{ tag }}</view>
 								</view>
 								<text class="status-text" v-if="item.status == 0">未刷</text>
-								<text class="status-text ys" v-if="item.status == 1">未刷</text>
+								<text class="status-text ys" v-if="item.status == 1">已刷</text>
 							</view>
 						</view>
 					</view>
@@ -224,7 +229,8 @@ const handleQuestion = (item) => {
 								font-size: 24rpx;
 								color: #999;
 							}
-							.ys{
+
+							.ys {
 								color: #1677ff;
 							}
 						}
