@@ -372,6 +372,30 @@ const sendPrompt = async () => {
     }
   }
 }
+
+// 创建新对话
+const createReply = () => {
+  // 判断是否为最新对话
+  if (aiId.value === 0) {
+    uni.showToast({
+      title: '已是最新对话',
+      icon: 'none',
+      duration: 1500
+    })
+    return
+  }
+  uni.showToast({
+    title: '创建对话成功',
+    icon: 'success',
+    duration: 1500
+  })
+  setTimeout(() => {
+    // 使用 uni-app 的方式重新加载页面
+    uni.reLaunch({
+      url: '/pages/ai/ai'
+    })
+  }, 100)
+}
 </script>
 <template>
   <view class="ai-box">
@@ -381,7 +405,7 @@ const sendPrompt = async () => {
         <uni-icons type="bars" size="24" color="#1677ff"></uni-icons>
       </view>
       <view class="title">新对话</view>
-      <view class="right-icon">
+      <view class="right-icon" @click="createReply">
         <uni-icons type="plusempty" color="#1677ff" size="25"></uni-icons>
       </view>
     </view>
