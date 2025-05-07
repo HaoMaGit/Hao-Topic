@@ -531,7 +531,6 @@ const handleAiModeChange = (ev: any) => {
     // 说明是新对话可以随便切换
     aiModeValue.value = ev.target.value
   }
-
 }
 </script>
 <template>

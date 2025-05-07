@@ -12,11 +12,7 @@ const token = ref(localStorage.getItem(userInfo.value.account + 'token'))
 
 // 当前选中的模式
 const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
-// 切换模式
-const switchMode = (mode) => {
-  aiModeValue.value = mode;
-  localStorage.setItem('aiMode', mode)
-};
+
 // 模式
 const aiMode = reactive([
   {
@@ -86,6 +82,10 @@ const historyParams = ref({
 const showLeft = ref(null)
 // 点击了获取历史记录
 const handleGetHistoryList = () => {
+  if (!isReply.value) {
+    uni.showToast({ title: '当前正在回复中', icon: 'none' })
+    return
+  }
   showLeft.value.open()
   getHistoryList()
 }
@@ -162,7 +162,7 @@ const scrollToBottom = async () => {
     if (data) {
       // 计算所有内容的总高度
       const totalHeight = data.reduce((sum, item) => sum + item.height, 0)
-      scrollTop.value = totalHeight + 300 // 加上额外高度确保滚动到底部
+      scrollTop.value = totalHeight + 500 // 加上额外高度确保滚动到底部
     }
   }).exec()
 }
@@ -375,6 +375,10 @@ const sendPrompt = async () => {
 
 // 创建新对话
 const createReply = () => {
+  if (!isReply.value) {
+    uni.showToast({ title: '当前正在回复中', icon: 'none' })
+    return
+  }
   // 判断是否为最新对话
   if (aiId.value === 0) {
     uni.showToast({
@@ -395,6 +399,37 @@ const createReply = () => {
       url: '/pages/ai/ai'
     })
   }, 100)
+}
+
+// 选择了模式
+const handleAiModeChange = (mode) => {
+  if (isSelectHistory.value) {
+    // 为true说明已经在对话中了
+    uni.showModal({
+      title: '切换对话模式',
+      content: '当前已经开启对话，切换对话模式将会开启新的对话！',
+      success: (res) => {
+        if (res.confirm) {
+          uni.showToast({
+            title: '创建成功',
+            icon: 'success',
+            duration: 1500
+          })
+          setTimeout(() => {
+            // 使用 uni-app 的方式重新加载页面
+            uni.reLaunch({
+              url: '/pages/ai/ai'
+            })
+          }, 100)
+          // 存入缓存中
+          uni.setStorageSync('aiMode', mode)
+        }
+      }
+    })
+  } else {
+    // 说明是新对话可以随便切换
+    aiModeValue.value = mode
+  }
 }
 </script>
 <template>
@@ -493,7 +528,7 @@ const createReply = () => {
       <view class="button-group">
         <view class="mode-buttons">
           <view v-for="item in aiMode" :key="item.value" class="mode-btn"
-            :class="{ active: aiModeValue === item.value }" @click="switchMode(item.value)">
+            :class="{ active: aiModeValue === item.value }" @click="handleAiModeChange(item.value)">
             {{ item.label }}
           </view>
         </view>
