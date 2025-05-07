@@ -91,9 +91,9 @@ public enum ResultCodeEnum {
 
     TOPIC_ANSWER_NOT_EXIST(99950, "题目答案不存在"),
     TOPIC_MEMBER_ERROR(99951, "该题目答案需要会员才能查看哦"),
-    TOPIC_COLLECTION_ERROR(99952, "题目收藏失败");
-
+    TOPIC_COLLECTION_ERROR(99952, "题目收藏失败"),
+    USER_ACCOUNT_STOP(99953, "账户被停用了请联系我们");
     private Integer code;
     private String message;
 
-    }
+}

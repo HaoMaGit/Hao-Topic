@@ -293,4 +293,12 @@ public class SecurityController {
     public List<TopicDataVo> countUserDay7() {
         return sysUserService.countUserDay7();
     }
+
+    /**
+     * 查询出所有的用户
+     */
+    @GetMapping("/getAllUser")
+    public List<SysUser> getAllUser() {
+        return sysUserService.list();
+    }
 }

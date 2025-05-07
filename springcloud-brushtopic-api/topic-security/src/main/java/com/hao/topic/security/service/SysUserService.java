@@ -559,6 +559,10 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
             throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
         }
+        // 校验用户状态是否被停用了
+        if (sysUser.getStatus() == 1) {
+            throw new TopicException(ResultCodeEnum.USER_ACCOUNT_STOP);
+        }
         return getRoleIdentify(sysUser)
                 .map(sysRole -> {
                     String token = createToken(sysUser, sysRole);
@@ -609,6 +613,10 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         // 密码校验
         if (!PasswordUtils.matches(loginTypeDto.getPassword(), sysUser.getPassword())) {
             throw new TopicException(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
+        // 校验用户状态是否被停用了
+        if (sysUser.getStatus() == 1) {
+            throw new TopicException(ResultCodeEnum.USER_ACCOUNT_STOP);
         }
         return getRoleIdentify(sysUser)
                 .map(sysRole -> {
