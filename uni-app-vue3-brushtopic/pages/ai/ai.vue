@@ -503,7 +503,7 @@ const handleAiModeChange = (mode) => {
           <div class="content-avatar">
             <img class="avatar" src="../../static/images/128.png" alt="">
             <view v-if="!item.content">
-              <uni-icons type="spinner-cycle" size="24" color="#1677ff"></uni-icons>
+              <uv-loading-icon color="#1677ff"></uv-loading-icon>
             </view>
             <div class="message-wrapper" v-else>
               <zero-markdown-view class="markdown-content" :markdown="item.content"></zero-markdown-view>
