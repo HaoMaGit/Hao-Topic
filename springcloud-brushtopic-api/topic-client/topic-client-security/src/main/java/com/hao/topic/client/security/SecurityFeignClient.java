@@ -4,6 +4,7 @@ import com.hao.topic.common.auth.TokenInterceptor;
 import com.hao.topic.model.dto.ai.AiUserDto;
 import com.hao.topic.model.dto.system.SysUserDto;
 import com.hao.topic.model.dto.system.SysUserListDto;
+import com.hao.topic.model.entity.system.SysUser;
 import com.hao.topic.model.excel.sytem.SysUserExcel;
 import com.hao.topic.model.excel.sytem.SysUserExcelExport;
 import com.hao.topic.model.vo.topic.TopicDataVo;
@@ -91,5 +92,6 @@ public interface SecurityFeignClient {
 
     @GetMapping("/security/user/countUserDay7")
     List<TopicDataVo> countUserDay7();
-
+    @GetMapping("/security/user/getAllUser")
+    public List<SysUser> getAllUser();
 }

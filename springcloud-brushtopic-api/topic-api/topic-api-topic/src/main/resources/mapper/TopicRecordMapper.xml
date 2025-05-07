@@ -173,5 +173,18 @@
         ORDER BY date;
     </select>
 
+    <!-- 查询用户刷的最多的专题 -->
+    <select id="selectMaxSubject" resultType="java.lang.Long">
+        SELECT t.subject_id
+        FROM (SELECT subject_id,
+                     COUNT(*)        AS num_topics,
+                     MAX(topic_time) AS latest_time
+              FROM topic_record
+              WHERE user_id = #{id}
+              GROUP BY subject_id) t
+        ORDER BY t.num_topics DESC, t.latest_time DESC
+        LIMIT 1;
+    </select>
+
 
 </mapper>

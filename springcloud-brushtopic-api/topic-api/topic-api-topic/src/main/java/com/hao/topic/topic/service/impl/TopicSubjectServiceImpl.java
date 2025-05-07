@@ -146,6 +146,12 @@ public class TopicSubjectServiceImpl implements TopicSubjectService {
         if (topicSubjectDb != null) {
             throw new TopicException(ResultCodeEnum.SUBJECT_NAME_EXIST);
         }
+        // 根据专题名称查询专题
+        TopicSubject topicSubjectDbByName = topicSubjectMapper.selectOne(new LambdaQueryWrapper<TopicSubject>().
+                eq(TopicSubject::getSubjectName, topicSubjectDto.getSubjectName()));
+        if(topicSubjectDbByName != null){
+            throw new TopicException(ResultCodeEnum.SUBJECT_NAME_EXIST);
+        }
         //  根据分类名称查询分类
         TopicCategory topicCategoryDb = topicCategoryMapper
                 .selectOne(new LambdaQueryWrapper<TopicCategory>().

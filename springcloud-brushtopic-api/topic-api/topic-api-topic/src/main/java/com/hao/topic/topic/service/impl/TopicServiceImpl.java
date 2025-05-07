@@ -184,6 +184,7 @@ public class TopicServiceImpl implements TopicService {
         if (topicDb != null) {
             throw new TopicException(ResultCodeEnum.TOPIC_NAME_EXIST);
         }
+
         // 查询专题
         TopicSubject topicSubject = topicSubjectMapper.selectById(topicDto.getSubjectId());
         // 判断
@@ -228,6 +229,7 @@ public class TopicServiceImpl implements TopicService {
         if (currentId == 1L) {
             // 是开发者不需要审核
             topic.setStatus(StatusEnums.NORMAL.getCode());
+
             // 开始插入
             topicMapper.insert(topic);
         } else {
