@@ -67,6 +67,23 @@ const tapRanking = () => {
 	})
 }
 
+// 点击跳转题目
+const handleQuestion = (item) => {
+  // 判断专题id是否为空
+  if (!item.subjectId) {
+    // 该专题不存在或被禁用了
+    uni.showToast({
+      title: '该专题不存在或被禁用了',
+      icon: 'none'
+    })
+    return
+  }
+  // 跳转
+  uni.navigateTo({
+    url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${item.subjectId}`
+  })
+}
+
 </script>
 <template>
 	<view class="content" :style="{ background: getPageGradient }">
@@ -113,7 +130,7 @@ const tapRanking = () => {
 			<view class="list-box">
 				<view class="list-wrapper">
 					<view class="list-item" v-for="item in topicTodayVo" :key="item">
-						<view class="item-content">
+						<view class="item-content"  @click="handleQuestion(item)">
 							<view class="item-right">
 								<text class="title">{{item.topicName}}</text>
 							</view>

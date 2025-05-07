@@ -43,12 +43,12 @@ onMounted(() => {
     <view class="favorite-container" v-if="favoriteList && favoriteList.length !== 0">
       <view class="list-wrapper">
         <view class="list-item" v-for="item in favoriteList" :key="item.id">
-          <view class="item-content">
+          <view class="item-content" @click="handleQuestion(item)">
             <view class="item-right">
               <text class="title">{{ item.topicName }}</text>
               <uni-icons type="star-filled" size="20" color="#1677ff"></uni-icons>
             </view>
-            <view class="info-row" @click="handleQuestion(item)">
+            <view class="info-row" >
               <view class="tags-row">
                 <view class="tag" v-for="(tag, index) in item.labelNames" :key="index">
                   {{ tag }}
