@@ -37,6 +37,7 @@ public class TopicTask {
     private final TopicSubjectTopicMapper topicSubjectTopicMapper;
     private final SecurityFeignClient securityFeignClient;
     private final TopicSubjectMapper topicSubjectMapper;
+    private final TopicDailyBrushMapper topicDailyBrushMapper;
 
     /**
      * 每天凌晨 12:00 执行 - 查询排行榜数据并重新写入Redis防止redis挂了导致数据丢失
@@ -62,6 +63,7 @@ public class TopicTask {
     // @Scheduled(cron = "0 * * * * ?") // 1分钟
     public void refreshUserTopicToRedis() {
         // 删除所有数据
+        int delete1 = topicDailyBrushMapper.delete(null);
         int delete = topicDailyStagingMapper.delete(null);
 
         // 查询管理员是否设置了每日必刷
