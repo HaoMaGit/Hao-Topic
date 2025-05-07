@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/modules/user';
 const userStore = useUserStore()
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import * as echarts from 'echarts';
 import { getYearDateRange, getDynamicDateRange } from '@/utils/date';
 import { getWaterBallSVG } from '@/utils/customer';
 import { apiUserHomeCount, apiUserHomeCategory, apiUserTopicCount } from '@/api/home'
 import type { UserHomeCount } from '@/api/home/type';
+
 // 用户身份计算
-const getUserIdentity = () => {
+const getUserIdentity = computed(() => {
   // 这里可以根据用户的刷题数量、连续天数等计算用户身份
-  const totalProblems = 30; // 假设这是从用户数据中获取的
-
-  if (totalProblems >= 100) return '算法大师';
-  if (totalProblems >= 50) return '面试糕手';
-  if (totalProblems >= 20) return '面试实习生';
-  return '面试新手';
-};
-
+  const totalProblems = leftData.value?.topicFrequencyCount || 0;
+  if (totalProblems >= 1000) return { name: '面试之神', color: '#722ed1' }; // 紫色
+  if (totalProblems >= 800) return { name: '面试专家', color: '#f5222d' };  // 红色
+  if (totalProblems >= 500) return { name: '面试达人', color: '#fa8c16' };  // 橙色
+  if (totalProblems >= 300) return { name: '面试高手', color: '#1677ff' };  // 蓝色
+  if (totalProblems >= 100) return { name: '面试新秀', color: '#52c41a' };  // 绿色
+  return { name: '面试新手', color: '#8c8c8c' };  // 灰色
+})
 
 // 分类实例
 const categoryChart = ref(null)
@@ -337,8 +338,8 @@ onMounted(() => {
                     }}</div>
                   <div class="achievements">
                     <!-- 用户成就 -->
-                    <a-tag color="#f50" class="user-identity">
-                      <CrownOutlined /> {{ getUserIdentity() }}
+                    <a-tag :color="getUserIdentity.color" class="user-identity">
+                      <CrownOutlined /> {{ getUserIdentity.name }}
                     </a-tag>
                   </div>
                 </div>

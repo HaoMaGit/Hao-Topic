@@ -486,7 +486,9 @@ onMounted(() => {
                     }}</div>
                   <div class="achievements">
                     <!-- 用户成就 -->
-                    <a-tag color="#1677ff" class="user-identity">
+                    <a-tag
+                      style="background: linear-gradient(to right, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.2) 30%, rgba(243, 156, 18, 0.3) 60%, rgba(243, 156, 18, 0.4) 80%);"
+                      class="user-identity">
                       <CrownOutlined /> 管理员
                     </a-tag>
                   </div>
