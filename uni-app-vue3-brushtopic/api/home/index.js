@@ -19,3 +19,9 @@ export const apiQueryRank = (type) =>
  */
 export const apiQueryUserRank = (type) =>
   request(prefix + 'userRank/' + type)
+
+/**
+ * 获取今日题目
+ */
+export const apiQueryTopicTodayVo = () =>
+  request(prefix + 'topicTodayVo')

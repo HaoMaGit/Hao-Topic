@@ -3,7 +3,7 @@ import {
 	ref, computed, onMounted
 } from 'vue'
 import { getTimeOfDay } from '@/utils/time'
-import { apiQueryWebHomeCount } from '@/api/home/index'
+import { apiQueryWebHomeCount,apiQueryTopicTodayVo } from '@/api/home/index'
 
 // 数据对象
 const webHomeCount = ref({})
@@ -14,9 +14,16 @@ const getWebHomeCount = async () => {
 	webHomeCount.value = res.data
 	uni.hideLoading()
 }
+// 获取今日题目
+const topicTodayVo = ref([])
+const getTopicTodayVo = async () => {
+	const res = await apiQueryTopicTodayVo()
+	topicTodayVo.value = res.data
+}
 
 onMounted(() => {
 	getWebHomeCount()
+	getTopicTodayVo()
 })
 
 // 用户信息
@@ -105,19 +112,17 @@ const tapRanking = () => {
 			<!-- 列表区域 -->
 			<view class="list-box">
 				<view class="list-wrapper">
-					<view class="list-item" v-for="item in 9" :key="item">
+					<view class="list-item" v-for="item in topicTodayVo" :key="item">
 						<view class="item-content">
 							<view class="item-right">
-								<text class="title">你认为Java的优势是什么？</text>
-								<uni-icons :type="item.isFavorite ? 'star-filled' : 'star'" size="24" color="#1677ff"></uni-icons>
+								<text class="title">{{item.topicName}}</text>
 							</view>
 							<view class="info-row">
-								<view class="tags-row">
-									<view class="tag">Java</view>
-									<view class="tag">JavaSE</view>
-									<view class="tag">MySQL</view>
+								<view class="tags-row" v-for="tag in item.labelNames">
+									<view class="tag">{{tag}}</view>
 								</view>
-								<text class="status-text">未刷</text>
+								<text class="status-text" v-if="item.status == 0">未刷</text>
+								<text class="status-text ys" v-if="item.status == 1">未刷</text>
 							</view>
 						</view>
 					</view>
@@ -201,6 +206,9 @@ const tapRanking = () => {
 							.status-text {
 								font-size: 24rpx;
 								color: #999;
+							}
+							.ys{
+								color: #1677ff;
 							}
 						}
 					}
