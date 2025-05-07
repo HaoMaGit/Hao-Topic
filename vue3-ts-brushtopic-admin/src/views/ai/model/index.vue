@@ -406,8 +406,6 @@ const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr
 const readAloudLoading = ref(false)
 // 朗读文字
 const readAloud = (content: string) => {
-  console.log('开始朗读', content);
-
   // 如果有正在播放的音频，先停止
   if (currentAudio) {
     currentAudio.pause();
@@ -417,6 +415,7 @@ const readAloud = (content: string) => {
   readAloudLoading.value = true
   // 开始朗读
   isSpeaking.value = true
+
   // 调用语音合成模型
   fetch(`${VITE_SERVE}${VITE_APP_BASE_API}/ai/model/tts`, {
     method: "post",
@@ -431,8 +430,13 @@ const readAloud = (content: string) => {
       text: content
     }),
   })
-    .then(res => res.blob())
-    .then(blob => {
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('语音合成请求失败');
+      }
+      res.blob()
+    })
+    .then((blob: any) => {
       readAloudLoading.value = false
       // 合成对话
       const url = URL.createObjectURL(blob);
@@ -448,11 +452,40 @@ const readAloud = (content: string) => {
         currentAudio = null;
         URL.revokeObjectURL(url);
       };
-    });
+    }).catch(() => {
+      console.warn('后端语音合成失败，切换到浏览器原生语音:');
+      readAloudLoading.value = false;
+      // 调用浏览器原生语音合成
+      readAloudWeb(content);
+    })
 }
+
+// 朗读文字
+const readAloudWeb = (content: string) => {
+  const utterance = new SpeechSynthesisUtterance(content);
+  utterance.lang = 'zh-CN'; // 设置语言为中文
+  utterance.rate = 1.4; // 稍微放慢语速
+  utterance.pitch = 2.5; // 提高音调，让声音更自然
+  utterance.volume = 1; // 音量最大
+
+  // 开始朗读
+  window.speechSynthesis.speak(utterance);
+
+  // 更新状态
+  isSpeaking.value = true;
+
+  // 监听朗读结束事件
+  utterance.onend = () => {
+    isSpeaking.value = false;
+  };
+}
+
+
 // 取消播放
 const cancelReadAloud = () => {
   isSpeaking.value = false;
+  window.speechSynthesis.cancel();
+
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
