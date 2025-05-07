@@ -169,32 +169,6 @@ const scrollToBottom = async () => {
   }).exec()
 }
 
-// 是否开启朗读
-const isSpeaking = ref(false)
-// 语音播报
-const readAloud = (text) => {
-  isSpeaking.value = true
-  const innerAudioContext = uni.createInnerAudioContext()
-  innerAudioContext.src = `https://tts.youdao.com/fanyivoice?word=${encodeURIComponent(text)}&le=zh&keyfrom=speaker-target`
-  innerAudioContext.play()
-  innerAudioContext.onEnded(() => {
-    isSpeaking.value = false
-  })
-  innerAudioContext.onError(() => {
-    isSpeaking.value = false
-    uni.showToast({
-      title: '播放失败',
-      icon: 'error'
-    })
-  })
-}
-
-// 取消语音播报
-const cancelReadAloud = () => {
-  isSpeaking.value = false
-  const innerAudioContext = uni.createInnerAudioContext()
-  innerAudioContext.stop()
-}
 
 
 // 复制内容
@@ -433,6 +407,112 @@ const handleAiModeChange = (mode) => {
     aiModeValue.value = mode
   }
 }
+
+// 是否开启朗读
+const isSpeaking = ref(false)
+// 当前audio实例
+let currentAudio;
+// 随机loading文案
+const loadingTextArr = [
+  "正在召唤HaoAi发声中...",
+  "HaoAi正在努力变声，请稍等~",
+  "语音合成中，马上就能听到啦！",
+  "HaoAi正在认真朗读你的内容...",
+  "别着急，精彩马上开始！"
+];
+// 随机loading文案
+const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr.length)]);
+// 语音合成loading
+const readAloudLoading = ref(false)
+// 朗读文字
+const readAloud = (content) => {
+  // 如果有正在播放的音频，先停止
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  readAloudLoading.value = true
+  // 开始朗读
+  isSpeaking.value = true
+
+  // 调用语音合成模型
+  fetch(`http://localhost:9993/api/ai/model/tts`, {
+    method: "post",
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": token.value,
+
+    },
+    body: JSON.stringify({
+      text: content
+    }),
+  })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('语音合成请求失败');
+      }
+      return res.blob()
+    })
+    .then((blob) => {
+      readAloudLoading.value = false
+      // 合成对话
+      const url = URL.createObjectURL(blob);
+      // 创建播放器
+      const audio = new Audio(url);
+      currentAudio = audio
+      // 播放
+      audio.play();
+      // 监听播放结束，自动重置
+      audio.onended = () => {
+        isSpeaking.value = false;
+
+        currentAudio = null;
+        URL.revokeObjectURL(url);
+      };
+    }).catch(() => {
+      console.warn('后端语音合成失败，切换到浏览器原生语音:');
+      readAloudLoading.value = false;
+      // 调用浏览器原生语音合成
+      readAloudWeb(content);
+    })
+}
+
+// 朗读文字
+const readAloudWeb = (content) => {
+  const utterance = new SpeechSynthesisUtterance(content);
+  utterance.lang = 'zh-CN'; // 设置语言为中文
+  utterance.rate = 1.4; // 稍微放慢语速
+  utterance.pitch = 2.5; // 提高音调，让声音更自然
+  utterance.volume = 1; // 音量最大
+
+  // 开始朗读
+  window.speechSynthesis.speak(utterance);
+
+  // 更新状态
+  isSpeaking.value = true;
+
+  // 监听朗读结束事件
+  utterance.onend = () => {
+    isSpeaking.value = false;
+  };
+}
+
+
+// 取消播放
+const cancelReadAloud = () => {
+  isSpeaking.value = false;
+  window.speechSynthesis.cancel();
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+}
+
 </script>
 <template>
   <view class="ai-box">
@@ -488,10 +568,11 @@ const handleAiModeChange = (mode) => {
               </template>
             </div>
             <div class="message-actions">
-              <view class="action-icon" @click="readAloud(item.prompt)" v-if="!isSpeaking">
+              <view class="action-icon" @click="readAloud(item.prompt)" v-if="!isSpeaking" v-show="!readAloudLoading">
                 <uv-icon name="volume" size="20" color="#666"></uv-icon>
               </view>
-              <view class="action-icon" @click="cancelReadAloud" v-else>
+              <uv-loading-icon :text="loadingText" color="#1677ff" v-if="readAloudLoading"></uv-loading-icon>
+              <view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud" v-if="isSpeaking">
                 <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
               </view>
               <view class="action-icon" @click="copyContent(item.prompt)">
@@ -508,10 +589,12 @@ const handleAiModeChange = (mode) => {
             <div class="message-wrapper" v-else>
               <zero-markdown-view class="markdown-content" :markdown="item.content"></zero-markdown-view>
               <div class="message-actions" v-if="aiId !== 0">
-                <view class="action-icon" @click="readAloud(item.content)" v-if="!isSpeaking">
+                <view class="action-icon" @click="readAloud(item.content)" v-if="!isSpeaking"
+                  v-show="!readAloudLoading">
                   <uni-icons type="sound" size="20" color="#666"></uni-icons>
                 </view>
-                <view class="action-icon" @click="cancelReadAloud" v-else>
+                <uv-loading-icon :text="loadingText" color="#1677ff" v-if="readAloudLoading"></uv-loading-icon>
+                <view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud" v-if="isSpeaking">
                   <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
                 </view>
                 <view class="action-icon" @click="copyContent(item.content)">
