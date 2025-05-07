@@ -2,19 +2,21 @@
 import { ref, reactive, watch, nextTick } from 'vue';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
 import { apiGetManageList, apiGetHistoryDetail } from '@/api/ai'
-// 当前选中的模式
-const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
+
 // 当前身份
 const role = ref(uni.getStorageSync('role'))
-// 输入内容
-const inputValue = ref('')
+// 用户信息
+const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+// 存一下token
+const token = ref(localStorage.getItem(userInfo.value.account + 'token'))
 
+// 当前选中的模式
+const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
 // 切换模式
 const switchMode = (mode) => {
   aiModeValue.value = mode;
   localStorage.setItem('aiMode', mode)
 };
-
 // 模式
 const aiMode = reactive([
   {
@@ -32,9 +34,10 @@ const aiMode = reactive([
   },
 ])
 
+
+
 // 提示词
 const placeholder = ref(role.value === 1 ? '请输入系统中和会员自定义的正确的题目专题，AI将自动生成题目' : '请输入系统中的正确的题目专题，AI将自动生成题目')
-
 // 初始化提示词
 const initPlaceholder = () => {
   if (aiModeValue.value === 'system') {
@@ -43,7 +46,6 @@ const initPlaceholder = () => {
     placeholder.value = '请输入给AI你想刷的题目类型，AI将自动生成题目'
   }
 }
-
 // 监听模式变化
 watch(() => aiModeValue.value, () => {
   initPlaceholder()
@@ -56,13 +58,6 @@ const chatLoading = ref(false)
 const activeIndex = ref([])
 // 是否可以选择对话
 const isSelectHistory = ref(false)
-
-const prompt = ref('')
-
-// 是否点击回复
-const isReply = ref(true)
-// 用户信息
-const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
 
 // ai标识
 const aiId = ref(0)
@@ -167,11 +162,12 @@ const scrollToBottom = async () => {
     if (data) {
       // 计算所有内容的总高度
       const totalHeight = data.reduce((sum, item) => sum + item.height, 0)
-      scrollTop.value = totalHeight + 100 // 加上额外高度确保滚动到底部
+      scrollTop.value = totalHeight + 300 // 加上额外高度确保滚动到底部
     }
   }).exec()
 }
 
+// 是否开启朗读
 const isSpeaking = ref(false)
 // 语音播报
 const readAloud = (text) => {
@@ -207,7 +203,7 @@ const copyContent = (content) => {
     .replace(/\*/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .trim()
-  
+
   uni.setClipboardData({
     data: plainText,
     success: () => {
@@ -227,6 +223,155 @@ const copyContent = (content) => {
   })
 }
 
+
+// 是否暂停回复
+const isPaused = ref(false)
+// 当前的 AbortController 实例
+let currentController
+// 是否点击回复
+const isReply = ref(true)
+// 添加暂停函数
+const pauseReply = () => {
+  if (currentController) {
+    // 暂停回复
+    currentController.abort()
+    currentController = null
+    isPaused.value = false
+    isReply.value = true
+  }
+}
+
+// 输入内容
+const prompt = ref('')
+// 发送
+const sendPrompt = async () => {
+  isReply.value = false
+  isSelectHistory.value = true
+  if (prompt.value) {
+    if (aiId.value === 0) {
+      // 说明是第一次
+      localStorage.setItem('chatId', currentRecordId.value)
+    }
+    aiId.value++
+    // 添加一条数据
+    messageList.push({
+      prompt: prompt.value,
+      memoryId: aiId.value,
+      chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
+      model: aiModeValue.value,
+      content: '',
+      nickname: userInfo.value.nickname,
+    })
+    prompt.value = ''
+    await scrollToBottom()
+
+    // 获取当前记录
+    const currentRecord = messageList[messageList.length - 1]
+    try {
+      // 创建新的 AbortController
+      currentController = new AbortController()
+      // 发送 get 请求
+      fetch(`http://localhost:9993/api/ai/model/chat`, {
+        method: "POST",
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token.value,
+        },
+        // 添加 signal
+        signal: currentController.signal,
+        body: JSON.stringify({
+          ...currentRecord
+        }),
+      }).then(response => {
+        // 检查响应是否成功
+        if (!response.ok) {
+          uni.showToast({
+            title: "HaoAi回复出现点问题请稍后再试！",
+            icon: "none",
+            duration: 2000
+          })
+        }
+        // 返回一个可读流
+        return response.body;
+      }).then(async body => {
+        if (!body) {
+          uni.showToast({
+            title: "HaoAi回复出现点问题请稍后再试！",
+            icon: "none",
+            duration: 2000
+          })
+          return
+        }
+        // 获取读取流
+        const reader = body.getReader();
+        // 读取流
+        const decoder = new TextDecoder('utf-8')
+        // 循环读取流
+        while (true) {
+          try {
+            if (reader) {
+              const { value, done } = await reader.read()
+              if (done) {
+                uni.showToast({
+                  title: "回复成功",
+                  icon: "success",
+                  duration: 2000
+                })
+                // 回复成功
+                isReply.value = true
+                // 如果是第一次
+                if (aiId.value === 1) {
+                  // 获取一下历史记录
+                  getHistoryList()
+                  activeIndex.value[0] = 0
+                }
+                break
+              }
+              await nextTick(() => {
+                // 累积新内容
+                currentRecord.content += decoder.decode(value)
+              })
+              await scrollToBottom()
+            }
+          } catch (readError) {
+            if (readError.name === 'AbortError') {
+              uni.showToast({
+                title: "已暂停回复",
+                icon: "none",
+                duration: 2000
+              })
+              isReply.value = true
+            } else {
+              uni.showToast({
+                title: "回复失败" + readError,
+                icon: "none",
+                duration: 2000
+              })
+            }
+            break
+          }
+        }
+      })
+    } catch (error) {
+      console.log(error);
+      if (error.name === 'AbortError') {
+        uni.showToast({
+          title: "已暂停回复",
+          icon: "none",
+          duration: 2000
+        })
+      } else {
+        uni.showToast({
+          title: "发送失败" + error,
+          icon: "none",
+          duration: 2000
+        })
+      }
+    }
+  }
+}
 </script>
 <template>
   <view class="ai-box">
@@ -320,7 +465,7 @@ const copyContent = (content) => {
 
     <!-- 输入框 -->
     <view class="ai-search">
-      <uv-textarea adjustPosition v-model="inputValue" height="25" :placeholder="placeholder"></uv-textarea>
+      <uv-textarea adjustPosition v-model="prompt" height="25" :placeholder="placeholder"></uv-textarea>
       <view class="button-group">
         <view class="mode-buttons">
           <view v-for="item in aiMode" :key="item.value" class="mode-btn"
@@ -329,8 +474,13 @@ const copyContent = (content) => {
           </view>
         </view>
         <view class="send-btn">
-          <uni-icons type="paperplane-filled" size="24" color="#1677ff" v-if="isReply"></uni-icons>
-          <uv-icon type="pause-circle" size="24" color="#ff4d4f" v-else></uv-icon>
+          <template v-if="!isReply">
+            <uv-icon name="pause-circle" class="pause-icon" size="24" color="#ff4d4f" @click="pauseReply"></uv-icon>
+          </template>
+          <template v-else>
+            <uni-icons type="paperplane-filled" size="24" color="#1677ff" class="send-icon"
+              :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()"></uni-icons>
+          </template>
         </view>
       </view>
     </view>
@@ -591,6 +741,39 @@ const copyContent = (content) => {
         &:active {
           opacity: 0.8;
         }
+
+        .pause-icon {
+          font-size: 25px;
+          color: #ff4d4f;
+          cursor: pointer;
+
+          &:hover {
+            color: #ff7875;
+          }
+        }
+
+        .send-icon {
+          font-size: 25px;
+          color: #1677ff;
+          cursor: pointer;
+
+          &.disabled {
+            color: #d6dee8;
+            cursor: not-allowed;
+          }
+
+          &:not(.disabled):hover {
+            color: #4096ff;
+          }
+
+          &:hover {
+            color: #4096ff;
+          }
+
+
+        }
+
+
       }
     }
   }
