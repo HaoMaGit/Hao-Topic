@@ -94,9 +94,12 @@ const getHistoryList = async () => {
   const res = await apiGetManageList(historyParams.value)
   historyList.value = res.data
 }
-// 点击了莫一条历史记录
-const getHistoryContent = async (id, index, historyIndex) => {
+// 当前对话标题
+const currentTitle = ref('')
+// 点击了某一条历史记录
+const getHistoryContent = async (id, index, historyIndex, title) => {
   uni.showLoading({ title: '加载中...' })
+  currentTitle.value = title
   showLeft.value.close()
   chatLoading.value = true
   // 清除默认对话
@@ -109,7 +112,6 @@ const getHistoryContent = async (id, index, historyIndex) => {
   const res = await apiGetHistoryDetail(id)
   isSelectHistory.value = true
   aiModeValue.value = res.data[0].mode
-
   // 封装内容
   const content = res.data.map((item) => {
     return {
@@ -439,7 +441,8 @@ const handleAiModeChange = (mode) => {
       <view class="left-icon" @click="handleGetHistoryList">
         <uni-icons type="bars" size="24" color="#1677ff"></uni-icons>
       </view>
-      <view class="title">新对话</view>
+      <view class="title" v-if="aiId === 0">新对话</view>
+      <view class="title" v-else>{{ currentTitle }}</view>
       <view class="right-icon" @click="createReply">
         <uni-icons type="plusempty" color="#1677ff" size="25"></uni-icons>
       </view>
@@ -454,8 +457,8 @@ const handleAiModeChange = (mode) => {
             <view class="history-date">{{ history.date }}</view>
             <view
               :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '', 'pointer-events': isReply ? 'auto' : 'none' }"
-              @click="getHistoryContent(record.id, index, historyIndex)" v-for="(record, index) in history.aiHistoryVos"
-              :key="item" class="history-item">
+              @click="getHistoryContent(record.id, index, historyIndex, record.title)"
+              v-for="(record, index) in history.aiHistoryVos" :key="item" class="history-item">
               {{ record.title }}
             </view>
           </view>
@@ -611,6 +614,14 @@ const handleAiModeChange = (mode) => {
     color: #2c313c;
     font-size: 35rpx;
     background-color: #fff;
+
+    .title {
+      width: 400rpx; // 设置固定宽度
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   .ai-content {
