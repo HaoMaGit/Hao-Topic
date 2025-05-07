@@ -48,6 +48,7 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final TopicSubjectService topicSubjectService;
     private final TopicDailyStagingMapper topicDailyStagingMapper;
     private final TopicLabelTopicMapper topicLabelTopicMapper;
+    private final TopicDailyBrushMapper topicDailyBrushMapper;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -735,12 +736,40 @@ public class TopicDataServiceImpl implements TopicDataService {
                     labelNames.add(topicLabel.getLabelName());
                 }
             }
+            // 查询是否刷的关联表
+            LambdaQueryWrapper<TopicDailyBrush> topicDailyBrushLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicDailyBrushLambdaQueryWrapper.eq(TopicDailyBrush::getUserId, currentId);
+            topicDailyBrushLambdaQueryWrapper.eq(TopicDailyBrush::getDailyId, topicDailyStaging.getId());
+            if (topicDailyBrushMapper.selectOne(topicDailyBrushLambdaQueryWrapper) != null) {
+                topicTodayVo.setStatus(1);
+            } else {
+                topicTodayVo.setStatus(0);
+            }
             topicTodayVo.setTopicName(topic.getTopicName());
             topicTodayVo.setLabelNames(labelNames);
-            topicTodayVo.setStatus(topicDailyStaging.getStatus());
-            topicTodayVo.setId(topic.getId());
+            topicTodayVo.setId(topicDailyStaging.getId());
             topicTodayVo.setSubjectId(topicDailyStaging.getSubjectId());
+            topicTodayVo.setTopicId(topicDailyStaging.getTopicId());
             return topicTodayVo;
         }).toList();
+    }
+
+    /**
+     * 刷每日题
+     *
+     * @param id
+     */
+    public void flushTopic(Long id) {
+        // 查询
+        LambdaQueryWrapper<TopicDailyBrush> topicDailyBrushLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicDailyBrushLambdaQueryWrapper.eq(TopicDailyBrush::getDailyId, id);
+        topicDailyBrushLambdaQueryWrapper.eq(TopicDailyBrush::getUserId, SecurityUtils.getCurrentId());
+        TopicDailyBrush topicDailyBrush = topicDailyBrushMapper.selectOne(topicDailyBrushLambdaQueryWrapper);
+        if (topicDailyBrush == null) {
+            topicDailyBrush = new TopicDailyBrush();
+            topicDailyBrush.setDailyId(id);
+            topicDailyBrush.setUserId(SecurityUtils.getCurrentId());
+            topicDailyBrushMapper.insert(topicDailyBrush);
+        }
     }
 }

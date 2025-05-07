@@ -54,7 +54,7 @@ public class TopicDataController {
     }
 
     /**
-     *  查询每日必刷
+     * 查询每日必刷
      */
     @GetMapping("/topicTodayVo")
     public Result<List<TopicTodayVo>> topicTodayVo() {
@@ -135,5 +135,14 @@ public class TopicDataController {
     public Result<List<TopicDataVo>> userTopicDateCount(@PathVariable String date) {
         List<TopicDataVo> list = topicDataService.userTopicDateCount(date);
         return Result.success(list);
+    }
+
+    /**
+     * 已刷题目
+     */
+    @GetMapping("/flush/{id}")
+    public Result flushTopic(@PathVariable Long id) {
+         topicDataService.flushTopic(id);
+        return Result.success();
     }
 }

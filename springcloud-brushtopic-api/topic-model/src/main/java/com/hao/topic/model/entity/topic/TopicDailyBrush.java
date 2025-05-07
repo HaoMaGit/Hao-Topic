@@ -2,21 +2,17 @@ package com.hao.topic.model.entity.topic;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.hao.topic.model.entity.BaseEntity;
 import lombok.Data;
 
 /**
- * Description: 每日题目暂存表
+ * Description:
  * Author: Hao
- * Date: 2025/5/7 14:28
+ * Date: 2025/5/7 17:02
  */
 @Data
-public class TopicDailyStaging {
+public class TopicDailyBrush {
     @TableId(type = IdType.AUTO)
     private Long id;
-
     private Long userId;
-    private Long topicId;
-    private Long subjectId;
-    private Integer isPublic;
+    private Long dailyId;
 }

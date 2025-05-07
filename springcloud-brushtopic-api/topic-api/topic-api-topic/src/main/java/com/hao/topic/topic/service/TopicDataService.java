@@ -39,4 +39,5 @@ public interface TopicDataService {
 
     List<TopicTodayVo> topicTodayVo();
 
+    void flushTopic(Long id);
 }
