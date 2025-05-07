@@ -54,8 +54,13 @@ public class TopicDataController {
     }
 
     /**
-     * TODO 查询每日必刷
+     *  查询每日必刷
      */
+    @GetMapping("/topicTodayVo")
+    public Result<List<TopicTodayVo>> topicTodayVo() {
+        List<TopicTodayVo> list = topicDataService.topicTodayVo();
+        return Result.success(list);
+    }
 
 
     /**

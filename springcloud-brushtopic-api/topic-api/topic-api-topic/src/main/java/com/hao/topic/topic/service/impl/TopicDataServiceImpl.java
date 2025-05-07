@@ -46,6 +46,8 @@ public class TopicDataServiceImpl implements TopicDataService {
     private final TopicCategorySubjectMapper topicCategorySubjectMapper;
     private final TopicSubjectMapper topicSubjectMapper;
     private final TopicSubjectService topicSubjectService;
+    private final TopicDailyStagingMapper topicDailyStagingMapper;
+    private final TopicLabelTopicMapper topicLabelTopicMapper;
 
     /**
      * 查询题目刷题数据以及刷题排名和用户数量
@@ -682,5 +684,63 @@ public class TopicDataServiceImpl implements TopicDataService {
         Long currentId = SecurityUtils.getCurrentId();
         // 开始查询
         return topicRecordMapper.userTopicDateCount(date, currentId);
+    }
+
+    /**
+     * 查询每日必刷
+     *
+     * @return
+     */
+    public List<TopicTodayVo> topicTodayVo() {
+        // 查询公共的
+        LambdaQueryWrapper<TopicDailyStaging> topicDailyStagingLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        topicDailyStagingLambdaQueryWrapper.eq(TopicDailyStaging::getIsPublic, 1);
+        List<TopicDailyStaging> topicDailyStagings = topicDailyStagingMapper.selectList(topicDailyStagingLambdaQueryWrapper);
+        // 查询用户的
+        // 获取当前登录用户id
+        Long currentId = SecurityUtils.getCurrentId();
+        // 查询用户刷过的题目
+        LambdaQueryWrapper<TopicDailyStaging> topicDailyStagingLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+        topicDailyStagingLambdaQueryWrapper1.eq(TopicDailyStaging::getUserId, currentId);
+        topicDailyStagingLambdaQueryWrapper1.eq(TopicDailyStaging::getIsPublic, 2);
+        List<TopicDailyStaging> topicDailyStagings1 = topicDailyStagingMapper.selectList(topicDailyStagingLambdaQueryWrapper1);
+        // 合并一起
+        topicDailyStagings.addAll(topicDailyStagings1);
+        // 遍历封装返回数据
+        return topicDailyStagings.stream().map(topicDailyStaging -> {
+            // 封装返回数据
+            TopicTodayVo topicTodayVo = new TopicTodayVo();
+            // 根据题目id查询题目
+            Topic topic = topicMapper.selectById(topicDailyStaging.getTopicId());
+            // 根据题目id查询题目标签题目关系表
+            LambdaQueryWrapper<TopicLabelTopic> topicLabelTopicLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            topicLabelTopicLambdaQueryWrapper.eq(TopicLabelTopic::getTopicId, topicDailyStaging.getTopicId());
+            List<TopicLabelTopic> topicLabelTopics = topicLabelTopicMapper.selectList(topicLabelTopicLambdaQueryWrapper);
+            if (CollectionUtils.isEmpty(topicLabelTopics)) {
+                return null;
+            }
+            // 有标签
+            // 收集所有的id
+            List<Long> labelIds = topicLabelTopics.stream().map(TopicLabelTopic::getLabelId).toList();
+            // 存放标签名称
+            List<String> labelNames = new ArrayList<>();
+            // 查询
+            for (Long labelId : labelIds) {
+                LambdaQueryWrapper<TopicLabel> topicLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                topicLabelLambdaQueryWrapper.eq(TopicLabel::getId, labelId);
+                topicLabelLambdaQueryWrapper.eq(TopicLabel::getStatus, StatusEnums.NORMAL.getCode());
+                topicLabelLambdaQueryWrapper.orderByDesc(TopicLabel::getCreateTime);
+                TopicLabel topicLabel = topicLabelMapper.selectOne(topicLabelLambdaQueryWrapper);
+                if (topicLabel != null) {
+                    labelNames.add(topicLabel.getLabelName());
+                }
+            }
+            topicTodayVo.setTopicName(topic.getTopicName());
+            topicTodayVo.setLabelNames(labelNames);
+            topicTodayVo.setStatus(topicDailyStaging.getStatus());
+            topicTodayVo.setId(topic.getId());
+            topicTodayVo.setSubjectId(topicDailyStaging.getSubjectId());
+            return topicTodayVo;
+        }).toList();
     }
 }

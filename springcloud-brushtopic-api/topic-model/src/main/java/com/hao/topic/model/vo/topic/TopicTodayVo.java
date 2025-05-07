@@ -1,6 +1,5 @@
 package com.hao.topic.model.vo.topic;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.List;
@@ -8,15 +7,14 @@ import java.util.List;
 /**
  * Description:
  * Author: Hao
- * Date: 2025/5/4 18:02
+ * Date: 2025/5/7 16:42
  */
 @Data
-public class TopicCollectionVo {
+public class TopicTodayVo {
     private Long id;
     private Long subjectId;
     private String topicName;
+    private Integer status;
     List<String> labelNames;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private String collectionTime;
 
 }

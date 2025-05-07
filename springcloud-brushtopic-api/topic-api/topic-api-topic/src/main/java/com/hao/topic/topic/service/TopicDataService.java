@@ -36,4 +36,7 @@ public interface TopicDataService {
     List<TopicCategoryUserDataVo> userHomeCategory();
 
     List<TopicDataVo> userTopicDateCount(String date);
+
+    List<TopicTodayVo> topicTodayVo();
+
 }
