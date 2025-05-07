@@ -171,6 +171,32 @@ const scrollToBottom = async () => {
     }
   }).exec()
 }
+
+const isSpeaking = ref(false)
+// 语音播报
+const readAloud = (text) => {
+  isSpeaking.value = true
+  const innerAudioContext = uni.createInnerAudioContext()
+  innerAudioContext.src = `https://tts.youdao.com/fanyivoice?word=${encodeURIComponent(text)}&le=zh&keyfrom=speaker-target`
+  innerAudioContext.play()
+  innerAudioContext.onEnded(() => {
+    isSpeaking.value = false
+  })
+  innerAudioContext.onError(() => {
+    isSpeaking.value = false
+    uni.showToast({
+      title: '播放失败',
+      icon: 'error'
+    })
+  })
+}
+
+// 取消语音播报
+const cancelReadAloud = () => {
+  isSpeaking.value = false
+  const innerAudioContext = uni.createInnerAudioContext()
+  innerAudioContext.stop()
+}
 </script>
 <template>
   <view class="ai-box">
@@ -194,7 +220,7 @@ const scrollToBottom = async () => {
             <view class="history-date">{{ history.date }}</view>
             <view
               :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '', 'pointer-events': isReply ? 'auto' : 'none' }"
-              @click="getHistoryContent(record.id, index, historyIndex)" v-for="(record,index) in history.aiHistoryVos"
+              @click="getHistoryContent(record.id, index, historyIndex)" v-for="(record, index) in history.aiHistoryVos"
               :key="item" class="history-item">
               {{ record.title }}
             </view>
@@ -205,8 +231,8 @@ const scrollToBottom = async () => {
 
     <!-- ai输出内容需要判断 -->
     <view class="ai-content">
-      <scroll-view ref="contentRef" :duration="3000"  :scroll-top="scrollTop" v-if="!chatLoading" scroll-y="true" class="scroll-Y"
-        :scroll-with-animation="true" :scroll-anchoring="true" @scrolltoupper="upper">
+      <scroll-view ref="contentRef" :duration="3000" :scroll-top="scrollTop" v-if="!chatLoading" scroll-y="true"
+        class="scroll-Y" :scroll-with-animation="true" :scroll-anchoring="true" @scrolltoupper="upper">
         <!-- 有数据的时候显示 -->
         <div v-for="(item, index) in messageList" class="box" :key="index">
           <!-- 用户输入的内容 -->
@@ -215,20 +241,24 @@ const scrollToBottom = async () => {
               <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
                 <zero-markdown-view class="markdown-content" :markdown="item.prompt"></zero-markdown-view>
               </div>
-              <view class="avatar"
-                :style="{ backgroundColor: '#1677ff', color: '#fff', fontSize: '20px', width: '40rpx', height: '40rpx', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }">
-                {{ userInfo.account?.charAt(0)?.toUpperCase() }}
-              </view>
+              <template v-if="userInfo.avatar">
+                <img class="avatar" :src="userInfo.avatar" />
+              </template>
+              <template v-else>
+                <a-avatar class="avatar" :style="{ backgroundColor: '#1677ff', fontSize: '20px' }">
+                  {{ userInfo.account?.charAt(0)?.toUpperCase() }}
+                </a-avatar>
+              </template>
             </div>
             <div class="message-actions">
               <view class="action-icon" @click="readAloud(item.prompt)" v-if="!isSpeaking">
-                <uni-icons type="sound" size="20" color="#666"></uni-icons>
+                <uv-icon name="volume" size="20" color="#666"></uv-icon>
               </view>
               <view class="action-icon" @click="cancelReadAloud" v-else>
-                <uni-icons type="videocam-filled" size="20" color="#666"></uni-icons>
+                <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
               </view>
               <view class="action-icon" @click="copyContent(item.prompt)">
-                <uni-icons type="file-b" size="20" color="#666"></uni-icons>
+                <uv-icon name="file-text" size="21" color="#666"></uv-icon>
               </view>
             </div>
           </div>
@@ -245,10 +275,10 @@ const scrollToBottom = async () => {
                   <uni-icons type="sound" size="20" color="#666"></uni-icons>
                 </view>
                 <view class="action-icon" @click="cancelReadAloud" v-else>
-                  <uni-icons type="videocam-filled" size="20" color="#666"></uni-icons>
+                  <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
                 </view>
                 <view class="action-icon" @click="copyContent(item.content)">
-                  <uni-icons type="file-b" size="20" color="#666"></uni-icons>
+                  <uv-icon name="file-text" size="21" color="#666"></uv-icon>
                 </view>
               </div>
             </div>
@@ -270,7 +300,7 @@ const scrollToBottom = async () => {
         </view>
         <view class="send-btn">
           <uni-icons type="paperplane-filled" size="24" color="#1677ff" v-if="isReply"></uni-icons>
-          <uni-icons type="circle-filled" size="24" color="#ff4d4f" v-else></uni-icons>
+          <uv-icon type="pause-circle" size="24" color="#ff4d4f" v-else></uv-icon>
         </view>
       </view>
     </view>
@@ -364,7 +394,6 @@ const scrollToBottom = async () => {
           justify-content: flex-end;
           gap: 16px;
           margin-right: 40px;
-          opacity: 0;
           transition: opacity 0.3s;
 
           .action-icon {
@@ -376,16 +405,9 @@ const scrollToBottom = async () => {
             &:hover {
               color: #1677ff;
             }
-
-          }
-
-        }
-
-        &:hover {
-          .message-actions {
-            opacity: 1;
           }
         }
+
 
         .user-message {
           display: flex;
@@ -404,6 +426,15 @@ const scrollToBottom = async () => {
             .first-prompt {
               margin-top: 0 !important;
             }
+          }
+
+          .avatar {
+            margin-top: 10px;
+            width: 31px;
+            height: 31px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 5px;
           }
         }
       }
@@ -438,7 +469,6 @@ const scrollToBottom = async () => {
             display: flex;
             gap: 16px;
             padding: 8px 0;
-            opacity: 0;
             transition: opacity 0.3s;
 
             .action-icon {
