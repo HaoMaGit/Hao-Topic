@@ -197,6 +197,36 @@ const cancelReadAloud = () => {
   const innerAudioContext = uni.createInnerAudioContext()
   innerAudioContext.stop()
 }
+
+
+// 复制内容
+const copyContent = (content) => {
+  // 去除markdown格式
+  const plainText = content.replace(/```[\s\S]*?```/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .trim()
+  
+  uni.setClipboardData({
+    data: plainText,
+    success: () => {
+      uni.showToast({
+        title: '复制成功',
+        icon: 'success',
+        duration: 1500
+      })
+    },
+    fail: () => {
+      uni.showToast({
+        title: '复制失败',
+        icon: 'error',
+        duration: 1500
+      })
+    }
+  })
+}
+
 </script>
 <template>
   <view class="ai-box">
