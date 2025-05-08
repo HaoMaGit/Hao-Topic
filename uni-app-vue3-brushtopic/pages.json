@@ -18,9 +18,7 @@
 			"path": "pages/ai/ai",
 			"style": {
 				"navigationBarTitleText": "ai",
-				"navigationStyle": "custom",
-				// 自定义导航栏
-				
+				"navigationStyle": "custom"
 			}
 		},
 		{

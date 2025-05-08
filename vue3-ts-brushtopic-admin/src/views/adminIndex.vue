@@ -499,7 +499,7 @@ onMounted(() => {
             <a-col :span="16" class="user-data-col">
               <a-row :gutter="[16, 16]">
                 <a-col :span="12">
-                  <a-statistic title="刷题次数总数" :value="leftData?.countTodayFrequency" class="stat-item">
+                  <a-statistic title="刷题次数总数" :value="leftData?.countTodayFrequency || 0" class="stat-item">
                     <template #prefix>
                       <CodeOutlined />
                     </template>

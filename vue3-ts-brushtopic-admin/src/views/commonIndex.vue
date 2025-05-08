@@ -349,7 +349,7 @@ onMounted(() => {
             <a-col :span="16" class="user-data-col">
               <a-row :gutter="[16, 16]">
                 <a-col :span="12">
-                  <a-statistic title="已刷题次数" :value="leftData?.topicFrequencyCount" class=" stat-item">
+                  <a-statistic title="已刷题次数" :value="leftData?.topicFrequencyCount || 0" class=" stat-item">
                     <template #prefix>
                       <BarChartOutlined />
                     </template>
@@ -365,7 +365,7 @@ onMounted(() => {
                   </a-statistic>
                 </a-col>
                 <a-col :span="12">
-                  <a-statistic title="刷题次数总排名" :value="leftData?.rank" class="stat-item">
+                  <a-statistic title="刷题次数总排名 " :value="leftData?.rank || 0" class="stat-item">
                     <template #prefix>
                       <TrophyOutlined />
                     </template>
