@@ -3,6 +3,7 @@
 ### 项目介绍 🔥
 
 - 此项目是基于 **SpringCloud微服务 + Vue3+ts+uniapp**开发的AI智能刷题项目
+- 项目包含后台，h5,后端2个网关，4个服务
 - 项目功能多,AI功能亮点多极其有创意
 - 后端架构设计规范前端页面简洁美观有创意
 - 项目自主研发从0-1设计的
@@ -48,7 +49,7 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 后台： Vue3 + AntDv + Echarts + Ts + Md-editor-v3....
 
-后端： JDK17 + SpringBoot3.2 + SpringCloud2023 + Nacos + Gateway + Open SpringTask +  Mysql + Redis + RabbitMQ + Minio + Mybatis-Plus....
+后端： JDK17 + SpringBoot3.2 + SpringCloud2023 + Nacos + Gateway + OpenFeign + SpringTask +  Mysql + Redis + RabbitMQ + Minio + Mybatis-Plus....
 
 ##### 前端
 
