@@ -350,7 +350,7 @@ const initAiCallChart = () => {
     },
     series: [
       {
-        name: '刷题次数',
+        name: '调用次数',
         type: 'line',
         stack: 'Total',
         smooth: true,
