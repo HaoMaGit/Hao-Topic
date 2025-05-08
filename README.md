@@ -6,11 +6,12 @@
 - 项目功能多,AI功能亮点多极其有创意
 - 后端架构设计规范前端页面简洁美观有创意
 - 项目自主研发从0-1设计的
+- 技术和环境都是最新的
 
 ### 项目亮点 🔨
 
-- 使用**Redis**缓存刷题次数排行榜提升响应速度
-- 使用**Redis**缓存实现分布式锁防止消息重复消费
+- 使用**Redis**刷题次数排行榜提升响应速度
+- 使用**Redis**实现分布式锁防止消息重复消费
 - 使用**Rabbitmq**异步生成AI答案提升响应速度
 - 使用**Rabbitmq**异步通过AI服务审核会员题目无需人工
 - 使用**Minio**存储专题图片存储免费好用
@@ -19,13 +20,21 @@
 - 使用**SpringAi**接入阿里云百炼api接口进行对话有免费额度
 - 使用**Echats**仿力扣分类气泡图展示题目分类和数量有创意
 - 使用**Echats**仿gitee日历热点图展示用户每日刷题次数提高用户刷题率
+- 使用**Security**严格控制角色权限保障会员权益
 
 
 ### 技术收获 🔨
 
-- 使用**Redis**缓存刷题次数排行榜
-- 使用**Redis**缓存实现分布式锁防止消息重复消费
-- 使用**Rabbitmq**异步生成AI答案
+- 收获**Redis**缓存
+- 收获**Rabbitmq**消息队列
+- 收获**SpringTask**定时任务
+- 收获**SpringCloud**微服务设计
+- 收获**Nacos**配置中心与注册中心
+- 收获**SpringAi**与AI对话
+- 收获**SpringSecurity**权限管理
+- 收获**OpenFeign**远程调用
+- 收获**MybatisPlus**操作数据库
+- 收获
 - 使用**Rabbitmq**异步生成AI答案
 - 使用**MongoDb**存储留言数据减轻数据库压力
 - 使用**ElementPlus**快速开发组件页面美观
@@ -43,11 +52,11 @@
 
 ### 运行环境
 
-前台前端（博客）： Vue3+ Element Plus + Echarts + Md-editor-v3.+ Danmaku-vue + Vue-video-player....... 
+h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
-后台前端（管理）： Vue3+ Element Plus + Echarts + Md-editor-v3 …… 
+后台： Vue3 + AntDv + Echarts + Ts + Md-editor-v3 …… 
 
-后端： JDK17 + SpringBoot2 + SpringAop + SpringTask + Elasticsearch+ Mysql+ Redis + MongoDb + RabbitMQ + Minio + Mybatis-Plus + Easyexcel + aws-java-sdk-s3 + Nginx + Docker……
+后端： JDK17 + SpringBoot3.2 + SpringCloud2023 + Nacos + Gateway + Open SpringTask +  Mysql + Redis + RabbitMQ + Minio + Mybatis-Plus
 
 ##### 前端
 
