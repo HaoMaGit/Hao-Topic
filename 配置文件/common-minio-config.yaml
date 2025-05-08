@@ -1,0 +1,10 @@
+minio:
+  # MinIO服务器地址
+  endpoint: http://*****:9000
+  # MinIO服务器访问凭据
+  accessKey: *****
+  secretKey: *****
+  # MinIO桶名称
+  bucket: topic
+  # MinIO读取路径前缀
+  readPath: http://*****:9000

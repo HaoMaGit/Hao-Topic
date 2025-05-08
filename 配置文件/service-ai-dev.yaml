@@ -1,0 +1,24 @@
+server:
+  port: 9995
+spring:
+  ai:
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode   
+      api-key: *****
+      chat: 
+        options:
+          model: qwen-max-2025-01-25
+          temperature: 0.8
+
+# 语音合成
+tts:
+  api-key: *****
+  model: cosyvoice-v1
+  voice: longcheng
+# 本地模型配置
+    # ollama:
+    #   base-url: http://localhost:11434
+    #   chat:
+    #     model: gemma3:12b
+# openai配置 
+  
