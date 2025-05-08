@@ -156,29 +156,31 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 ### 项目启动 🚀
 
-h5
-uni-app-vue3-brushtopic文件夹
-
+##### h5
+**uni-app-vue3-brushtopic**文件夹
+```
 npm install
 用HBuilder启动
+```
 
-后台
-vue3-ts-brushtopic-admin文件夹
-
+##### 后台
+**vue3-ts-brushtopic-admin**文件夹
+```
 npm install
 npm run dev
+```
 
-后端
-springcloud-brushtopic-api文件夹
+##### 后端
+**springcloud-brushtopic-api**文件夹
 
-打开项目 配置jdk17 加载maven依赖
-安装mysql redis mq nacos minio
-安装完nacos后需要将配置文件导入到nacos中
-打开common-config配置文件需要配置自己的
-打开common-minio配置文件需要配置自己的
-打开service-ai配置文件配置自己的阿里云百炼sk
-安装完minio后需要创建topic桶并开放public权限
-将sql文件夹中的sql放入到你的数据库中启动！
+- 打开项目 配置jdk17 加载maven依赖
+- 安装mysql redis mq nacos minio
+- 安装完nacos后需要将配置文件文件夹中的配置文件导入到nacos中
+- 打开common-config配置文件需要配置自己的
+- 打开common-minio配置文件需要配置自己的
+- 打开service-ai配置文件配置自己的阿里云百炼sk
+- 安装完minio后需要创建topic桶并开放public权限
+- 将sql文件夹中的sql放入到你的数据库中启动！
 
 
 ### 项目问题 🧩
