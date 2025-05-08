@@ -23,7 +23,7 @@
 - 使用**Security**严格控制角色权限保障会员权益
 
 
-### 技术收获 🔨
+### 项目收获 🔨
 
 - 收获**Redis**缓存
 - 收获**Rabbitmq**消息队列
@@ -34,29 +34,21 @@
 - 收获**SpringSecurity**权限管理
 - 收获**OpenFeign**远程调用
 - 收获**MybatisPlus**操作数据库
-- 收获
-- 使用**Rabbitmq**异步生成AI答案
-- 使用**MongoDb**存储留言数据减轻数据库压力
-- 使用**ElementPlus**快速开发组件页面美观
-- 使用**Md-editor-v3**编辑器使文章变得美观
-- 使用**Danmaku-vue**实现留言板的弹幕效果
-- 使用**Minio**进行图片存储免费好用
-- 使用**Elasticsearch**用于文章的存储以及实现搜索和高亮的效果
-- 使用**Rabbitmq**异步通知处理各种操作实现友链的申请
-- 使用**SpringAop**面向切面编程来进行接口访问量的数据统计
-- 使用**Echarts**图表来快速的预览数据
-- 使用**SpringTask**定时任务来进行将每天统计数据写入数据库
-- 使用**Mybatis-Plus**快速的CRUD开发
-- 使用**Aws-java-sdk-s3**亚马逊和**Minio**配合进行视频的分片上传
-- 使用**Easyexcel**技术快速的将excel数据导入导出
+- 收获**Gateway**路由转发
+- 收获**Vue3**前端框架
+- 收货**AntDv**UI框架
+- 收获**Uniapp**多端开发技术
+- 收获**Echats**图表设计
+- 收获**Uv-ui**手机端UI框架
+- 收获**Tts**语音合成技术的使用
 
 ### 运行环境
 
 h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
-后台： Vue3 + AntDv + Echarts + Ts + Md-editor-v3 …… 
+后台： Vue3 + AntDv + Echarts + Ts + Md-editor-v3....
 
-后端： JDK17 + SpringBoot3.2 + SpringCloud2023 + Nacos + Gateway + Open SpringTask +  Mysql + Redis + RabbitMQ + Minio + Mybatis-Plus
+后端： JDK17 + SpringBoot3.2 + SpringCloud2023 + Nacos + Gateway + Open SpringTask +  Mysql + Redis + RabbitMQ + Minio + Mybatis-Plus....
 
 ##### 前端
 
@@ -66,7 +58,7 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 | ---- | ---- |
 | Npm  | 10+  |
 | Vue3 | 3+   |
-| Node | 17+  |
+| Node | 18+  |
 
 ##### 后端
 
@@ -76,9 +68,9 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 | ------------- | ----- |
 | MySQL         | 8.0+  |
 | JDK           | 17    |
-| SpringBoot    | 2     |
-| Elasticsearch | 7.2.1 |
-| Easyexel      | 3.0.1 |
+| SpringBoot    | 3.2   |
+| SpringCloud   | 2023  |
+| SpringAi      |1.0.0-M6|
 
 ### 项目效果 👀
 
@@ -97,19 +89,13 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 ![输入图片说明](sql/Snipaste_2024-07-17_21-43-25.png)
 
-### 项目地址 ⭐
-
-前台博客：[http://blog.haoyuming.top](http://blog.haoyuming.top)
-
-后台管理： [http://admin.haoyuming.top:8888](http://blog.haoyuming.top)
 
 ### 使用事项 📔
 
-- 服务器是2核2G1M比较垃圾可以项目捐赠一下哦
-- 随时可能崩掉发现了会及时维护
-- 免费使用 大家随意发挥
-- 后续网站访问不了以及长期没更新的话就是没钱啦
-- 如有安装问题请联系作者
+- 如需部署服务器配置得8g以上
+- 如需要作者启动请联系作者
+- 如有启动问题请联系作者
+- 如有问题请联系作者
 
 ##### 联系方式
 
@@ -123,166 +109,13 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 ### 项目启动 📔
 
-##### 前台
+**由于环境较多放至启动文件夹中了**
 
-**vue3-blog-web**文件夹
-
-```sh
-npm install || npm run dev
-npm run dev
-```
-
-##### 后台
-
-**vue3-blog-admin**文件夹
-
-```sh
-npm install || npm run dev
-npm run dev
-```
-
-##### 后端
-
-**java-blog-system**文件夹
-
-- 后端分为两个服务一个对应web端一个admind端
-- 打开项目 配置jdk 加载maven依赖
-- 安装mysql redis mq es mongoDb minio 
-- 将sql文件夹中的sql放入到你的数据库中
-- 安装完minio后需要创建blog桶并开放public权限
-- 安装es后还需要配置分词器
-- 配置完分词器需要创建索引结构
-
-```
-curl -X PUT "http://localhost:9200/article" -H 'Content-Type: application/json' -d'  
-{  
-  "settings": {},  
-  "mappings": {  
-    "properties": {  
-      "id": {  
-        "type": "long"  
-      },  
-      "title": {  
-        "type": "text",  
-        "analyzer": "standard"  
-      },  
-      "describe": {  
-        "type": "text",  
-        "index": false  
-      },  
-      "categoryName": {  
-        "type": "keyword"  
-      },  
-      "labelName": {  
-        "type": "keyword"  
-      },  
-      "cover": {  
-        "type": "keyword",  
-        "index": false  
-      },  
-      "status": {  
-        "type": "integer"  
-      },  
-      "sort": {  
-        "type": "integer"  
-      },  
-      "hot": {  
-        "type": "integer"  
-      },  
-      "content": {  
-        "type": "text",  
-        "analyzer": "standard"  
-      },  
-      "createTime": {  
-        "type": "date"  
-      },  
-      "updateTime": {  
-        "type": "date"  
-      }  
-    }  
-  }  
-}'
-```
-
-- 安装mongoDb完成后打开可视化界面需要先使用
-
-``` 
-use blog 来创建数据库
-```
-
-- 在TODO的地方修改你的配置文件
-
-```java
-server:
-  servlet:
-    context-path: /api
-  port: 9779
-      // TODO:mysql的配置
-spring:
-  datasource:
-    driver-class-name:
-    url: jdbc:mysql://127.0.0.1:3306/blog-admin?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
-        // TODO:redis的配置
-  redis:
-    host: 127.0.0.1
-    port: 6379
-    password: 123456
-        // es的配置
-  elasticsearch:
-    uris: 127.0.0.1:9200
-        // mongoDb配置如果上线到服务器中需要配置密码防止被黑
-  data:
-    mongodb:
-      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy # 自动转驼峰
-      host: 127.0.0.1
-      port: 27017
-      database: blog
-#      password:
-#      username:
-		// TODO:mq的配置
-  rabbitmq:
-    port: 5672
-    host: 127.0.0.1
-    username:
-    password:
-    publisher-confirm-type: CORRELATED # 消息确认模式
-    publisher-returns: true # 消息无法路由回调
-    listener:
-      simple:
-        prefetch: 1
-        concurrency: 3
-        acknowledge-mode: manual # 手动确认
-mybatis-plus:
-  configuration:
-    # 在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志
-  global-config:
-    db-config:
-      id-type: ASSIGN_ID # 使用手动指定ID的方式。也就是说，当你插入数据时，需要手动为实体类中的ID属性设置值。
-	// TODO:minio的配置
-minio:
-  # MinIO服务器地址
-  endpoint: http://127.0.0.1:9000
-  # MinIO服务器访问凭据
-  accessKey: 
-  secretKey: 
-  # MinIO桶名称
-  bucket: blog
-  # MinIO读取路径前缀
-  readPath: http://127.0.0.1:9000
-```
 ### 项目问题 🧩
 
-**1.图片加载太慢** 
+**待反馈** 
 
-**2.上传图片没做限制** 
 
-**3.以及一些数据统计没做好** 
-
-**4.没有响应式**
 
 ### 项目捐赠 🍵
 
@@ -290,18 +123,20 @@ minio:
 
 - Star和Fork 
 - 哔哩哔哩视频一键三连支持
-- 通过微信、支付宝一次性打赏或捐赠作者 谢谢各位大哥赏饭吃 你的鼓励 是我最大的动力
+- 通过微信、支付宝一次性打赏或捐赠作者 谢谢各位ma友赏饭吃 你的鼓励 是我最大的动力
 
 | 微信                                                         | 支付宝                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | ![输入图片说明](%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240717213900.jpg) |![输入图片说明](%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240717213904.jpg) |
 
+### 项目计划 📚
+
+- 后台大屏设计
+
 ### 后续计划 📚
 
-- 主要编写uni-app+vue3代码
-- 后续项目会集成AI相关
-- 项目只从0到1编写
-- 后端编写SpringCloud微服务项目
+- 使用AI智能刷题项目刷题
+- 找工作
 
-1. 从0到1一个月内完成仿哔哩哔哩移动端以及网页端预计7.30上线
-2. 自研校园内项目会集成AI目前没有啥思路
+
+
