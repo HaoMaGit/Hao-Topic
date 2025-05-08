@@ -828,6 +828,7 @@ public class ModelServiceImpl implements ModelService {
      * @return
      */
     public ResponseEntity<byte[]> tts(TtsDto text) {
+        recordAiUser();
         SpeechSynthesisParam param =
                 SpeechSynthesisParam.builder()
                         .apiKey(ttsProperties.getApiKey())
@@ -836,7 +837,6 @@ public class ModelServiceImpl implements ModelService {
                         .build();
         SpeechSynthesizer synthesizer = new SpeechSynthesizer(param, null);
         ByteBuffer audio = synthesizer.call(text.getText()); // 用前端传入的text
-
         byte[] audioBytes = audio.array();
 
         HttpHeaders headers = new HttpHeaders();
