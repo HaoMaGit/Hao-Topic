@@ -118,7 +118,7 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 **题目页面**
 
-![输入图片说明](图片/Snipaste_2025-05-08_23-25-17.png)
+![输入图片说明](图片/Snipaste_2025-05-08_23-31-01.png)
 
 **AI刷题页面**
 
