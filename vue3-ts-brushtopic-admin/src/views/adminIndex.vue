@@ -446,8 +446,8 @@ const getAiTrendData = async () => {
 }
 
 // 统一异步执行请求
-const initData = () => {
-  Promise.all([
+const initData = async () => {
+  await Promise.all([
     getLeftData(),
     getRightData(),
     getMiddleData(),

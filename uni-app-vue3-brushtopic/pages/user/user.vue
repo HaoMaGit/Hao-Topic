@@ -1,161 +1,185 @@
 <script setup>
-import {
-	ref, computed
-} from 'vue'
-import { apiGetRoleDetail } from '@/api/system/role'
-import { apiSendFeedback } from '@/api/system/feedback'
-import { apiGetUserInfo } from '@/api/auth/index'
-import { apiGetConfig } from '@/api/system/index'
-import { apiRecordNotice, apiGetNoticeHas } from '@/api/system/notice'
-import { onShow } from '@dcloudio/uni-app'
-// 添加导入
-import FeedbackPopup from '@/components/feedbackPopup.vue'
-// 用户信息
-const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
-// 当前身份
-const role = ref(uni.getStorageSync('role'))
-// 角色信息
-const roleDetail = ref(null)
-// 获取角色详情
-const getRoleDetail = async () => {
-	// loading
-	uni.showLoading({
-		mask: true
-	})
-	const res = await apiGetRoleDetail(role.value)
-	roleDetail.value = res
-	uni.hideLoading()
-}
-// 获取用户信息
-const getUserDetail = async () => {
-	const res = await apiGetUserInfo(userInfo.value.id)
-	userInfo.value = res
-}
-
-// 角色相关的计算属性
-const getRoleIcon = computed(() => {
-	const iconMap = {
-		2: 'staff',
-		1: 'vip-filled',
-		0: 'person-filled'
+	import {
+		ref,
+		computed
+	} from 'vue'
+	import {
+		apiGetRoleDetail
+	} from '@/api/system/role'
+	import {
+		apiSendFeedback
+	} from '@/api/system/feedback'
+	import {
+		apiGetUserInfo
+	} from '@/api/auth/index'
+	import {
+		apiGetConfig
+	} from '@/api/system/index'
+	import {
+		apiRecordNotice,
+		apiGetNoticeHas
+	} from '@/api/system/notice'
+	import {
+		onShow
+	} from '@dcloudio/uni-app'
+	// 添加导入
+	import FeedbackPopup from '@/components/feedbackPopup.vue'
+	// 用户信息
+	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+	// 当前身份
+	const role = ref(uni.getStorageSync('role'))
+	// 角色信息
+	const roleDetail = ref(null)
+	// 获取角色详情
+	const getRoleDetail = async () => {
+		// loading
+		uni.showLoading({
+			mask: true
+		})
+		const res = await apiGetRoleDetail(role.value)
+		roleDetail.value = res
+		uni.hideLoading()
 	}
-	return iconMap[role.value] || 'person-filled'
-})
-const getRoleColor = computed(() => {
-	const colorMap = {
-		1: '#712a07',
-		2: '#564021',
-		0: '#203c71'
+	// 获取用户信息
+	const getUserDetail = async () => {
+		const res = await apiGetUserInfo(userInfo.value.id)
+		userInfo.value = res
 	}
-	return colorMap[role.value] || '#ffffff'
-})
 
-// 预览头像
-const previewAvatar = () => {
-	if (!userInfo.value.avatar) return
-	uni.previewImage({
-		urls: [userInfo.value.avatar],
-		current: 0
+	// 角色相关的计算属性
+	const getRoleIcon = computed(() => {
+		const iconMap = {
+			2: 'staff',
+			1: 'vip-filled',
+			0: 'person-filled'
+		}
+		return iconMap[role.value] || 'person-filled'
 	})
-}
-onShow(() => {
-	getUserDetail()
-	getRoleDetail()
-	getWebConfig()
-	getNotice()
-})
-
-
-// 会员对话框
-const memberModal = ref()
-// 解锁会员
-const unlockMember = () => {
-	memberModal.value.open()
-}
-
-
-// 联系我们的对话框
-const contactUsPopup = ref()
-// 联系我们
-const contactUs = () => {
-	contactUsPopup.value.open()
-}
-
-
-
-// 点击了提交
-const handleFeedbackSubmit = async (content) => {
-	await apiSendFeedback({
-		feedbackContent: content,
-		status: 2
+	const getRoleColor = computed(() => {
+		const colorMap = {
+			1: '#712a07',
+			2: '#564021',
+			0: '#203c71'
+		}
+		return colorMap[role.value] || '#ffffff'
 	})
-	uni.showToast({
-		title: '反馈成功可在我的反馈中查看',
-		icon: 'none',
-		duration: 2000
-	})
-}
 
-
-// 修改渐变背景计算属性，使上面更深，下面更浅
-const getPageGradient = computed(() => {
-	const gradientMap = {
-		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
-		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
-		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
+	// 预览头像
+	const previewAvatar = () => {
+		if (!userInfo.value.avatar) return
+		uni.previewImage({
+			urls: [userInfo.value.avatar],
+			current: 0
+		})
 	}
-	return gradientMap[role.value] || gradientMap[0]
-})
-
-// 添加文字颜色的计算属性
-const getTextColor = computed(() => {
-	const textColorMap = {
-		1: '#712a07',
-		2: '#564021',
-		0: '#203c71'
+	const initData = async () => {
+		uni.showLoading({
+			mask: true
+		})
+		await Promise.all([
+			getUserDetail(),
+			getRoleDetail(),
+			getWebConfig(),
+			getNotice()
+		])
+		uni.hideLoading()
 	}
-	return textColorMap[role.value] || gradientMap[0]
-})
 
-// 配置
-const config = ref({
-	pay: 1
-})
-// 支付配置
-const payConfig = ref({})
-const getWebConfig = async () => {
-	const res = await apiGetConfig(config.value.pay)
-	payConfig.value = res.data
-}
-
-// 去支付
-const goToPay = async () => {
-	// 发送请求到通知
-	await apiRecordNotice({
-		status: 0
+	onShow(() => {
+		initData()
 	})
-	memberModal.value.close()
-	const tips = [
-		'感谢您的支持，让我们一起开启AI之旅~',
-		'谢谢您的信任，HaoAi与您同行！',
-		'支付成功！您已解锁全新体验~',
-	]
-	uni.showToast({
-		title: tips[Math.floor(Math.random() * tips.length)],
-		icon: 'none',
-		duration: 2000
-	})
-}
-// 是否有通知
-const hasNotice = ref(false)
-// 查询是否有通知
-const getNotice = async () => {
-	const res = await apiGetNoticeHas()
-	hasNotice.value = res.data
-}
 
-// 反馈弹窗显示状态
-const showFeedback = ref(false)
+
+	// 会员对话框
+	const memberModal = ref()
+	// 解锁会员
+	const unlockMember = () => {
+		memberModal.value.open()
+	}
+
+
+	// 联系我们的对话框
+	const contactUsPopup = ref()
+	// 联系我们
+	const contactUs = () => {
+		contactUsPopup.value.open()
+	}
+
+
+
+	// 点击了提交
+	const handleFeedbackSubmit = async (content) => {
+		await apiSendFeedback({
+			feedbackContent: content,
+			status: 2
+		})
+		uni.showToast({
+			title: '反馈成功可在我的反馈中查看',
+			icon: 'none',
+			duration: 2000
+		})
+	}
+
+
+	// 修改渐变背景计算属性，使上面更深，下面更浅
+	const getPageGradient = computed(() => {
+		const gradientMap = {
+			1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
+			2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
+			0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
+		}
+		return gradientMap[role.value] || gradientMap[0]
+	})
+
+	// 添加文字颜色的计算属性
+	const getTextColor = computed(() => {
+		const textColorMap = {
+			1: '#712a07',
+			2: '#564021',
+			0: '#203c71'
+		}
+		return textColorMap[role.value] || gradientMap[0]
+	})
+
+	// 配置
+	const config = ref({
+		pay: 1
+	})
+	// 支付配置
+	const payConfig = ref({})
+	const getWebConfig = async () => {
+		const res = await apiGetConfig(config.value.pay)
+		payConfig.value = res.data
+	}
+
+	// 去支付
+	const goToPay = async () => {
+		// 发送请求到通知
+		await apiRecordNotice({
+			status: 0
+		})
+		memberModal.value.close()
+		const tips = [
+			'感谢您的支持，让我们一起开启AI之旅~',
+			'谢谢您的信任，HaoAi与您同行！',
+			'支付成功！您已解锁全新体验~',
+		]
+		uni.showToast({
+			title: tips[Math.floor(Math.random() * tips.length)],
+			icon: 'none',
+			duration: 2000
+		})
+	}
+	// 是否有通知
+	const hasNotice = ref(false)
+	// 查询是否有通知
+	const getNotice = async () => {
+		const res = await apiGetNoticeHas()
+		hasNotice.value = res.data
+	}
+
+	// 反馈弹窗显示状态
+	const showFeedback = ref(false)
 </script>
 <template>
 	<view class="user-box" :style="{ background: getPageGradient }">
@@ -342,321 +366,321 @@ const showFeedback = ref(false)
 	</view>
 </template>
 <style lang="scss" scoped>
-.user-box {
-	.modal-box {
-		padding: 20rpx;
-		background-color: #fff;
-		width: 100%;
+	.user-box {
+		.modal-box {
+			padding: 20rpx;
+			background-color: #fff;
+			width: 100%;
+
+			.member-box {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 20rpx;
+				background: #f8f8f8;
+				border-radius: 12rpx;
+
+				.vip-badge {
+					display: flex;
+					align-items: center;
+
+				}
+
+				.price {
+					font-size: 46rpx;
+					color: #ff4d4f;
+					font-weight: bold;
+
+					.symbol {
+						font-size: 32rpx;
+						margin-right: 4rpx;
+					}
+				}
+			}
+
+			.vip-content {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 40rpx 0;
+
+				.congrats {
+					font-size: 36rpx;
+					color: #333;
+					font-weight: bold;
+					margin: 20rpx 0 10rpx;
+				}
+
+				.benefit {
+					text-align: center;
+					font-size: 28rpx;
+					color: #666;
+				}
+			}
+
+			.pay-content {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 20rpx 0;
+
+				.pay-qrcode {
+					width: 400rpx;
+					height: 400rpx;
+					margin-bottom: 20rpx;
+				}
+
+				.pay-tips {
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					gap: 10rpx;
+
+					text {
+						font-size: 28rpx;
+						color: #666;
+
+						&:first-child {
+							color: #333;
+							font-weight: 500;
+						}
+					}
+				}
+			}
+
+			.bottom {
+				margin-top: 20rpx;
+				font-size: 26rpx;
+				color: #999;
+				text-align: center;
+				padding: 0 20rpx;
+			}
+		}
+
+		.border-row {
+			border-bottom: 1px solid #e6e6e6;
+		}
+
+
+
+		.image-style {
+			width: 500rpx;
+			height: 500rpx;
+		}
+
+		.bottom {
+			margin-top: 10rpx;
+			font-size: 28rpx;
+			color: #949494;
+		}
 
 		.member-box {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 20rpx;
-			background: #f8f8f8;
-			border-radius: 12rpx;
 
-			.vip-badge {
+			.left {
 				display: flex;
 				align-items: center;
 
+				.text {
+					font-size: 38rpx;
+					color: #858585;
+					padding-left: 10rpx;
+					font-weight: bold;
+				}
+
+				.icon {
+					color: #28b28b;
+				}
 			}
 
-			.price {
-				font-size: 46rpx;
-				color: #ff4d4f;
-				font-weight: bold;
+			.right {
+				display: flex;
+				align-items: center;
 
-				.symbol {
-					font-size: 32rpx;
-					margin-right: 4rpx;
+				.text {
+					font-size: 30rpx;
+					color: #aaa;
+					padding-right: 5rpx;
 				}
 			}
 		}
 
-		.vip-content {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			padding: 40rpx 0;
+		.section {
+			width: 690rpx;
+			margin: 28rpx auto;
+			border: 1px solid #eeeeee;
+			box-shadow: 0 0 30rpx rgba(0, 0, 0, 0.05);
 
-			.congrats {
-				font-size: 36rpx;
-				color: #333;
-				font-weight: bold;
-				margin: 20rpx 0 10rpx;
-			}
-
-			.benefit {
-				text-align: center;
-				font-size: 28rpx;
-				color: #666;
-			}
-		}
-
-		.pay-content {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			padding: 20rpx 0;
-
-			.pay-qrcode {
-				width: 400rpx;
-				height: 400rpx;
-				margin-bottom: 20rpx;
-			}
-
-			.pay-tips {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 10rpx;
-
-				text {
-					font-size: 28rpx;
-					color: #666;
-
-					&:first-child {
-						color: #333;
-						font-weight: 500;
-					}
-				}
-			}
-		}
-
-		.bottom {
-			margin-top: 20rpx;
-			font-size: 26rpx;
-			color: #999;
-			text-align: center;
-			padding: 0 20rpx;
-		}
-	}
-
-	.border-row {
-		border-bottom: 1px solid #e6e6e6;
-	}
-
-
-
-	.image-style {
-		width: 500rpx;
-		height: 500rpx;
-	}
-
-	.bottom {
-		margin-top: 10rpx;
-		font-size: 28rpx;
-		color: #949494;
-	}
-
-	.member-box {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-
-		.left {
-			display: flex;
-			align-items: center;
-
-			.text {
-				font-size: 38rpx;
-				color: #858585;
-				padding-left: 10rpx;
-				font-weight: bold;
-			}
-
-			.icon {
-				color: #28b28b;
-			}
-		}
-
-		.right {
-			display: flex;
-			align-items: center;
-
-			.text {
-				font-size: 30rpx;
-				color: #aaa;
-				padding-right: 5rpx;
-			}
-		}
-	}
-
-	.section {
-		width: 690rpx;
-		margin: 28rpx auto;
-		border: 1px solid #eeeeee;
-		box-shadow: 0 0 30rpx rgba(0, 0, 0, 0.05);
-
-		.list {
-			.row {
-				background-color: #fff;
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				height: 120rpx;
-				border-bottom: 1px solid #eeeeee;
-				padding: 0 20rpx;
-				position: relative;
-				border-radius: 10rpx;
-
-				&:last-child {
-					border-bottom: 0;
-				}
-
-				.left {
+			.list {
+				.row {
+					background-color: #fff;
 					display: flex;
 					align-items: center;
+					justify-content: space-between;
+					height: 120rpx;
+					border-bottom: 1px solid #eeeeee;
+					padding: 0 20rpx;
+					position: relative;
+					border-radius: 10rpx;
 
-					.text {
-						padding-left: 20rpx;
+					&:last-child {
+						border-bottom: 0;
 					}
 
-					.icon {
-						color: #28b28b;
+					.left {
+						display: flex;
+						align-items: center;
+
+						.text {
+							padding-left: 20rpx;
+						}
+
+						.icon {
+							color: #28b28b;
+						}
 					}
-				}
 
-				.right {
-					display: flex;
-					align-items: center;
+					.right {
+						display: flex;
+						align-items: center;
 
-					.text {
-						font-size: 28rpx;
-						color: #aaa;
-						padding-right: 5rpx;
+						.text {
+							font-size: 28rpx;
+							color: #aaa;
+							padding-right: 5rpx;
+						}
 					}
-				}
 
-				button {
-					position: absolute;
-					top: 0;
-					left: 0;
-					height: 100rpx;
-					width: 100%;
-					opacity: 0;
+					button {
+						position: absolute;
+						top: 0;
+						left: 0;
+						height: 100rpx;
+						width: 100%;
+						opacity: 0;
 
+					}
 				}
 			}
 		}
-	}
 
-	.user-top {
-		padding: 55rpx 0rpx 23rpx 0rpx;
-		// background: linear-gradient(135deg, #1677ff, #4096ff);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		position: relative;
-		overflow: hidden;
-		border-radius: 0rpx 0rpx 5rpx 5rpx;
-
-		&::after {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			// background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-		}
-
-		.avatar-wrap {
-			margin-bottom: 25rpx;
+		.user-top {
+			padding: 55rpx 0rpx 23rpx 0rpx;
+			// background: linear-gradient(135deg, #1677ff, #4096ff);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-direction: column;
 			position: relative;
-			z-index: 1;
-			width: 180rpx;
-			height: 180rpx;
-			border-radius: 50%;
 			overflow: hidden;
-			border: 6rpx solid rgba(255, 255, 255, 0.8);
-			box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+			border-radius: 0rpx 0rpx 5rpx 5rpx;
 
-			.avatar-image {
-				width: 100%;
-				height: 100%;
-				transition: transform 0.3s;
-
-				&:active {
-					transform: scale(0.95);
-				}
+			&::after {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				// background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
 			}
 
-			.avatar-placeholder {
-				width: 100%;
-				height: 100%;
-				background: linear-gradient(45deg, #1677ff, #4096ff);
-				display: flex;
-				align-items: center;
-				justify-content: center;
+			.avatar-wrap {
+				margin-bottom: 25rpx;
+				position: relative;
+				z-index: 1;
+				width: 180rpx;
+				height: 180rpx;
+				border-radius: 50%;
+				overflow: hidden;
+				border: 6rpx solid rgba(255, 255, 255, 0.8);
+				box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
 
-				text {
-					font-size: 60rpx;
-					color: #fff;
-					font-weight: 600;
-					text-transform: uppercase;
-				}
-			}
-		}
+				.avatar-image {
+					width: 100%;
+					height: 100%;
+					transition: transform 0.3s;
 
-		.user-info {
-			text-align: center;
-			position: relative;
-			z-index: 1;
-
-			.name-wrap {
-				margin-bottom: 20rpx;
-
-				.nickname {
-					font-size: 42rpx;
-					color: #fff;
-					font-weight: 600;
-					text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-					display: block;
-					margin-bottom: 8rpx;
-
+					&:active {
+						transform: scale(0.95);
+					}
 				}
 
-				.account-tag {
-					font-size: 24rpx;
-					color: rgba(255, 255, 255, 0.9);
-					background: rgba(255, 255, 255, 0.15);
-					padding: 4rpx 16rpx;
-					border-radius: 20rpx;
-				}
-			}
-
-			.role-wrap {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				gap: 16rpx;
-
-				.role-badge {
+				.avatar-placeholder {
+					width: 100%;
+					height: 100%;
+					background: linear-gradient(45deg, #1677ff, #4096ff);
 					display: flex;
 					align-items: center;
-					gap: 6rpx;
-					background: rgba(255, 255, 255, 0.2);
-					padding: 6rpx 16rpx;
-					border-radius: 20rpx;
-					backdrop-filter: blur(4px);
+					justify-content: center;
 
-					.role-name {
+					text {
+						font-size: 60rpx;
+						color: #fff;
+						font-weight: 600;
+						text-transform: uppercase;
+					}
+				}
+			}
+
+			.user-info {
+				text-align: center;
+				position: relative;
+				z-index: 1;
+
+				.name-wrap {
+					margin-bottom: 20rpx;
+
+					.nickname {
+						font-size: 42rpx;
+						color: #fff;
+						font-weight: 600;
+						text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+						display: block;
+						margin-bottom: 8rpx;
+
+					}
+
+					.account-tag {
+						font-size: 24rpx;
+						color: rgba(255, 255, 255, 0.9);
+						background: rgba(255, 255, 255, 0.15);
+						padding: 4rpx 16rpx;
+						border-radius: 20rpx;
+					}
+				}
+
+				.role-wrap {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 16rpx;
+
+					.role-badge {
+						display: flex;
+						align-items: center;
+						gap: 6rpx;
+						background: rgba(255, 255, 255, 0.2);
+						padding: 6rpx 16rpx;
+						border-radius: 20rpx;
+						backdrop-filter: blur(4px);
+
+						.role-name {
+							font-size: 24rpx;
+							color: #712a07;
+							font-weight: 500;
+						}
+					}
+
+					.role-desc {
+						margin-top: 10rpx;
 						font-size: 24rpx;
 						color: #712a07;
-						font-weight: 500;
 					}
-				}
-
-				.role-desc {
-					margin-top: 10rpx;
-					font-size: 24rpx;
-					color: #712a07;
 				}
 			}
 		}
 	}
-}
 </style>
