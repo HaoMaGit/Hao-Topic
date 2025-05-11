@@ -75,6 +75,7 @@ public class TopicTask {
         // 查询所有的题目
         LambdaQueryWrapper<Topic> topicLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
         topicLambdaQueryWrapper1.eq(Topic::getStatus, StatusEnums.NORMAL.getCode());
+        topicLambdaQueryWrapper1.eq(Topic::getIsDeleted,0);
         List<Topic> topics = topicMapper.selectList(topicLambdaQueryWrapper1);
         if (CollectionUtils.isNotEmpty(topicList)) {
             // 获取到数量
