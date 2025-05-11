@@ -20,7 +20,7 @@ onLoad((options) => {
 // 当前专题id
 const subjectId = ref(null)
 const goToTopic = (item) => {
-	
+
 	uni.navigateTo({
 		url: `/pages/database/topic/topic?id=${item.id}&name=${item.topicName}&subjectId=${subjectId.value}`
 	})
@@ -87,12 +87,12 @@ const getSubjectDetail = async (id) => {
 	.subject-top {
 		display: flex;
 		padding: 21rpx;
-		height: 130rpx;
+		min-height: 130rpx;
 
 		.top-left {
 			.avatar {
 				width: 130rpx;
-				height: 100%;
+				height: 130rpx;
 				margin-right: 26rpx;
 				border-radius: 10rpx;
 				object-fit: cover;
