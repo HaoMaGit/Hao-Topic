@@ -424,6 +424,11 @@ const goToTopic = (item) => {
 					box-shadow: 0 4rpx 8rpx rgba(255, 215, 0, 0.3);
 				}
 			}
+
+			.answer-box {
+				// height: 100vh;
+				padding-bottom: 200rpx;
+			}
 		}
 	}
 
