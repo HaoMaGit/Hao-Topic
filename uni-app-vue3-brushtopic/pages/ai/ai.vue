@@ -1,935 +1,988 @@
 <script setup>
-import { ref, reactive, watch, nextTick } from 'vue';
-import { v4 as uuidv4 } from 'uuid'; // 引入 uuid 库
-import { apiGetManageList, apiGetHistoryDetail } from '@/api/ai'
+	import {
+		ref,
+		reactive,
+		watch,
+		nextTick
+	} from 'vue';
+	import {
+		v4 as uuidv4
+	} from 'uuid'; // 引入 uuid 库
+	import {
+		apiGetManageList,
+		apiGetHistoryDetail
+	} from '@/api/ai'
 
-// 当前身份
-const role = ref(uni.getStorageSync('role'))
-// 用户信息
-const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
-// 存一下token
-const token = ref(localStorage.getItem(userInfo.value.account + 'token'))
+	// 当前身份
+	const role = ref(uni.getStorageSync('role'))
+	// 用户信息
+	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
+	// 存一下token
+	const token = ref(localStorage.getItem(userInfo.value.account + 'token'))
 
-// 当前选中的模式
-const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
+	// 当前选中的模式
+	const aiModeValue = ref(localStorage.getItem('aiMode') || 'system')
 
-// 模式
-const aiMode = reactive([
-  {
-    label: '系统模式',
-    value: 'system',
-    desc: role.value === 1 ? 'AI从系统题库和会员自定义题库中随机提取题目HaoAi会校验你的回答' : 'AI从系统题库中随机提取题目HaoAi会校验你的回答'
-  }, {
-    label: '模型模式',
-    value: 'model',
-    desc: '完全使用AI生成的题目HaoAi会校验你的回答'
-  }, {
-    label: '混合模式',
-    value: 'mix',
-    desc: 'AI随机混合系统题库和AI生成题目HaoAi会校验你的回答'
-  },
-])
-
-
-
-// 提示词
-const placeholder = ref(role.value === 1 ? '请输入系统中和会员自定义的正确的题目专题，AI将自动生成题目' : '请输入系统中的正确的题目专题，AI将自动生成题目')
-// 初始化提示词
-const initPlaceholder = () => {
-  if (aiModeValue.value === 'system') {
-    placeholder.value = '请输入题目专题，AI将自动生成题目'
-  } else if (aiModeValue.value === 'model' || aiModeValue.value === 'mix') {
-    placeholder.value = '请输入给AI你想刷的题目类型，AI将自动生成题目'
-  }
-}
-// 监听模式变化
-watch(() => aiModeValue.value, () => {
-  initPlaceholder()
-})
-
-
-// 加载对话记录loading
-const chatLoading = ref(false)
-// 当前索引
-const activeIndex = ref([])
-// 是否可以选择对话
-const isSelectHistory = ref(false)
-
-// ai标识
-const aiId = ref(0)
-// 记录一下当前使用的id
-const currentRecordId = ref(uuidv4())
-// 内容
-const messageList = reactive([
-  {
-    prompt: "我是" + userInfo.value.nickname || userInfo.value.account,
-    chatId: currentRecordId.value, // 对话id
-    model: aiModeValue.value,
-    content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
-    memoryId: aiId.value
-  }
-])
-
-// 历史记录列表
-const historyList = ref([])
-// 历史记录参数
-const historyParams = ref({
-  pageNum: 1,
-  pageSize: 999,
-  title: null
-})
-// 是否显示历史记录抽屉
-const showLeft = ref(null)
-// 点击了获取历史记录
-const handleGetHistoryList = () => {
-  if (!isReply.value) {
-    uni.showToast({ title: '当前正在回复中', icon: 'none' })
-    return
-  }
-  showLeft.value.open()
-  getHistoryList()
-}
-// 获取历史记录
-const getHistoryList = async () => {
-  const res = await apiGetManageList(historyParams.value)
-  historyList.value = res.data
-}
-// 当前对话标题
-const currentTitle = ref('')
-// 点击了某一条历史记录
-const getHistoryContent = async (id, index, historyIndex, title) => {
-  uni.showLoading({ title: '加载中...' })
-  currentTitle.value = title
-  showLeft.value.close()
-  chatLoading.value = true
-  // 清除默认对话
-  restoreDefaultRecord()
-  // 重置当前索引
-  activeIndex.value = []
-  // 添加当前索引
-  activeIndex.value[historyIndex] = index
-  // id:当前记录id
-  const res = await apiGetHistoryDetail(id)
-  isSelectHistory.value = true
-  aiModeValue.value = res.data[0].mode
-  // 封装内容
-  const content = res.data.map((item) => {
-    return {
-      prompt: item.title,
-      chatId: item.chatId,
-      content: item.content
-    }
-  })
-  // 追加
-  messageList.push(...content)
-  // 赋值当前id
-  currentRecordId.value = res.data[0].chatId
-  // 清空当前对话id
-  localStorage.removeItem('chatId')
-  // 赋值当前id
-  aiId.value = res.data.length;
-  console.log(res.data.length);
-
-  console.log(aiId.value);
-
-  chatLoading.value = false
-  uni.hideLoading()
-  await scrollToBottom()
-}
-// 恢复默认记录
-const restoreDefaultRecord = () => {
-  // 清空历史记录
-  messageList.splice(0, messageList.length)
-  // 添加一条数据
-  messageList.push({
-    prompt: "我是" + userInfo.value.nickname || userInfo.value.account,
-    chatId: currentRecordId.value, // 对话id
-    model: aiModeValue.value,
-    content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
-    memoryId: aiId.value
-  })
-}
-
-
-// ai容器
-const contentRef = ref(null)
-// 添加滚动值
-const scrollTop = ref(0)
-
-// 滚动到底部方法
-const scrollToBottom = async () => {
-  await nextTick()
-  const query = uni.createSelectorQuery()
-  query.selectAll('.box').boundingClientRect(data => {
-    if (data) {
-      // 计算所有内容的总高度
-      const totalHeight = data.reduce((sum, item) => sum + item.height, 0)
-      scrollTop.value = totalHeight + 500 // 加上额外高度确保滚动到底部
-    }
-  }).exec()
-}
+	// 模式
+	const aiMode = reactive([{
+		label: '系统模式',
+		value: 'system',
+		desc: role.value === 1 ? 'AI从系统题库和会员自定义题库中随机提取题目HaoAi会校验你的回答' : 'AI从系统题库中随机提取题目HaoAi会校验你的回答'
+	}, {
+		label: '模型模式',
+		value: 'model',
+		desc: '完全使用AI生成的题目HaoAi会校验你的回答'
+	}, {
+		label: '混合模式',
+		value: 'mix',
+		desc: 'AI随机混合系统题库和AI生成题目HaoAi会校验你的回答'
+	}, ])
 
 
 
-// 复制内容
-const copyContent = (content) => {
-  // 去除markdown格式
-  const plainText = content.replace(/```[\s\S]*?```/g, '')
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .trim()
-
-  uni.setClipboardData({
-    data: plainText,
-    success: () => {
-      uni.showToast({
-        title: '复制成功',
-        icon: 'success',
-        duration: 1500
-      })
-    },
-    fail: () => {
-      uni.showToast({
-        title: '复制失败',
-        icon: 'error',
-        duration: 1500
-      })
-    }
-  })
-}
+	// 提示词
+	const placeholder = ref(role.value === 1 ? '请输入系统中和会员自定义的正确的题目专题，AI将自动生成题目' : '请输入系统中的正确的题目专题，AI将自动生成题目')
+	// 初始化提示词
+	const initPlaceholder = () => {
+		if (aiModeValue.value === 'system') {
+			placeholder.value = '请输入题目专题，AI将自动生成题目'
+		} else if (aiModeValue.value === 'model' || aiModeValue.value === 'mix') {
+			placeholder.value = '请输入给AI你想刷的题目类型，AI将自动生成题目'
+		}
+	}
+	// 监听模式变化
+	watch(() => aiModeValue.value, () => {
+		initPlaceholder()
+	})
 
 
-// 是否暂停回复
-const isPaused = ref(false)
-// 当前的 AbortController 实例
-let currentController
-// 是否点击回复
-const isReply = ref(true)
-// 添加暂停函数
-const pauseReply = () => {
-  if (currentController) {
-    // 暂停回复
-    currentController.abort()
-    currentController = null
-    isPaused.value = false
-    isReply.value = true
-  }
-}
+	// 加载对话记录loading
+	const chatLoading = ref(false)
+	// 当前索引
+	const activeIndex = ref([])
+	// 是否可以选择对话
+	const isSelectHistory = ref(false)
 
-// 输入内容
-const prompt = ref('')
-// 发送
-const sendPrompt = async () => {
-  isReply.value = false
-  isSelectHistory.value = true
-  if (prompt.value) {
-    if (aiId.value === 0) {
-      // 说明是第一次
-      localStorage.setItem('chatId', currentRecordId.value)
-    }
-    aiId.value++
-    // 添加一条数据
-    messageList.push({
-      prompt: prompt.value,
-      memoryId: aiId.value,
-      chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
-      model: aiModeValue.value,
-      content: '',
-      nickname: userInfo.value.nickname,
-    })
-    prompt.value = ''
-    await scrollToBottom()
+	// ai标识
+	const aiId = ref(0)
+	// 记录一下当前使用的id
+	const currentRecordId = ref(uuidv4())
+	// 内容
+	const messageList = reactive([{
+		prompt: "我是" + userInfo.value.nickname || userInfo.value.account,
+		chatId: currentRecordId.value, // 对话id
+		model: aiModeValue.value,
+		content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
+		memoryId: aiId.value
+	}])
 
-    // 获取当前记录
-    const currentRecord = messageList[messageList.length - 1]
-    try {
-      // 创建新的 AbortController
-      currentController = new AbortController()
-      // 发送 get 请求
-      fetch(`http://localhost:9993/api/ai/model/chat`, {
-        method: "POST",
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": token.value,
-        },
-        // 添加 signal
-        signal: currentController.signal,
-        body: JSON.stringify({
-          ...currentRecord
-        }),
-      }).then(response => {
-        // 检查响应是否成功
-        if (!response.ok) {
-          uni.showToast({
-            title: "HaoAi回复出现点问题请稍后再试！",
-            icon: "none",
-            duration: 2000
-          })
-        }
-        // 返回一个可读流
-        return response.body;
-      }).then(async body => {
-        if (!body) {
-          uni.showToast({
-            title: "HaoAi回复出现点问题请稍后再试！",
-            icon: "none",
-            duration: 2000
-          })
-          return
-        }
-        // 获取读取流
-        const reader = body.getReader();
-        // 读取流
-        const decoder = new TextDecoder('utf-8')
-        // 循环读取流
-        while (true) {
-          try {
-            if (reader) {
-              const { value, done } = await reader.read()
-              if (done) {
-                uni.showToast({
-                  title: "回复成功",
-                  icon: "success",
-                  duration: 2000
-                })
-                // 回复成功
-                isReply.value = true
-                // 如果是第一次
-                if (aiId.value === 1) {
-                  // 获取一下历史记录
-                  getHistoryList()
-                  activeIndex.value[0] = 0
-                }
-                break
-              }
-              await nextTick(() => {
-                // 累积新内容
-                currentRecord.content += decoder.decode(value)
-              })
-              await scrollToBottom()
-            }
-          } catch (readError) {
-            if (readError.name === 'AbortError') {
-              uni.showToast({
-                title: "已暂停回复",
-                icon: "none",
-                duration: 2000
-              })
-              isReply.value = true
-            } else {
-              uni.showToast({
-                title: "回复失败" + readError,
-                icon: "none",
-                duration: 2000
-              })
-            }
-            break
-          }
-        }
-      })
-    } catch (error) {
-      console.log(error);
-      if (error.name === 'AbortError') {
-        uni.showToast({
-          title: "已暂停回复",
-          icon: "none",
-          duration: 2000
-        })
-      } else {
-        uni.showToast({
-          title: "发送失败" + error,
-          icon: "none",
-          duration: 2000
-        })
-      }
-    }
-  }
-}
+	// 历史记录列表
+	const historyList = ref([])
+	// 历史记录参数
+	const historyParams = ref({
+		pageNum: 1,
+		pageSize: 999,
+		title: null
+	})
+	// 是否显示历史记录抽屉
+	const showLeft = ref(null)
+	// 点击了获取历史记录
+	const handleGetHistoryList = () => {
+		if (!isReply.value) {
+			uni.showToast({
+				title: '当前正在回复中',
+				icon: 'none'
+			})
+			return
+		}
+		showLeft.value.open()
+		getHistoryList()
+	}
+	// 获取历史记录
+	const getHistoryList = async () => {
+		const res = await apiGetManageList(historyParams.value)
+		historyList.value = res.data
+	}
+	// 当前对话标题
+	const currentTitle = ref('')
+	// 点击了某一条历史记录
+	const getHistoryContent = async (id, index, historyIndex, title) => {
+		uni.showLoading({
+			title: '加载中...'
+		})
+		currentTitle.value = title
+		showLeft.value.close()
+		chatLoading.value = true
+		// 清除默认对话
+		restoreDefaultRecord()
+		// 重置当前索引
+		activeIndex.value = []
+		// 添加当前索引
+		activeIndex.value[historyIndex] = index
+		// id:当前记录id
+		const res = await apiGetHistoryDetail(id)
+		isSelectHistory.value = true
+		aiModeValue.value = res.data[0].mode
+		// 封装内容
+		const content = res.data.map((item) => {
+			return {
+				prompt: item.title,
+				chatId: item.chatId,
+				content: item.content
+			}
+		})
+		// 追加
+		messageList.push(...content)
+		// 赋值当前id
+		currentRecordId.value = res.data[0].chatId
+		// 清空当前对话id
+		localStorage.removeItem('chatId')
+		// 赋值当前id
+		aiId.value = res.data.length;
+		console.log(res.data.length);
 
-// 创建新对话
-const createReply = () => {
-  if (!isReply.value) {
-    uni.showToast({ title: '当前正在回复中', icon: 'none' })
-    return
-  }
-  // 判断是否为最新对话
-  if (aiId.value === 0) {
-    uni.showToast({
-      title: '已是最新对话',
-      icon: 'none',
-      duration: 1500
-    })
-    return
-  }
-  uni.showToast({
-    title: '创建对话成功',
-    icon: 'success',
-    duration: 1500
-  })
-  setTimeout(() => {
-    // 使用 uni-app 的方式重新加载页面
-    uni.reLaunch({
-      url: '/pages/ai/ai'
-    })
-  }, 100)
-}
+		console.log(aiId.value);
 
-// 选择了模式
-const handleAiModeChange = (mode) => {
-  if (isSelectHistory.value) {
-    // 为true说明已经在对话中了
-    uni.showModal({
-      title: '切换对话模式',
-      content: '当前已经开启对话，切换对话模式将会开启新的对话！',
-      success: (res) => {
-        if (res.confirm) {
-          uni.showToast({
-            title: '创建成功',
-            icon: 'success',
-            duration: 1500
-          })
-          setTimeout(() => {
-            // 使用 uni-app 的方式重新加载页面
-            uni.reLaunch({
-              url: '/pages/ai/ai'
-            })
-          }, 100)
-          // 存入缓存中
-          uni.setStorageSync('aiMode', mode)
-        }
-      }
-    })
-  } else {
-    // 说明是新对话可以随便切换
-    aiModeValue.value = mode
-  }
-}
-
-// 是否开启朗读
-const isSpeaking = ref(false)
-// 当前audio实例
-let currentAudio;
-// 随机loading文案
-const loadingTextArr = [
-  "正在召唤HaoAi发声中...",
-  "HaoAi正在努力变声，请稍等~",
-  "语音合成中，马上就能听到啦！",
-  "HaoAi正在认真朗读你的内容...",
-  "别着急，精彩马上开始！"
-];
-// 随机loading文案
-const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr.length)]);
-// 语音合成loading
-const readAloudLoading = ref(false)
-// 朗读文字
-const readAloud = (content) => {
-  // 如果有正在播放的音频，先停止
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
-  readAloudLoading.value = true
-  // 开始朗读
-  isSpeaking.value = true
-
-  // 调用语音合成模型
-  fetch(`http://localhost:9993/api/ai/model/tts`, {
-    method: "post",
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": token.value,
-
-    },
-    body: JSON.stringify({
-      text: content
-    }),
-  })
-    .then(res => {
-      if (!res.ok) {
-        throw new Error('语音合成请求失败');
-      }
-      return res.blob()
-    })
-    .then((blob) => {
-      readAloudLoading.value = false
-      // 合成对话
-      const url = URL.createObjectURL(blob);
-      // 创建播放器
-      const audio = new Audio(url);
-      currentAudio = audio
-      // 播放
-      audio.play();
-      // 监听播放结束，自动重置
-      audio.onended = () => {
-        isSpeaking.value = false;
-
-        currentAudio = null;
-        URL.revokeObjectURL(url);
-      };
-    }).catch(() => {
-      console.warn('后端语音合成失败，切换到浏览器原生语音:');
-      readAloudLoading.value = false;
-      // 调用浏览器原生语音合成
-      readAloudWeb(content);
-    })
-}
-
-// 朗读文字
-const readAloudWeb = (content) => {
-  const utterance = new SpeechSynthesisUtterance(content);
-  utterance.lang = 'zh-CN'; // 设置语言为中文
-  utterance.rate = 1.4; // 稍微放慢语速
-  utterance.pitch = 2.5; // 提高音调，让声音更自然
-  utterance.volume = 1; // 音量最大
-
-  // 开始朗读
-  window.speechSynthesis.speak(utterance);
-
-  // 更新状态
-  isSpeaking.value = true;
-
-  // 监听朗读结束事件
-  utterance.onend = () => {
-    isSpeaking.value = false;
-  };
-}
+		chatLoading.value = false
+		uni.hideLoading()
+		await scrollToBottom()
+	}
+	// 恢复默认记录
+	const restoreDefaultRecord = () => {
+		// 清空历史记录
+		messageList.splice(0, messageList.length)
+		// 添加一条数据
+		messageList.push({
+			prompt: "我是" + userInfo.value.nickname || userInfo.value.account,
+			chatId: currentRecordId.value, // 对话id
+			model: aiModeValue.value,
+			content: '你好，我是HaoAi 1.0，你的面试题AI助手！',
+			memoryId: aiId.value
+		})
+	}
 
 
-// 取消播放
-const cancelReadAloud = () => {
-  isSpeaking.value = false;
-  window.speechSynthesis.cancel();
+	// ai容器
+	const contentRef = ref(null)
+	// 添加滚动值
+	const scrollTop = ref(0)
 
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
-}
+	// 滚动到底部方法
+	const scrollToBottom = async () => {
+		await nextTick()
+		const query = uni.createSelectorQuery()
+		query.selectAll('.box').boundingClientRect(data => {
+			if (data) {
+				// 计算所有内容的总高度
+				const totalHeight = data.reduce((sum, item) => sum + item.height, 0)
+				scrollTop.value = totalHeight + 500 // 加上额外高度确保滚动到底部
+			}
+		}).exec()
+	}
 
+
+
+	// 复制内容
+	const copyContent = (content) => {
+		// 去除markdown格式
+		const plainText = content.replace(/```[\s\S]*?```/g, '')
+			.replace(/\*\*/g, '')
+			.replace(/\*/g, '')
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+			.trim()
+
+		uni.setClipboardData({
+			data: plainText,
+			success: () => {
+				uni.showToast({
+					title: '复制成功',
+					icon: 'success',
+					duration: 1500
+				})
+			},
+			fail: () => {
+				uni.showToast({
+					title: '复制失败',
+					icon: 'error',
+					duration: 1500
+				})
+			}
+		})
+	}
+
+
+	// 是否暂停回复
+	const isPaused = ref(false)
+	// 当前的 AbortController 实例
+	let currentController
+	// 是否点击回复
+	const isReply = ref(true)
+	// 添加暂停函数
+	const pauseReply = () => {
+		if (currentController) {
+			// 暂停回复
+			currentController.abort()
+			currentController = null
+			isPaused.value = false
+			isReply.value = true
+		}
+	}
+
+	// 输入内容
+	const prompt = ref('')
+	// 发送
+	const sendPrompt = async () => {
+		isReply.value = false
+		isSelectHistory.value = true
+		if (prompt.value) {
+			if (aiId.value === 0) {
+				// 说明是第一次
+				localStorage.setItem('chatId', currentRecordId.value)
+			}
+			aiId.value++
+			// 添加一条数据
+			messageList.push({
+				prompt: prompt.value,
+				memoryId: aiId.value,
+				chatId: localStorage.getItem('chatId') || currentRecordId.value, // 当前对话id
+				model: aiModeValue.value,
+				content: '',
+				nickname: userInfo.value.nickname,
+			})
+			prompt.value = ''
+			await scrollToBottom()
+
+			// 获取当前记录
+			const currentRecord = messageList[messageList.length - 1]
+			try {
+				// 创建新的 AbortController
+				currentController = new AbortController()
+				// 发送 get 请求
+				fetch(`http://localhost:9993/api/ai/model/chat`, {
+					method: "POST",
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-expect-error
+					headers: {
+						"Content-Type": "application/json",
+						"Authorization": token.value,
+					},
+					// 添加 signal
+					signal: currentController.signal,
+					body: JSON.stringify({
+						...currentRecord
+					}),
+				}).then(response => {
+					// 检查响应是否成功
+					if (!response.ok) {
+						uni.showToast({
+							title: "HaoAi回复出现点问题请稍后再试！",
+							icon: "none",
+							duration: 2000
+						})
+					}
+					// 返回一个可读流
+					return response.body;
+				}).then(async body => {
+					if (!body) {
+						uni.showToast({
+							title: "HaoAi回复出现点问题请稍后再试！",
+							icon: "none",
+							duration: 2000
+						})
+						return
+					}
+					// 获取读取流
+					const reader = body.getReader();
+					// 读取流
+					const decoder = new TextDecoder('utf-8')
+					// 循环读取流
+					while (true) {
+						try {
+							if (reader) {
+								const {
+									value,
+									done
+								} = await reader.read()
+								if (done) {
+									uni.showToast({
+										title: "回复成功",
+										icon: "success",
+										duration: 2000
+									})
+									// 回复成功
+									isReply.value = true
+									// 如果是第一次
+									if (aiId.value === 1) {
+										// 获取一下历史记录
+										getHistoryList()
+										activeIndex.value[0] = 0
+									}
+									break
+								}
+								await nextTick(() => {
+									// 累积新内容
+									currentRecord.content += decoder.decode(value)
+								})
+								await scrollToBottom()
+							}
+						} catch (readError) {
+							if (readError.name === 'AbortError') {
+								uni.showToast({
+									title: "已暂停回复",
+									icon: "none",
+									duration: 2000
+								})
+								isReply.value = true
+							} else {
+								uni.showToast({
+									title: "回复失败" + readError,
+									icon: "none",
+									duration: 2000
+								})
+							}
+							break
+						}
+					}
+				})
+			} catch (error) {
+				console.log(error);
+				if (error.name === 'AbortError') {
+					uni.showToast({
+						title: "已暂停回复",
+						icon: "none",
+						duration: 2000
+					})
+				} else {
+					uni.showToast({
+						title: "发送失败" + error,
+						icon: "none",
+						duration: 2000
+					})
+				}
+			}
+		}
+	}
+
+	// 创建新对话
+	const createReply = () => {
+		if (!isReply.value) {
+			uni.showToast({
+				title: '当前正在回复中',
+				icon: 'none'
+			})
+			return
+		}
+		// 判断是否为最新对话
+		if (aiId.value === 0) {
+			uni.showToast({
+				title: '已是最新对话',
+				icon: 'none',
+				duration: 1500
+			})
+			return
+		}
+		uni.showToast({
+			title: '创建对话成功',
+			icon: 'success',
+			duration: 1500
+		})
+		setTimeout(() => {
+			// 使用 uni-app 的方式重新加载页面
+			uni.reLaunch({
+				url: '/pages/ai/ai'
+			})
+		}, 100)
+	}
+
+	// 选择了模式
+	const handleAiModeChange = (mode) => {
+		if (isSelectHistory.value) {
+			// 为true说明已经在对话中了
+			uni.showModal({
+				title: '切换对话模式',
+				content: '当前已经开启对话，切换对话模式将会开启新的对话！',
+				success: (res) => {
+					if (res.confirm) {
+						uni.showToast({
+							title: '创建成功',
+							icon: 'success',
+							duration: 1500
+						})
+						setTimeout(() => {
+							// 使用 uni-app 的方式重新加载页面
+							uni.reLaunch({
+								url: '/pages/ai/ai'
+							})
+						}, 100)
+						// 存入缓存中
+						uni.setStorageSync('aiMode', mode)
+					}
+				}
+			})
+		} else {
+			// 说明是新对话可以随便切换
+			aiModeValue.value = mode
+		}
+	}
+
+	// 是否开启朗读
+	const isSpeaking = ref(false)
+	// 当前audio实例
+	let currentAudio;
+	// 随机loading文案
+	const loadingTextArr = [
+		"正在召唤HaoAi发声中...",
+		"HaoAi正在努力变声，请稍等~",
+		"语音合成中，马上就能听到啦！",
+		"HaoAi正在认真朗读你的内容...",
+		"别着急，精彩马上开始！"
+	];
+	// 随机loading文案
+	const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr.length)]);
+	// 语音合成loading
+	const readAloudLoading = ref(false)
+	// 朗读文字
+	const readAloud = (content) => {
+		content = plainText(content)
+		// 如果有正在播放的音频，先停止
+		if (currentAudio) {
+			currentAudio.pause();
+			currentAudio.currentTime = 0;
+			currentAudio = null;
+		}
+		readAloudLoading.value = true
+		// 开始朗读
+		isSpeaking.value = true
+
+		// 调用语音合成模型
+		fetch(`http://localhost:9993/api/ai/model/tts`, {
+				method: "post",
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-expect-error
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": token.value,
+
+				},
+				body: JSON.stringify({
+					text: content
+				}),
+			})
+			.then(res => {
+				if (!res.ok) {
+					throw new Error('语音合成请求失败');
+				}
+				return res.blob()
+			})
+			.then((blob) => {
+				readAloudLoading.value = false
+				// 合成对话
+				const url = URL.createObjectURL(blob);
+				// 创建播放器
+				const audio = new Audio(url);
+				currentAudio = audio
+				// 播放
+				audio.play();
+				// 监听播放结束，自动重置
+				audio.onended = () => {
+					isSpeaking.value = false;
+
+					currentAudio = null;
+					URL.revokeObjectURL(url);
+				};
+			}).catch(() => {
+				console.warn('后端语音合成失败，切换到浏览器原生语音:');
+				readAloudLoading.value = false;
+				// 调用浏览器原生语音合成
+				readAloudWeb(content);
+			})
+	}
+
+	// 朗读文字
+	const readAloudWeb = (content) => {
+		content = plainText(content)
+		const utterance = new SpeechSynthesisUtterance(content);
+		utterance.lang = 'zh-CN'; // 设置语言为中文
+		utterance.rate = 1.4; // 稍微放慢语速
+		utterance.pitch = 2.5; // 提高音调，让声音更自然
+		utterance.volume = 1; // 音量最大
+
+		// 开始朗读
+		window.speechSynthesis.speak(utterance);
+
+		// 更新状态
+		isSpeaking.value = true;
+
+		// 监听朗读结束事件
+		utterance.onend = () => {
+			isSpeaking.value = false;
+		};
+	}
+
+	// 移除Markdown格式
+	const plainText = (content) => {
+		// 移除Markdown格式
+		const plainText = content
+			// 移除各级标题 (#, ##, ###, ...)
+			.replace(/#{1,6}\s/g, '')
+			// 移除加粗和斜体 (**, __, *, _)
+			.replace(/\*\*|__|\*|_/g, '')
+			// 移除链接和图片的标记 ([], (), ![])
+			.replace(/$|$|$|$|!\[/g, '')
+			// 移除行内代码标记（`）
+			.replace(/`/g, '')
+			// 移除代码块标记（```)
+			.split('```').filter((_, index) => index % 2 === 0).join('')
+			// 移除引用标记（>）
+			.replace(/^\s*>/gm, '')
+			// 移除无序列表标记（-, *, +）
+			.replace(/^\s*[-*+]\s/gm, '')
+			// 移除有序列表标记（数字后跟.或））
+			.replace(/^\s*\d+\.\s/gm, '')
+			// 替换多个换行符为单个空格
+			.replace(/\n+/g, ' ')
+			// 将多个连续空格替换为单个空格，并去除首尾空格
+			.replace(/\s+/g, ' ').trim();
+
+		return plainText;
+	};
+
+
+	// 取消播放
+	const cancelReadAloud = () => {
+		isSpeaking.value = false;
+		window.speechSynthesis.cancel();
+
+		if (currentAudio) {
+			currentAudio.pause();
+			currentAudio.currentTime = 0;
+			currentAudio = null;
+		}
+	}
 </script>
 <template>
-  <view class="ai-box">
-    <!-- 顶部导航栏 -->
-    <view class="ai-history">
-      <view class="left-icon" @click="handleGetHistoryList">
-        <uni-icons type="bars" size="24" color="#1677ff"></uni-icons>
-      </view>
-      <view class="title" v-if="aiId === 0">新对话</view>
-      <view class="title" v-else>{{ currentTitle }}</view>
-      <view class="right-icon" @click="createReply">
-        <uni-icons type="plusempty" color="#1677ff" size="25"></uni-icons>
-      </view>
-    </view>
+	<view class="ai-box">
+		<!-- 顶部导航栏 -->
+		<view class="ai-history">
+			<view class="left-icon" @click="handleGetHistoryList">
+				<uni-icons type="bars" size="24" color="#1677ff"></uni-icons>
+			</view>
+			<view class="title" v-if="aiId === 0">新对话</view>
+			<view class="title" v-else>{{ currentTitle }}</view>
+			<view class="right-icon" @click="createReply">
+				<uni-icons type="plusempty" color="#1677ff" size="25"></uni-icons>
+			</view>
+		</view>
 
-    <!-- 历史记录抽屉 -->
-    <uni-drawer ref="showLeft" :mask-click="true">
-      <view class="drawer-content">
-        <view class="drawer-title">历史记录</view>
-        <scroll-view scroll-y class="history-list">
-          <view v-for="(history, historyIndex) in historyList" :key="index" class="history-group">
-            <view class="history-date">{{ history.date }}</view>
-            <view
-              :style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '', 'pointer-events': isReply ? 'auto' : 'none' }"
-              @click="getHistoryContent(record.id, index, historyIndex, record.title)"
-              v-for="(record, index) in history.aiHistoryVos" :key="item" class="history-item">
-              {{ record.title }}
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-    </uni-drawer>
+		<!-- 历史记录抽屉 -->
+		<uni-drawer ref="showLeft" :mask-click="true">
+			<view class="drawer-content">
+				<view class="drawer-title">历史记录</view>
+				<scroll-view scroll-y class="history-list">
+					<view v-for="(history, historyIndex) in historyList" :key="index" class="history-group">
+						<view class="history-date">{{ history.date }}</view>
+						<view
+							:style="{ 'background-color': activeIndex[historyIndex] === index ? '#f2f3f4' : '', 'pointer-events': isReply ? 'auto' : 'none' }"
+							@click="getHistoryContent(record.id, index, historyIndex, record.title)"
+							v-for="(record, index) in history.aiHistoryVos" :key="item" class="history-item">
+							{{ record.title }}
+						</view>
+					</view>
+				</scroll-view>
+			</view>
+		</uni-drawer>
 
-    <!-- ai输出内容需要判断 -->
-    <view class="ai-content">
-      <scroll-view ref="contentRef" :duration="3000" :scroll-top="scrollTop" v-if="!chatLoading" scroll-y="true"
-        class="scroll-Y" :scroll-with-animation="true" :scroll-anchoring="true" @scrolltoupper="upper">
-        <!-- 有数据的时候显示 -->
-        <div v-for="(item, index) in messageList" class="box" :key="index">
-          <!-- 用户输入的内容 -->
-          <div class="prompt-box">
-            <div class="user-message">
-              <div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
-                <zero-markdown-view class="markdown-content" :markdown="item.prompt"></zero-markdown-view>
-              </div>
-              <template v-if="userInfo.avatar">
-                <img class="avatar" :src="userInfo.avatar" />
-              </template>
-              <template v-else>
-                <a-avatar class="avatar" :style="{ backgroundColor: '#1677ff', fontSize: '20px' }">
-                  {{ userInfo.account?.charAt(0)?.toUpperCase() }}
-                </a-avatar>
-              </template>
-            </div>
-            <div class="message-actions">
-              <view class="action-icon" @click="readAloud(item.prompt)" v-if="!isSpeaking" v-show="!readAloudLoading">
-                <uv-icon name="volume" size="20" color="#666"></uv-icon>
-              </view>
-              <uv-loading-icon :text="loadingText" color="#1677ff" v-if="readAloudLoading"></uv-loading-icon>
-              <view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud" v-if="isSpeaking">
-                <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
-              </view>
-              <view class="action-icon" @click="copyContent(item.prompt)">
-                <uv-icon name="file-text" size="21" color="#666"></uv-icon>
-              </view>
-            </div>
-          </div>
-          <!-- AI返回的内容 -->
-          <div class="content-avatar">
-            <img class="avatar" src="../../static/images/128.png" alt="">
-            <view v-if="!item.content">
-              <uv-loading-icon color="#1677ff"></uv-loading-icon>
-            </view>
-            <div class="message-wrapper" v-else>
-              <zero-markdown-view class="markdown-content" :markdown="item.content"></zero-markdown-view>
-              <div class="message-actions" v-if="aiId !== 0">
-                <view class="action-icon" @click="readAloud(item.content)" v-if="!isSpeaking"
-                  v-show="!readAloudLoading">
-                  <uni-icons type="sound" size="20" color="#666"></uni-icons>
-                </view>
-                <uv-loading-icon :text="loadingText" color="#1677ff" v-if="readAloudLoading"></uv-loading-icon>
-                <view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud" v-if="isSpeaking">
-                  <uv-icon name="volume-off" size="20" color="#666"></uv-icon>
-                </view>
-                <view class="action-icon" @click="copyContent(item.content)">
-                  <uv-icon name="file-text" size="21" color="#666"></uv-icon>
-                </view>
-              </div>
-            </div>
-          </div>
-        </div>
-      </scroll-view>
-    </view>
+		<!-- ai输出内容需要判断 -->
+		<view class="ai-content">
+			<scroll-view ref="contentRef" :duration="3000" :scroll-top="scrollTop" v-if="!chatLoading" scroll-y="true"
+				class="scroll-Y" :scroll-with-animation="true" :scroll-anchoring="true" @scrolltoupper="upper">
+				<!-- 有数据的时候显示 -->
+				<div v-for="(item, index) in messageList" class="box" :key="index">
+					<!-- 用户输入的内容 -->
+					<div class="prompt-box">
+						<div class="user-message">
+							<div class="message-content" :class="{ 'prompt': true, 'first-prompt': index === 0 }">
+								<zero-markdown-view class="markdown-content"
+									:markdown="item.prompt"></zero-markdown-view>
+							</div>
+							<template v-if="userInfo.avatar">
+								<img class="avatar" :src="userInfo.avatar" />
+							</template>
+							<template v-else>
+								<a-avatar class="avatar" :style="{ backgroundColor: '#1677ff', fontSize: '20px' }">
+									{{ userInfo.account?.charAt(0)?.toUpperCase() }}
+								</a-avatar>
+							</template>
+						</div>
+						<div class="message-actions">
+							<view class="action-icon" @click="readAloud(item.prompt)" v-if="!isSpeaking"
+								v-show="!readAloudLoading">
+								<uv-icon name="volume" size="20" color="#666"></uv-icon>
+							</view>
+							<uv-loading-icon :text="loadingText" color="#1677ff"
+								v-if="readAloudLoading"></uv-loading-icon>
+							<view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud"
+								v-if="isSpeaking">
+								<uv-icon name="volume-off" size="20" color="#666"></uv-icon>
+							</view>
+							<view class="action-icon" @click="copyContent(item.prompt)">
+								<uv-icon name="file-text" size="21" color="#666"></uv-icon>
+							</view>
+						</div>
+					</div>
+					<!-- AI返回的内容 -->
+					<div class="content-avatar">
+						<img class="avatar" src="../../static/images/128.png" alt="">
+						<view v-if="!item.content">
+							<uv-loading-icon color="#1677ff"></uv-loading-icon>
+						</view>
+						<div class="message-wrapper" v-else>
+							<zero-markdown-view class="markdown-content" :markdown="item.content"></zero-markdown-view>
+							<div class="message-actions" v-if="aiId !== 0">
+								<view class="action-icon" @click="readAloud(item.content)" v-if="!isSpeaking"
+									v-show="!readAloudLoading">
+									<uni-icons type="sound" size="20" color="#666"></uni-icons>
+								</view>
+								<uv-loading-icon :text="loadingText" color="#1677ff"
+									v-if="readAloudLoading"></uv-loading-icon>
+								<view class="action-icon" v-show="!readAloudLoading" @click="cancelReadAloud"
+									v-if="isSpeaking">
+									<uv-icon name="volume-off" size="20" color="#666"></uv-icon>
+								</view>
+								<view class="action-icon" @click="copyContent(item.content)">
+									<uv-icon name="file-text" size="21" color="#666"></uv-icon>
+								</view>
+							</div>
+						</div>
+					</div>
+				</div>
+			</scroll-view>
+		</view>
 
 
-    <!-- 输入框 -->
-    <view class="ai-search">
-      <uv-textarea adjustPosition v-model="prompt" height="25" :placeholder="placeholder"></uv-textarea>
-      <view class="button-group">
-        <view class="mode-buttons">
-          <view v-for="item in aiMode" :key="item.value" class="mode-btn"
-            :class="{ active: aiModeValue === item.value }" @click="handleAiModeChange(item.value)">
-            {{ item.label }}
-          </view>
-        </view>
-        <view class="send-btn">
-          <template v-if="!isReply">
-            <uv-icon name="pause-circle" class="pause-icon" size="24" color="#ff4d4f" @click="pauseReply"></uv-icon>
-          </template>
-          <template v-else>
-            <uni-icons type="paperplane-filled" size="24" color="#1677ff" class="send-icon"
-              :class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()"></uni-icons>
-          </template>
-        </view>
-      </view>
-    </view>
-  </view>
+		<!-- 输入框 -->
+		<view class="ai-search">
+			<uv-textarea adjustPosition v-model="prompt" height="25" :placeholder="placeholder"></uv-textarea>
+			<view class="button-group">
+				<view class="mode-buttons">
+					<view v-for="item in aiMode" :key="item.value" class="mode-btn"
+						:class="{ active: aiModeValue === item.value }" @click="handleAiModeChange(item.value)">
+						{{ item.label }}
+					</view>
+				</view>
+				<view class="send-btn">
+					<template v-if="!isReply">
+						<uv-icon name="pause-circle" class="pause-icon" size="24" color="#ff4d4f"
+							@click="pauseReply"></uv-icon>
+					</template>
+					<template v-else>
+						<uni-icons type="paperplane-filled" size="24" color="#1677ff" class="send-icon"
+							:class="{ 'disabled': !prompt }" @click="prompt && sendPrompt()"></uni-icons>
+					</template>
+				</view>
+			</view>
+		</view>
+	</view>
 </template>
 <style lang="scss" scoped>
-.ai-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10rpx;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #fff;
+	.ai-box {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin: 10rpx;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #fff;
 
-  .drawer-content {
-    padding: 20rpx;
-    height: 100%;
+		.drawer-content {
+			padding: 20rpx;
+			height: 100%;
 
-    .drawer-title {
-      font-size: 32rpx;
-      font-weight: bold;
-      padding: 20rpx 0;
-      border-bottom: 1px solid #eee;
-    }
+			.drawer-title {
+				font-size: 32rpx;
+				font-weight: bold;
+				padding: 20rpx 0;
+				border-bottom: 1px solid #eee;
+			}
 
-    .history-list {
-      height: calc(100% - 150rpx);
-      padding: 20rpx 0;
-    }
+			.history-list {
+				height: calc(100% - 150rpx);
+				padding: 20rpx 0;
+			}
 
-    .history-group {
-      margin: 20rpx 0;
+			.history-group {
+				margin: 20rpx 0;
 
-      .history-date {
-        font-size: 24rpx;
-        color: #999;
-        margin-bottom: 10rpx;
-      }
+				.history-date {
+					font-size: 24rpx;
+					color: #999;
+					margin-bottom: 10rpx;
+				}
 
-      .history-item {
-        font-size: 28rpx;
-        color: #333;
-        padding: 20rpx;
-        border-radius: 8rpx;
-        margin-bottom: 10rpx;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+				.history-item {
+					font-size: 28rpx;
+					color: #333;
+					padding: 20rpx;
+					border-radius: 8rpx;
+					margin-bottom: 10rpx;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
 
-        &:active {
-          opacity: 0.8;
-        }
-      }
+					&:active {
+						opacity: 0.8;
+					}
+				}
 
-    }
-  }
+			}
+		}
 
-  .ai-history {
-    width: 98%;
-    height: calc(100vh - 95vh);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 0 0 5rpx 5rpx;
-    color: #2c313c;
-    font-size: 35rpx;
-    background-color: #fff;
+		.ai-history {
+			width: 98%;
+			height: calc(100vh - 95vh);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			border-radius: 0 0 5rpx 5rpx;
+			color: #2c313c;
+			font-size: 35rpx;
+			background-color: #fff;
 
-    .title {
-      width: 400rpx; // 设置固定宽度
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
+			.title {
+				width: 400rpx; // 设置固定宽度
+				text-align: center;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
 
-  .ai-content {
-    width: 95%;
-    padding: 3rpx;
-    height: calc(100vh - 23.5vh); // 增加内容区域高度
-    background-color: #f6f7fb;
-    width: 100%;
+		.ai-content {
+			width: 95%;
+			padding: 3rpx;
+			height: calc(100vh - 23.5vh); // 增加内容区域高度
+			background-color: #f6f7fb;
+			width: 100%;
 
-    .scroll-Y {
-      height: 100%;
-      scroll-behavior: smooth;
+			.scroll-Y {
+				height: 100%;
+				scroll-behavior: smooth;
 
-      .prompt-box {
-        display: flex;
-        flex-direction: column;
+				.prompt-box {
+					display: flex;
+					flex-direction: column;
 
-        .message-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 16px;
-          margin-right: 40px;
-          transition: opacity 0.3s;
+					.message-actions {
+						display: flex;
+						justify-content: flex-end;
+						gap: 16px;
+						margin-right: 40px;
+						transition: opacity 0.3s;
 
-          .action-icon {
-            margin-top: 5px;
-            font-size: 16px;
-            color: #666;
-            cursor: pointer;
+						.action-icon {
+							margin-top: 5px;
+							font-size: 16px;
+							color: #666;
+							cursor: pointer;
 
-            &:hover {
-              color: #1677ff;
-            }
-          }
-        }
-
-
-        .user-message {
-          display: flex;
-          justify-content: flex-end;
-          align-items: flex-start;
-          gap: 2px;
-
-          .message-content {
-            max-width: calc(100% - 100px);
-            background-color: #eff6ff;
-
-            .prompt {
-              margin: 10px 0 5px 0 !important;
-            }
-
-            .first-prompt {
-              margin-top: 0 !important;
-            }
-          }
-
-          .avatar {
-            margin-top: 10px;
-            width: 31px;
-            height: 31px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 5px;
-          }
-        }
-      }
-
-      .content-avatar {
-        font-size: 16px !important;
-        display: flex;
-        margin-top: 20px;
-        margin-bottom: 10px;
-
-        .avatar {
-          margin-top: 60rpx;
-          width: 31px;
-          height: 31px;
-          border-radius: 50%;
-          object-fit: cover;
-          margin-right: 5px;
-        }
-
-        .message-wrapper {
-          flex: 1;
-          max-width: calc(100% - 50px); // 减去头像和间距的宽度
-
-          :deep(.markdown-content) {
-            overflow-x: auto; // 添加横向滚动
-            word-wrap: break-word; // 允许在单词内换行
-            white-space: pre-wrap; // 保留空格和换行
-            max-width: 100%; // 限制最大宽度
-          }
-
-          .message-actions {
-            display: flex;
-            gap: 16px;
-            padding: 8px 0;
-            transition: opacity 0.3s;
-
-            .action-icon {
-              font-size: 16px;
-              color: #666;
-              cursor: pointer;
-
-              &:hover {
-                color: #1677ff;
-              }
-            }
-          }
-
-          &:hover {
-            .message-actions {
-              opacity: 1;
-            }
-          }
-        }
-      }
-    }
+							&:hover {
+								color: #1677ff;
+							}
+						}
+					}
 
 
+					.user-message {
+						display: flex;
+						justify-content: flex-end;
+						align-items: flex-start;
+						gap: 2px;
+
+						.message-content {
+							max-width: calc(100% - 100px);
+							background-color: #eff6ff;
+
+							.prompt {
+								margin: 10px 0 5px 0 !important;
+							}
+
+							.first-prompt {
+								margin-top: 0 !important;
+							}
+						}
+
+						.avatar {
+							margin-top: 10px;
+							width: 31px;
+							height: 31px;
+							border-radius: 50%;
+							object-fit: cover;
+							margin-right: 5px;
+						}
+					}
+				}
+
+				.content-avatar {
+					font-size: 16px !important;
+					display: flex;
+					margin-top: 20px;
+					margin-bottom: 10px;
+
+					.avatar {
+						margin-top: 60rpx;
+						width: 31px;
+						height: 31px;
+						border-radius: 50%;
+						object-fit: cover;
+						margin-right: 5px;
+					}
+
+					.message-wrapper {
+						flex: 1;
+						max-width: calc(100% - 50px); // 减去头像和间距的宽度
+
+						:deep(.markdown-content) {
+							overflow-x: auto; // 添加横向滚动
+							word-wrap: break-word; // 允许在单词内换行
+							white-space: pre-wrap; // 保留空格和换行
+							max-width: 100%; // 限制最大宽度
+						}
+
+						.message-actions {
+							display: flex;
+							gap: 16px;
+							padding: 8px 0;
+							transition: opacity 0.3s;
+
+							.action-icon {
+								font-size: 16px;
+								color: #666;
+								cursor: pointer;
+
+								&:hover {
+									color: #1677ff;
+								}
+							}
+						}
+
+						&:hover {
+							.message-actions {
+								opacity: 1;
+							}
+						}
+					}
+				}
+			}
 
 
 
-    .item {
-      width: 100%;
-      margin-top: 10rpx;
-      height: 300rpx;
-      background-color: pink;
-    }
-  }
-
-  .ai-search {
-    height: 10vh;
-    background-color: #fff;
-    width: 96%;
-    padding: 20rpx 30rpx;
-    box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
-
-    :deep(.uv-textarea) {
-      background-color: #f5f5f5;
-      border-radius: 16rpx;
-
-      .uv-textarea__field {
-        font-size: 28rpx;
-        line-height: 40rpx;
-        color: #333;
-      }
-
-      .uv-textarea__placeholder {
-        color: #999;
-        font-size: 28rpx;
-      }
-    }
-
-    .button-group {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .mode-buttons {
-        display: flex;
-        gap: 16rpx;
-
-        .mode-btn {
-          font-size: 24rpx;
-          padding: 8rpx 16rpx;
-          border-radius: 8rpx;
-          background-color: #f5f5f5;
-          color: #666;
-          transition: all 0.3s;
-
-          &.active {
-            background-color: #e6f4ff;
-            color: #1677ff;
-          }
-
-          &:active {
-            opacity: 0.8;
-          }
-        }
-      }
-
-      .send-btn {
-        padding: 12rpx;
-        border-radius: 8rpx;
-
-        &:active {
-          opacity: 0.8;
-        }
-
-        .pause-icon {
-          font-size: 25px;
-          color: #ff4d4f;
-          cursor: pointer;
-
-          &:hover {
-            color: #ff7875;
-          }
-        }
-
-        .send-icon {
-          font-size: 25px;
-          color: #1677ff;
-          cursor: pointer;
-
-          &.disabled {
-            color: #d6dee8;
-            cursor: not-allowed;
-          }
-
-          &:not(.disabled):hover {
-            color: #4096ff;
-          }
-
-          &:hover {
-            color: #4096ff;
-          }
 
 
-        }
+			.item {
+				width: 100%;
+				margin-top: 10rpx;
+				height: 300rpx;
+				background-color: pink;
+			}
+		}
+
+		.ai-search {
+			height: 10vh;
+			background-color: #fff;
+			width: 96%;
+			padding: 20rpx 30rpx;
+			box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
+
+			:deep(.uv-textarea) {
+				background-color: #f5f5f5;
+				border-radius: 16rpx;
+
+				.uv-textarea__field {
+					font-size: 28rpx;
+					line-height: 40rpx;
+					color: #333;
+				}
+
+				.uv-textarea__placeholder {
+					color: #999;
+					font-size: 28rpx;
+				}
+			}
+
+			.button-group {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+
+				.mode-buttons {
+					display: flex;
+					gap: 16rpx;
+
+					.mode-btn {
+						font-size: 24rpx;
+						padding: 8rpx 16rpx;
+						border-radius: 8rpx;
+						background-color: #f5f5f5;
+						color: #666;
+						transition: all 0.3s;
+
+						&.active {
+							background-color: #e6f4ff;
+							color: #1677ff;
+						}
+
+						&:active {
+							opacity: 0.8;
+						}
+					}
+				}
+
+				.send-btn {
+					padding: 12rpx;
+					border-radius: 8rpx;
+
+					&:active {
+						opacity: 0.8;
+					}
+
+					.pause-icon {
+						font-size: 25px;
+						color: #ff4d4f;
+						cursor: pointer;
+
+						&:hover {
+							color: #ff7875;
+						}
+					}
+
+					.send-icon {
+						font-size: 25px;
+						color: #1677ff;
+						cursor: pointer;
+
+						&.disabled {
+							color: #d6dee8;
+							cursor: not-allowed;
+						}
+
+						&:not(.disabled):hover {
+							color: #4096ff;
+						}
+
+						&:hover {
+							color: #4096ff;
+						}
 
 
-      }
-    }
-  }
+					}
 
-}
+
+				}
+			}
+		}
+
+	}
 </style>
