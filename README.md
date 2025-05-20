@@ -68,7 +68,7 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 
 | 名称          | 环境  |
 | ------------- | ----- |
-| MySQL         | 8.0+  |
+| MySQL         | 8.0.13+ |
 | JDK           | 17    |
 | SpringBoot    | 3.2   |
 | SpringCloud   | 2023  |
