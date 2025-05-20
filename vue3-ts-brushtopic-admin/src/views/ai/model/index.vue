@@ -405,7 +405,8 @@ const loadingText = ref(loadingTextArr[Math.floor(Math.random() * loadingTextArr
 // 语音合成loading
 const readAloudLoading = ref(false)
 // 朗读文字
-const readAloud = (content: string) => {
+const readAloud = (content: any) => {
+  content = plainText(content)
   // 如果有正在播放的音频，先停止
   if (currentAudio) {
     currentAudio.pause();
@@ -459,9 +460,38 @@ const readAloud = (content: string) => {
       readAloudWeb(content);
     })
 }
+// 移除Markdown格式
+const plainText = (content: any) => {
+  // 移除Markdown格式
+  const plainText = content
+    // 移除各级标题 (#, ##, ###, ...)
+    .replace(/#{1,6}\s/g, '')
+    // 移除加粗和斜体 (**, __, *, _)
+    .replace(/\*\*|__|\*|_/g, '')
+    // 移除链接和图片的标记 ([], (), ![])
+    .replace(/$|$|$|$|!\[/g, '')
+    // 移除行内代码标记（`）
+    .replace(/`/g, '')
+    // 移除代码块标记（```)
+    .split('```').filter((_: any, index: any) => index % 2 === 0).join('')
+    // 移除引用标记（>）
+    .replace(/^\s*>/gm, '')
+    // 移除无序列表标记（-, *, +）
+    .replace(/^\s*[-*+]\s/gm, '')
+    // 移除有序列表标记（数字后跟.或））
+    .replace(/^\s*\d+\.\s/gm, '')
+    // 替换多个换行符为单个空格
+    .replace(/\n+/g, ' ')
+    // 将多个连续空格替换为单个空格，并去除首尾空格
+    .replace(/\s+/g, ' ').trim();
+
+  return plainText;
+};
+
 
 // 朗读文字
 const readAloudWeb = (content: string) => {
+  content = plainText(content)
   const utterance = new SpeechSynthesisUtterance(content);
   utterance.lang = 'zh-CN'; // 设置语言为中文
   utterance.rate = 1.4; // 稍微放慢语速
