@@ -4,6 +4,8 @@ import LeftTopPieChart from './components/LeftTopPieChart.vue'
 import RightTopPieChart from './components/RightTopPieChart.vue';
 import VScaleScreen from 'v-scale-screen'
 import ScreenHeader from './components/ScreenHeader.vue';
+import LeftCenterBarChart from './components/LeftCenterBarChart.vue';
+import RightCenterBarChart from './components/RightCenterBarChart.vue';
 onMounted(() => {
 
 })
@@ -23,8 +25,8 @@ onMounted(() => {
           <div class="left-chart-container">
             <!-- 左上（展示不同等级用户的分布情况饼图） -->
             <LeftTopPieChart />
-            <!-- 左中 -->
-
+            <!-- 左中（刷题量top10柱状图） -->
+            <LeftCenterBarChart />
             <!-- 左下 -->
           </div>
           <!-- 中部 -->
@@ -33,7 +35,8 @@ onMounted(() => {
           <div class="right-chart-container">
             <!-- 右上（用户使用率系统使用率系统空闲率饼图） -->
             <RightTopPieChart />
-            <!-- 右中 -->
+            <!-- 右中（活跃用户top10柱状图） -->
+            <RightCenterBarChart />
             <!-- 右下 -->
           </div>
         </div>
