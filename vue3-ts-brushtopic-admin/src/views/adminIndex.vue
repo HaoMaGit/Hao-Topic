@@ -62,7 +62,7 @@ const initBubbleChart = () => {
       data: rightData.value.map((cat: any) => ({
         name: cat.categoryName,
         value: cat.count,
-        symbolSize: (cat.count === 0 ? 5 : cat.count) * 10, // value越大，球越大
+        symbolSize: (cat.count === 0 ? 5 : cat.count) * 2, // value越大，球越大
         draggable: true,
       }))
     }]

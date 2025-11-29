@@ -80,7 +80,7 @@ const initBubbleChart = () => {
         value: cat.count,
         count: cat.totalCount,
         symbol: getWaterBallSVG(cat.count, cat.totalCount),
-        symbolSize: (cat.totalCount < 5 ? 5 : cat.totalCount) * 10, // value越大，球越大
+        symbolSize: (cat.totalCount < 5 ? 5 : cat.totalCount) * 2, // value越大，球越大
         draggable: true,
       }))
     }]

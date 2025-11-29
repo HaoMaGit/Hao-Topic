@@ -19,6 +19,7 @@ request.interceptors.request.use((config) => {
   const userStore = useUserStore()
   // 登录不需要带token
   if (userStore.token) {
+    // 不要
     config.headers.Authorization = userStore.token
   }
   //config配置对象,headers属性请求头,经常给服务器端携带公共参数

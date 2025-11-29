@@ -1,0 +1,1 @@
+import{a}from"./request.RFVXOHA2.js";const s="/topic/data/",o=()=>a(s+"webHomeCount"),t=o=>a(s+"rank/"+o),e=o=>a(s+"userRank/"+o),r=()=>a(s+"topicTodayVo"),c=o=>a(s+"flush/"+o);export{o as a,r as b,c,t as d,e};

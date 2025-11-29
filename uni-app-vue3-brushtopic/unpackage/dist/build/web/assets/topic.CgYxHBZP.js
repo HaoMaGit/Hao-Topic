@@ -1,0 +1,1 @@
+import{a as t}from"./request.RFVXOHA2.js";const o="/topic/topic/",a=a=>t(o+"detail/"+a),s=a=>t(o+"answer/"+a),c=a=>t(o+"collection/"+a),e=()=>t(o+"collection/list"),i=a=>t({url:o+"count",method:"post",data:a});export{e as a,i as b,a as c,s as d,c as e};

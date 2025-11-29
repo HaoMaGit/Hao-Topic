@@ -11,7 +11,7 @@ import {
 import { message } from 'ant-design-vue'
 //全局守卫:项目当中任意路由切换都会触发的钩子
 //全局前置守卫
-const whiteList = ['/login', '/404', '/captchaImage']
+const whiteList = ['/login', '/404', '/captchaImage', '/screen']
 router.beforeEach(async (to, from, next) => {
   //to:你将要访问那个路由
   //from:你从来个路由而来

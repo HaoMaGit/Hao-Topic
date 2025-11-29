@@ -151,6 +151,14 @@ export const constantRoute = [
       component: () => import('@/views/profile/index.vue'),
     }]
   },
+  // 大屏
+  {
+    path: '/screen',
+    component: () => import('@/views/screen/index.vue'),
+    meta: {
+      title: '数据大屏',
+    },
+  },
   // 404页面
   {
     path: '/404',
