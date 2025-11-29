@@ -1,7 +1,8 @@
 package com.hao.topic.ai.service.impl;
 
-import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
-import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
+import com.alibaba.dashscope.audio.tts.SpeechSynthesisAudioFormat;
+import com.alibaba.dashscope.audio.tts.SpeechSynthesisParam;
+import com.alibaba.dashscope.audio.tts.SpeechSynthesizer;
 import com.alibaba.excel.util.StringUtils;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -60,6 +61,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -829,21 +833,48 @@ public class ModelServiceImpl implements ModelService {
      */
     public ResponseEntity<byte[]> tts(TtsDto text) {
         recordAiUser();
-        SpeechSynthesisParam param =
-                SpeechSynthesisParam.builder()
-                        .apiKey(ttsProperties.getApiKey())
-                        .model(ttsProperties.getModel())
-                        .voice(ttsProperties.getVoice())
-                        .build();
-        SpeechSynthesizer synthesizer = new SpeechSynthesizer(param, null);
-        ByteBuffer audio = synthesizer.call(text.getText()); // 用前端传入的text
+        // SpeechSynthesisParam param =
+        //         SpeechSynthesisParam.builder()
+        //                 .apiKey(ttsProperties.getApiKey())
+        //                 .model(ttsProperties.getModel())
+        //                 .voice(ttsProperties.getVoice())
+        //                 .build();
+        //
+        // SpeechSynthesizer synthesizer = new SpeechSynthesizer(param, null);
+        // ByteBuffer audio = synthesizer.call(text.getText()); // 用前端传入的text
+        // byte[] audioBytes = audio.array();
+        //
+        // HttpHeaders headers = new HttpHeaders();
+        // headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        // headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=output.mp3");
+        // return ResponseEntity
+        //         .ok()
+        //         .headers(headers)
+        //         .body(audioBytes);
+        com.alibaba.dashscope.audio.tts.SpeechSynthesizer synthesizer = new SpeechSynthesizer();
+        com.alibaba.dashscope.audio.tts.SpeechSynthesisParam param = SpeechSynthesisParam.builder()
+                // 若没有将API Key配置到环境变量中，需将下面这行代码注释放开，并将apiKey替换为自己的API Key
+                .apiKey(ttsProperties.getApiKey())
+                .model(ttsProperties.getModel())
+                .text(text.getText())
+                .sampleRate(48000)
+                .format(SpeechSynthesisAudioFormat.WAV)
+                .build();
+
+
+        // 执行语音合成
+        ByteBuffer audio = synthesizer.call(param);
+
+        // 将音频数据写入字节数组
         byte[] audioBytes = audio.array();
 
+        // 构建 HTTP 响应头
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=output.mp3");
-        return ResponseEntity
-                .ok()
+        headers.setContentDispositionFormData("file", "output.wav");  // 告诉浏览器这是一个下载的文件
+
+        // 返回音频数据给前端
+        return ResponseEntity.ok()
                 .headers(headers)
                 .body(audioBytes);
     }
