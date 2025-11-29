@@ -6,6 +6,9 @@ import VScaleScreen from 'v-scale-screen'
 import ScreenHeader from './components/ScreenHeader.vue';
 import LeftCenterBarChart from './components/LeftCenterBarChart.vue';
 import RightCenterBarChart from './components/RightCenterBarChart.vue';
+import LeftBottomInfiniteScroll from './components/LeftBottomInfiniteScroll.vue';
+import RightBottomInfiniteScroll from './components/RightBottomInfiniteScroll.vue';
+import CenterFlyLineMap from './components/CenterFlyLineMap.vue';
 onMounted(() => {
 
 })
@@ -27,24 +30,40 @@ onMounted(() => {
             <LeftTopPieChart />
             <!-- 左中（刷题量top10柱状图） -->
             <LeftCenterBarChart />
-            <!-- 左下 -->
+            <!-- 左下（用户xx刚刷了1道题） -->
+            <LeftBottomInfiniteScroll />
           </div>
-          <!-- 中部 -->
-          <div class="center-chart-container"></div>
           <!--右侧 -->
           <div class="right-chart-container">
             <!-- 右上（用户使用率系统使用率系统空闲率饼图） -->
             <RightTopPieChart />
             <!-- 右中（活跃用户top10柱状图） -->
             <RightCenterBarChart />
-            <!-- 右下 -->
+            <!-- 右下（用户xx刚跟AI陪背了） -->
+            <RightBottomInfiniteScroll />
           </div>
+        </div>
+        <!-- 地图 -->
+        <div class="map-center-fixed">
+          <CenterFlyLineMap />
         </div>
       </div>
     </div>
   </v-scale-screen>
 </template>
 <style lang="scss" scoped>
+.map-center-fixed {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  width: 900px;
+  /* 你可以调整大小 */
+  height: 600px;
+  pointer-events: none;
+  z-index: 999;
+}
+
 #screen-app {
   position: fixed;
   top: 0;
@@ -52,7 +71,6 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   z-index: 1;
-  background: url("@/assets/images/bgk.png") no-repeat;
   background-size: 100% 100%;
   pointer-events: none;
   color: rgba(153, 206, 255, 1);
