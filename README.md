@@ -79,6 +79,10 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 哔哩哔哩视频效果演示地址：[https://space.bilibili.com/1680425641?spm_id_from=333.788.0.0](https://space.bilibili.com/1680425641?spm_id_from=333.788.0.0)
 
 ##### 后台
+**大屏**
+
+![输入图片说明](%E5%9B%BE%E7%89%87/eaff5b1d217844249a763fb66bc689c9.png) 
+
 **管理员首页** 
 
 ![输入图片说明](图片/Snipaste_2025-05-08_18-37-22.png)
