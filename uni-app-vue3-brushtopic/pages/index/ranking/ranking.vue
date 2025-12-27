@@ -1,303 +1,476 @@
-<script setup>
-import {
-	ref, computed, onMounted
-} from 'vue'
-import { apiQueryRank, apiQueryUserRank } from '@/api/home'
-// 筛选
-const screen = ref(true)
-
-// 排行榜
-const rankList = ref()
-// 前3
-const top3 = ref([])
-// 用户信息
-const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
-// 当前用户排行榜
-const currentRank = ref()
-// 查询排行榜
-const getRank = async (type) => {
-	uni.showLoading()
-	const res = await apiQueryRank(type)
-	if (res.data) {
-		rankList.value = res.data
-		// 提取前三个
-		top3.value = rankList.value.slice(0, 3)
-		// 提取剩余的
-		rankList.value = rankList.value.slice(3);
-	}
-	uni.hideLoading()
-}
-// 获取当前用户排名
-const getUserRank = async (type) => {
-	const res = await apiQueryUserRank(type)
-	if (res.data) {
-		currentRank.value = res.data
-	}
-}
-
-onMounted(() => {
-	if (screen.value === true) {
-		getRank(1)
-		getUserRank(1)
-	} else {
-		getRank(2)
-		getUserRank(2)
-	}
-})
-
-const list = ref([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
-const current = ref(0)
-// 当前身份
-const role = ref(uni.getStorageSync('role'))
-// 修改渐变背景计算属性，使上面更深，下面更浅
-const getPageGradient = computed(() => {
-	const gradientMap = {
-		1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
-		2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
-		0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
-	}
-	return gradientMap[role.value] || gradientMap[0]
-})
-// 映射身份颜色
-const getRoleTextColor = (userRole) => {
-	console.log("==========>", userRole);
-	const colors = {
-		'admin': '#564021',
-		'member': '#712a07',
-		'user': '#203c71'
-	};
-	return colors[userRole] || colors[0];
-}
-</script>
 <template>
-	<view class="ranking">
-		<view class="ranking-box" :style="{ background: getPageGradient }">
-			<!-- 顶部切换总排行榜和当天排行 -->
-			<view class="page">
-				<view class="tab">
-					<view :class="{ 'tab-active': screen }" @click="screen = true, getRank(1), getUserRank(1)"><text>日排行</text>
+	<view class="ranking-container" :style="{ background: themeConfig.bg }">
+		<!-- 1. 顶部 Tab 切换 (胶囊设计) -->
+		<view class="header-tab">
+			<view class="tab-pill">
+				<view :class="['tab-btn', screen ? 'active' : '']" @click="toggleTab(true)">日榜</view>
+				<view :class="['tab-btn', !screen ? 'active' : '']" @click="toggleTab(false)">总榜</view>
+			</view>
+		</view>
+
+		<!-- 2. 前三名荣誉台 (3列等宽，位置绝对不会错乱) -->
+		<view class="podium-box">
+			<!-- 左侧：第2名 -->
+			<view class="podium-col">
+				<view class="podium-item silver" v-if="top3[1]">
+					<view class="avatar-wrap">
+						<image v-if="top3[1].avatar" class="avatar" :src="top3[1].avatar" />
+						<uv-avatar v-else :text="top3[1].nickname.charAt(0)" size="55" randomBgColor></uv-avatar>
+						<view class="medal">2</view>
 					</view>
-					<view :class="{ 'tab-active': !screen }" @click="screen = false, getRank(2), getUserRank(2)"><text>总排行</text>
+					<text class="nickname">{{ top3[1].nickname }}</text>
+					<view class="score-tag">{{ top3[1].scope }}</view>
+				</view>
+				<view class="placeholder" v-else></view>
+			</view>
+
+			<!-- 中间：第1名 -->
+			<view class="podium-col">
+				<view class="podium-item gold" v-if="top3[0]">
+					<view class="avatar-wrap">
+						<image v-if="top3[0].avatar" class="avatar main" :src="top3[0].avatar" />
+						<uv-avatar v-else :text="top3[0].nickname.charAt(0)" size="75" randomBgColor></uv-avatar>
+						<view class="medal">1</view>
+					</view>
+					<text class="nickname main">{{ top3[0].nickname }}</text>
+					<view class="score-tag main">{{ top3[0].scope }}</view>
+				</view>
+				<view class="placeholder" v-else></view>
+			</view>
+
+			<!-- 右侧：第3名 -->
+			<view class="podium-col">
+				<view class="podium-item bronze" v-if="top3[2]">
+					<view class="avatar-wrap">
+						<image v-if="top3[2].avatar" class="avatar" :src="top3[2].avatar" />
+						<uv-avatar v-else :text="top3[2].nickname.charAt(0)" size="55" randomBgColor></uv-avatar>
+						<view class="medal">3</view>
+					</view>
+					<text class="nickname">{{ top3[2].nickname }}</text>
+					<view class="score-tag">{{ top3[2].scope }}</view>
+				</view>
+				<view class="placeholder" v-else></view>
+			</view>
+		</view>
+
+		<!-- 3. 下方列表区 -->
+		<view class="rank-list-card">
+			<scroll-view scroll-y class="scroll-v" style="height: calc(100vh - 680rpx)">
+				<view v-if="rankList && rankList.length > 0">
+					<view class="rank-row" v-for="(item, index) in rankList" :key="index">
+						<text class="rank-index">{{ index + 4 }}</text>
+						<view class="user-cell">
+							<image v-if="item.avatar" class="u-img" :src="item.avatar" />
+							<uv-avatar v-else :text="item.nickname.charAt(0)" size="40" randomBgColor></uv-avatar>
+							<text class="u-name" :style="{ color: getRoleColor(item.role) }">{{ item.nickname }}</text>
+						</view>
+						<view class="u-score">
+							<text class="val">{{ item.scope }}</text>
+						</view>
 					</view>
 				</view>
-				<!-- top3 -->
-				<view class="top">
-					<view class="top-item" :style="{ opacity: top3[1] ? 1 : 0 }">
-						<image v-if="top3[1]?.avatar" class="top-item-avatar" :src="top3[1]?.avatar"
-							style="border: 4rpx solid #C0C0C0;">
-						</image>
-						<uv-avatar v-else size="69" style="border: 4rpx solid #C0C0C0;" :text="top3[1]?.nickname.charAt(0)"
-							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[1]?.role) }">{{ top3[1]?.nickname
-							}}</text>
-						<text class="top-item-score">{{ top3[1]?.scope }}</text>
+				<view v-else class="empty-box">
+					<uv-empty text="暂无排名" mode="list"></uv-empty>
+				</view>
+			</scroll-view>
+		</view>
+
+		<!-- 4. 吸底：我的排名 (已同步身份配色) -->
+		<view class="my-status-fixed" v-if="currentRank">
+			<!-- 重点优化：背景跟随 themeConfig.bg -->
+			<view class="my-card" :style="{ background: themeConfig.bg }">
+				<view class="my-left">
+					<text class="my-no">{{ currentRank.rank || '-' }}</text>
+					<view class="my-avatar-box">
+						<image v-if="userInfo.avatar || currentRank.avatar" class="my-img"
+							:src="userInfo.avatar || currentRank.avatar" />
+						<uv-avatar v-else :text="currentRank.nickname.charAt(0)" size="35" randomBgColor></uv-avatar>
 					</view>
-					<view class="top-item" :style="{ paddingBottom: '20rpx', opacity: top3[0] ? 1 : 0 }">
-						<image v-if="top3[0]?.avatar" class="top-item-avatar" :src="top3[0]?.avatar"
-							style="border: 4rpx solid #FFD700;">
-						</image>
-						<uv-avatar v-else size="69.6" style="border: 4rpx solid #FFD700;" :text="top3[0]?.nickname.charAt(0)"
-							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[0]?.role) }">{{ top3[0]?.nickname
-							}}</text>
-						<text class="top-item-score">{{ top3[0]?.scope }}</text>
-					</view>
-					<view class="top-item" :style="{ opacity: top3[2] ? 1 : 0 }">
-						<image v-if="top3[2]?.avatar" class="top-item-avatar" :src="top3[2]?.avatar"
-							style="border: 4rpx solid #CD7F32;">
-						</image>
-						<uv-avatar v-else size="69.6" style="border: 4rpx solid #CD7F32;" :text="top3[2]?.nickname.charAt(0)"
-							fontSize="18" randomBgColor></uv-avatar>
-						<text class="top-item-name" :style="{ color: getRoleTextColor(top3[2]?.role) }">{{ top3[2]?.nickname
-							}}</text>
-						<text class="top-item-score">{{ top3[2]?.scope }}</text>
+					<view class="my-info">
+						<text class="my-name">{{ currentRank.nickname }}</text>
+						<text class="my-label" :style="{ color: themeConfig.doneBorder }">当前我的排名</text>
 					</view>
 				</view>
-				<view class="ranking">
-					<scroll-view :scroll-top="0" scroll-y="true" style="height: 950rpx;" class="scroll-Y" @scrolltoupper="upper"
-						@scrolltolower="lower" @scroll="scroll">
-						<!-- 排行榜 -->
-						<view v-if="rankList && rankList.length !== 0" class="ranking-list-item" v-for="(item, key) in rankList"
-							:key="key">
-							<text class="ranking-list-number">{{ key + 4 }}</text>
-							<view class="ranking-list-nickname">
-								<image v-if="item.avatar" :src="item.avatar">
-								</image>
-								<uv-avatar v-else size="69" style="border: 4rpx solid #C0C0C0;" :text="item.nickname.charAt(0)"
-									fontSize="18" randomBgColor></uv-avatar>
-								<text :style="{ color: getRoleTextColor(item.role) }">{{ item.nickname }}</text>
-							</view>
-							<text class="ranking-list-score">{{ item.scope }}</text>
-						</view>
-						<uv-empty v-else text="还没有人上榜～快去刷题，成为第一个霸榜的人！🔥" icon="../../../static/images/empty.png"></uv-empty>
-					</scroll-view>
-					<!-- 当前排名 -->
-					<view class="current-ranking" v-if="currentRank">
-						<text class="ranking-list-number current">{{ currentRank?.rank }}</text>
-						<view class="ranking-list-nickname ">
-							<image v-if="currentRank?.avatar" :src="currentRank?.avatar">
-							</image>
-							<uv-avatar size="10" v-else :text="currentRank?.nickname.charAt(0)" fontSize="18"
-								randomBgColor></uv-avatar>
-							<text :style="{ color: getRoleTextColor(currentRank.role) }">{{ currentRank?.nickname }}</text>
-						</view>
-						<text class="ranking-list-score">{{ currentRank?.scope }}</text>
-					</view>
+				<view class="my-right">
+					<text class="my-val">{{ currentRank.scope || 0 }}</text>
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
+
+<script setup>
+	import {
+		ref,
+		computed,
+		onMounted
+	} from 'vue'
+	import {
+		apiQueryRank,
+		apiQueryUserRank
+	} from '@/api/home'
+
+	const screen = ref(true)
+	const rankList = ref([])
+	const top3 = ref([])
+	const currentRank = ref(null)
+	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo') || '{}'))
+	const role = ref(uni.getStorageSync('role') || 0)
+
+	// --- 颜色配置 (完全同步首页最新配色方案) ---
+	const themeConfig = computed(() => {
+		const configs = {
+			2: { // 管理员
+				name: '管理员',
+				accent: '#4F46E5',
+				bg: 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
+				doneBg: '#EEF2FF',
+				doneBorder: 'rgba(255,255,255,0.6)'
+			},
+			1: { // 高级会员
+				name: '高级会员',
+				accent: '#D97706',
+				bg: 'linear-gradient(135deg, #2D241E 0%, #78350F 100%)',
+				doneBg: '#FFFBEB',
+				doneBorder: 'rgba(255,255,255,0.6)'
+			},
+			0: { // 普通用户
+				name: '普通用户',
+				accent: '#1677ff',
+				bg: 'linear-gradient(135deg, #1677ff 0%, #40a9ff 100%)',
+				doneBg: '#f0f7ff',
+				doneBorder: 'rgba(255,255,255,0.6)'
+			}
+		}
+		return configs[role.value] || configs[0]
+	})
+
+	const fetchData = async (type) => {
+		uni.showLoading({
+			title: '加载中'
+		})
+		try {
+			const [resRank, resUser] = await Promise.all([apiQueryRank(type), apiQueryUserRank(type)])
+			if (resRank.data) {
+				const raw = resRank.data
+				top3.value = raw.slice(0, 3)
+				rankList.value = raw.slice(3)
+			}
+			if (resUser.data) currentRank.value = resUser.data
+		} finally {
+			uni.hideLoading()
+		}
+	}
+
+	const toggleTab = (isDay) => {
+		if (screen.value === isDay) return
+		screen.value = isDay
+		fetchData(isDay ? 1 : 2)
+	}
+
+	onMounted(() => fetchData(1))
+
+	const getRoleColor = (r) => {
+		const map = {
+			2: '#4F46E5',
+			1: '#D97706',
+			0: '#1677ff'
+		}
+		return map[r] || '#333'
+	}
+</script>
+
 <style lang="scss" scoped>
-.ranking {
-	width: 100%;
+	.ranking-container {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		transition: all 0.4s ease;
+	}
 
-	.ranking-box {
-		.page {
-			padding-bottom: 20rpx;
+	/* 顶部 Tab 切换区 */
+	.header-tab {
+		padding: 40rpx 0 0rpx;
+		display: flex;
+		justify-content: center;
 
-			.tab {
-				display: flex;
-				justify-content: center;
-				padding: 20rpx;
-				margin-bottom: 20rpx;
-				color: #1677ff;
+		.tab-pill {
+			display: flex;
+			background: rgba(255, 255, 255, 0.15);
+			padding: 8rpx;
+			border-radius: 100rpx;
+			backdrop-filter: blur(10px);
 
-				view {
-					height: 60rpx;
-					width: 200rpx;
-					line-height: 60rpx;
-					box-sizing: border-box;
-					border: 1px solid #1677ff;
-					font-size: 16px;
-					text-align: center;
+			.tab-btn {
+				padding: 12rpx 50rpx;
+				border-radius: 100rpx;
+				font-size: 26rpx;
+				color: rgba(255, 255, 255, 0.8);
+
+				&.active {
+					background: #fff;
+					color: #333;
 					font-weight: bold;
-					color: #1677ff;
-
-					&:active {
-						background: #1677ff;
-						color: #fff;
-					}
-
-					&:nth-child(1) {
-						border-radius: 30rpx 0 0 30rpx;
-					}
-
-					&:nth-child(2) {
-						border-radius: 0 30rpx 30rpx 0;
-					}
-				}
-
-				.tab-active {
-					background: #1677ff;
-					color: #fff;
-					font-weight: bold;
-				}
-			}
-
-			.top {
-				width: 660rpx;
-				height: 320rpx;
-				margin: auto;
-				display: flex;
-				justify-content: space-between;
-				align-items: flex-end;
-
-				.top-item {
-					width: 200rpx;
-					height: 300rpx;
-					display: flex;
-					flex-direction: column;
-					position: relative;
-					align-items: center;
-					border-radius: 100rpx 100rpx 0 0;
-					color: #1677ff;
-					font-weight: bold;
-
-					.top-item-avatar {
-						border-radius: 50%;
-						width: 140rpx;
-						height: 140rpx;
-					}
-
-
-					.top-item-name {
-						margin: 10rpx 0;
-					}
-
-					.top-item-score {
-						font-size: 16px;
-					}
-				}
-			}
-
-			.ranking {
-				width: 700rpx;
-				border-radius: 30rpx;
-				margin: auto;
-				background: #fff;
-				box-sizing: border-box;
-				padding: 20rpx;
-
-				.ranking-list-item {
-					height: 105rpx;
-					display: flex;
-					align-items: center;
-					font-size: 14px;
-					color: #1677ff;
-				}
-
-				.current-ranking {
-					border-radius: 16rpx;
-					background-color: #f9f9f9;
-					position: fixed;
-					bottom: 0;
-					left: 0;
-					right: 0;
-					height: 85rpx;
-					padding: 0 10rpx 0 10rpx;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					font-size: 14px;
-					color: #1677ff;
-				}
-
-				.ranking-list-number {
-					display: block;
-					width: 70rpx;
-					color: #777;
-				}
-
-				.ranking-list-score {
-					display: block;
-					width: 70rpx;
-					color: #1677ff;
-					font-size: 16px;
-				}
-
-				.ranking-list-nickname {
-					display: flex;
-					align-items: center;
-					width: calc(100% - 140rpx);
-
-					image {
-						width: 80rpx;
-						height: 80rpx;
-						border-radius: 50%;
-						margin-right: 20rpx;
-					}
-
-					text {
-						width: auto;
-					}
-				}
-
-				.current {
-					padding-left: 40rpx;
+					box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
 				}
 			}
 		}
 	}
-}
+
+	/* 荣誉台 */
+	.podium-box {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		padding: 0rpx 10rpx 60rpx;
+		height: 320rpx;
+
+		.podium-col {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+
+			.placeholder {
+				width: 1px;
+				height: 1px;
+				visibility: hidden;
+			}
+		}
+
+		.podium-item {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			width: 100%;
+
+			.avatar-wrap {
+				position: relative;
+
+				.avatar {
+					width: 105rpx;
+					height: 105rpx;
+					border-radius: 50%;
+					border: 4rpx solid rgba(255, 255, 255, 0.6);
+
+					&.main {
+						width: 145rpx;
+						height: 145rpx;
+						border-color: #FFD700;
+					}
+				}
+
+				.medal {
+					position: absolute;
+					bottom: -8rpx;
+					left: 50%;
+					transform: translateX(-50%);
+					width: 36rpx;
+					height: 36rpx;
+					border-radius: 50%;
+					color: #fff;
+					font-size: 22rpx;
+					font-weight: bold;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+				}
+
+				.crown-icon {
+					position: absolute;
+					top: -50rpx;
+					left: 50%;
+					transform: translateX(-50%);
+					width: 70rpx;
+					height: 70rpx;
+					z-index: 2;
+				}
+			}
+
+			.nickname {
+				font-size: 24rpx;
+				color: #fff;
+				margin-top: 16rpx;
+				opacity: 0.9;
+				text-align: center;
+				width: 180rpx;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+
+				&.main {
+					font-size: 28rpx;
+					font-weight: bold;
+					opacity: 1;
+				}
+			}
+
+			.score-tag {
+				margin-top: 8rpx;
+				padding: 4rpx 20rpx;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 40rpx;
+				font-size: 22rpx;
+				color: #fff;
+
+				&.main {
+					background: #FFD700;
+					color: #7C4B00;
+					font-weight: bold;
+				}
+			}
+
+			&.gold .medal {
+				background: #FFD700;
+				font-size: 24rpx;
+				width: 42rpx;
+				height: 42rpx;
+			}
+
+			&.silver .medal {
+				background: #C0C0C0;
+			}
+
+			&.bronze .medal {
+				background: #CD7F32;
+			}
+		}
+	}
+
+	/* 列表区 */
+	.rank-list-card {
+		flex: 1;
+		background: #fff;
+		border-radius: 60rpx 60rpx 0 0;
+		padding: 40rpx 40rpx 140rpx;
+
+		.rank-row {
+			display: flex;
+			align-items: center;
+			padding: 26rpx 0;
+			border-bottom: 1rpx solid #f2f2f2;
+
+			.rank-index {
+				width: 60rpx;
+				font-size: 32rpx;
+				color: #bbb;
+				font-style: italic;
+				font-weight: bold;
+			}
+
+			.user-cell {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				margin: 0 20rpx;
+
+				.u-img {
+					width: 84rpx;
+					height: 84rpx;
+					border-radius: 50%;
+					margin-right: 20rpx;
+					background: #eee;
+				}
+
+				.u-name {
+					font-size: 30rpx;
+					font-weight: 500;
+				}
+			}
+
+			.u-score {
+				text-align: right;
+
+				.val {
+					font-size: 36rpx;
+					font-weight: bold;
+					color: #333;
+				}
+
+				.unit {
+					font-size: 20rpx;
+					color: #bbb;
+					margin-left: 4rpx;
+				}
+			}
+		}
+	}
+
+	/* 底部吸底卡片 */
+	.my-status-fixed {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 20rpx 30rpx 40rpx;
+		background: linear-gradient(to top, #fff 80%, transparent);
+
+		.my-card {
+			/* 改动：背景动态化，圆角加大 */
+			border-radius: 36rpx;
+			padding: 24rpx 36rpx;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.15);
+			transition: all 0.3s ease;
+
+			.my-left {
+				display: flex;
+				align-items: center;
+
+				.my-no {
+					font-size: 38rpx;
+					color: #fff;
+					font-weight: bold;
+					font-style: italic;
+					margin-right: 30rpx;
+				}
+
+				.my-avatar-box {
+					width: 76rpx;
+					height: 76rpx;
+
+					.my-img {
+						width: 100%;
+						height: 100%;
+						border-radius: 50%;
+						border: 2rpx solid rgba(255, 255, 255, 0.4);
+					}
+				}
+
+				.my-info {
+					margin-left: 20rpx;
+
+					.my-name {
+						font-size: 30rpx;
+						color: #fff;
+						font-weight: 600;
+						display: block;
+					}
+
+					.my-label {
+						font-size: 20rpx;
+						margin-top: 2rpx;
+					}
+				}
+			}
+
+			.my-right {
+				text-align: right;
+				color: #fff;
+
+				.my-val {
+					font-size: 44rpx;
+					font-weight: bold;
+				}
+
+				.my-unit {
+					font-size: 20rpx;
+					margin-left: 4rpx;
+					opacity: 0.8;
+				}
+			}
+		}
+	}
 </style>
