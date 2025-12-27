@@ -1,8 +1,177 @@
+<template>
+	<view class="user-page-container" :style="{ background: themeConfig.bg }">
+		<!-- 1. 顶部身份卡片 -->
+		<view class="profile-header">
+			<view class="avatar-container" @click="previewAvatar">
+				<view class="avatar-border" :style="{ borderColor: themeConfig.accent }">
+					<image v-if="userInfo.avatar" :src="userInfo.avatar" class="img" mode="aspectFill" />
+					<view v-else class="img-placeholder" :style="{ background: themeConfig.accent }">
+						{{ userInfo.nickname?.charAt(0) || 'H' }}
+					</view>
+				</view>
+				<view class="role-corner-tag" :style="{ background: themeConfig.accent }">
+					<uni-icons :type="getRoleIcon" size="10" color="#fff"></uni-icons>
+				</view>
+			</view>
+
+			<view class="user-info-box">
+				<text class="user-nickname">{{ userInfo.nickname || '未设置昵称' }}</text>
+				<view class="identity-capsule" v-if="roleDetail">
+					<view class="dot" :style="{ background: themeConfig.accent }"></view>
+					<text class="role-text">{{ roleDetail.name }}</text>
+				</view>
+			</view>
+		</view>
+
+		<!-- 2. 功能操作区 -->
+		<view class="main-action-panel">
+			<!-- 会员权益条 -->
+			<view class="vip-benefit-bar" v-if="role <= 1" @click="unlockMember">
+				<view class="bar-left">
+					<view class="vip-icon-bg">
+						<uni-icons type="vip-filled" size="24" color="#D97706"></uni-icons>
+					</view>
+					<view class="bar-text">
+						<text class="t1">{{ role === 1 ? 'HaoAi 永久会员特权' : '开通永久会员' }}</text>
+						<text class="t2">{{ role === 1 ? '尊享全站 100% 刷题功能' : '解锁无限AI面试、自定义题库等' }}</text>
+					</view>
+				</view>
+				<view class="bar-btn" :style="{ background: themeConfig.accent }">查看</view>
+			</view>
+
+			<!-- 列表容器 -->
+			<view class="action-list-wrap">
+				<!-- 第一组 -->
+				<view class="list-section">
+					<view class="section-title">学习管理</view>
+
+					<navigator url="/pages/user/favorite/favorite" class="list-row-nav">
+						<view class="row-content">
+							<view class="row-left">
+								<view class="icon-circle fav"><uni-icons type="star-filled" size="20"
+										color="#1677ff"></uni-icons></view>
+								<text class="label">我的收藏</text>
+							</view>
+							<uni-icons type="right" size="14" color="#ccc"></uni-icons>
+						</view>
+					</navigator>
+
+					<navigator url="/pages/user/feedback/feedback" class="list-row-nav">
+						<view class="row-content">
+							<view class="row-left">
+								<view class="icon-circle feedback"><uni-icons type="chatbubble-filled" size="20"
+										color="#2dd4bf"></uni-icons></view>
+								<text class="label">反馈记录</text>
+							</view>
+							<view class="row-right">
+								<uv-badge :isDot="hasNotice" type="error"></uv-badge>
+								<uni-icons type="right" size="14" color="#ccc" style="margin-left: 10rpx;"></uni-icons>
+							</view>
+						</view>
+					</navigator>
+				</view>
+
+				<!-- 第二组 -->
+				<view class="list-section">
+					<view class="section-title">系统支持</view>
+
+					<view class="list-row-click" @click="contactUs">
+						<view class="row-content">
+							<view class="row-left">
+								<view class="icon-circle contact"><uni-icons type="staff-filled" size="20"
+										color="#6366f1"></uni-icons></view>
+								<text class="label">联系我们</text>
+							</view>
+							<uni-icons type="right" size="14" color="#ccc"></uni-icons>
+						</view>
+					</view>
+
+					<view class="list-row-click" @click="showFeedback = true">
+						<view class="row-content">
+							<view class="row-left">
+								<view class="icon-circle idea"><uni-icons type="paperplane-filled" size="20"
+										color="#f43f5e"></uni-icons></view>
+								<text class="label">意见反馈</text>
+							</view>
+							<uni-icons type="right" size="14" color="#ccc"></uni-icons>
+						</view>
+					</view>
+
+					<navigator url="/pages/user/setting/setting" class="list-row-nav">
+						<view class="row-content">
+							<view class="row-left">
+								<view class="icon-circle set"><uni-icons type="gear-filled" size="20"
+										color="#64748b"></uni-icons></view>
+								<text class="label">我的设置</text>
+							</view>
+							<uni-icons type="right" size="14" color="#ccc"></uni-icons>
+						</view>
+					</navigator>
+				</view>
+			</view>
+
+		</view>
+
+		<!-- 3. 会员详情弹窗 -->
+		<uv-modal ref="memberModal" :show-cancel-button="role !== 1" :confirm-text="role === 1 ? '我知道了' : '提交支付审核'"
+			confirmColor="#D97706" @confirm="handleMemberConfirm">
+			<view class="premium-modal-box">
+				<view class="premium-header">
+					<view class="medal-ring">
+						<uni-icons type="vip-filled" size="40" color="#D97706"></uni-icons>
+					</view>
+					<text class="premium-title">HaoAi Premium</text>
+					<text class="premium-status" v-if="role === 1">永久会员特权已激活</text>
+				</view>
+
+				<view class="privilege-list">
+					<view class="p-item">
+						<uni-icons type="checkbox-filled" size="16" color="#D97706"></uni-icons>
+						<text>会员专属答案解析</text>
+					</view>
+					<view class="p-item">
+						<uni-icons type="checkbox-filled" size="16" color="#D97706"></uni-icons>
+						<text>HaoAi 智能面试解析助手</text>
+					</view>
+					<view class="p-item">
+						<uni-icons type="checkbox-filled" size="16" color="#D97706"></uni-icons>
+						<text>自定义专属题库管理特权</text>
+					</view>
+				</view>
+
+				<view class="premium-pay-section" v-if="role !== 1">
+					<view class="price-tag">
+						<text class="unit">￥</text>{{ payConfig.price }}
+						<text class="term">/ 永久有效</text>
+					</view>
+					<view class="qr-container">
+						<image :src="payConfig.url" mode="widthFix" class="qr-img" />
+						<text class="qr-tips">{{ payConfig.remark }}</text>
+					</view>
+				</view>
+			</view>
+		</uv-modal>
+
+		<!-- 弹窗组件 -->
+		<uni-popup ref="contactUsPopup" type="center">
+			<view class="qr-pop-content">
+				<image src="../../static/images/qq.png" mode="widthFix" class="img"></image>
+				<text>添加客服 开启 1对1 服务</text>
+			</view>
+		</uni-popup>
+
+		<FeedbackPopup v-model:show="showFeedback" @submit="handleFeedbackSubmit" />
+	</view>
+</template>
+
 <script setup>
 	import {
 		ref,
 		computed
 	} from 'vue'
+	import {
+		onShow
+	} from '@dcloudio/uni-app'
 	import {
 		apiGetRoleDetail
 	} from '@/api/system/role'
@@ -19,668 +188,476 @@
 		apiRecordNotice,
 		apiGetNoticeHas
 	} from '@/api/system/notice'
-	import {
-		onShow
-	} from '@dcloudio/uni-app'
-	// 添加导入
 	import FeedbackPopup from '@/components/feedbackPopup.vue'
-	// 用户信息
-	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
-	// 当前身份
-	const role = ref(uni.getStorageSync('role'))
-	// 角色信息
-	const roleDetail = ref(null)
-	// 获取角色详情
-	const getRoleDetail = async () => {
-		// loading
-		uni.showLoading({
-			mask: true
-		})
-		const res = await apiGetRoleDetail(role.value)
-		roleDetail.value = res
-		uni.hideLoading()
-	}
-	// 获取用户信息
-	const getUserDetail = async () => {
-		const res = await apiGetUserInfo(userInfo.value.id)
-		userInfo.value = res
-	}
 
-	// 角色相关的计算属性
+	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo') || '{}'))
+	const role = ref(Number(uni.getStorageSync('role')) || 0)
+	const roleDetail = ref(null)
+	const payConfig = ref({})
+	const hasNotice = ref(false)
+	const showFeedback = ref(false)
+	const memberModal = ref()
+	const contactUsPopup = ref()
+
+	const themeConfig = computed(() => {
+		const configs = {
+			2: {
+				name: '管理员',
+				accent: '#4F46E5',
+				bg: 'linear-gradient(135deg, #1E293B 0%, #334155 100%)'
+			},
+			1: {
+				name: '高级会员',
+				accent: '#D97706',
+				bg: 'linear-gradient(135deg, #2D241E 0%, #78350F 100%)'
+			},
+			0: {
+				name: '普通用户',
+				accent: '#1677ff',
+				bg: 'linear-gradient(135deg, #1677ff 0%, #40a9ff 100%)'
+			}
+		}
+		return configs[role.value] || configs[0]
+	})
+
 	const getRoleIcon = computed(() => {
-		const iconMap = {
-			2: 'staff',
+		const map = {
+			2: 'staff-filled',
 			1: 'vip-filled',
 			0: 'person-filled'
 		}
-		return iconMap[role.value] || 'person-filled'
-	})
-	const getRoleColor = computed(() => {
-		const colorMap = {
-			1: '#712a07',
-			2: '#564021',
-			0: '#203c71'
-		}
-		return colorMap[role.value] || '#ffffff'
+		return map[role.value] || 'person-filled'
 	})
 
-	// 预览头像
-	const previewAvatar = () => {
-		if (!userInfo.value.avatar) return
-		uni.previewImage({
-			urls: [userInfo.value.avatar],
-			current: 0
-		})
-	}
 	const initData = async () => {
-		uni.showLoading({
-			mask: true
-		})
-		await Promise.all([
-			getUserDetail(),
-			getRoleDetail(),
-			getWebConfig(),
-			getNotice()
-		])
-		uni.hideLoading()
+		try {
+			const [u, r, c, n] = await Promise.all([
+				apiGetUserInfo(userInfo.value.id),
+				apiGetRoleDetail(role.value),
+				apiGetConfig(1),
+				apiGetNoticeHas()
+			])
+			userInfo.value = u;
+			roleDetail.value = r;
+			payConfig.value = c.data;
+			hasNotice.value = n.data;
+		} catch (e) {
+			console.error(e)
+		}
 	}
 
-	onShow(() => {
-		initData()
+	onShow(() => initData())
+
+	const previewAvatar = () => userInfo.value.avatar && uni.previewImage({
+		urls: [userInfo.value.avatar]
 	})
+	const unlockMember = () => memberModal.value.open()
+	const contactUs = () => contactUsPopup.value.open()
 
-
-	// 会员对话框
-	const memberModal = ref()
-	// 解锁会员
-	const unlockMember = () => {
-		memberModal.value.open()
+	const handleMemberConfirm = () => {
+		if (role.value === 1) memberModal.value.close()
+		else goToPay()
 	}
 
-
-	// 联系我们的对话框
-	const contactUsPopup = ref()
-	// 联系我们
-	const contactUs = () => {
-		contactUsPopup.value.open()
+	const goToPay = async () => {
+		await apiRecordNotice({
+			status: 0
+		})
+		memberModal.value.close()
+		uni.showToast({
+			title: '已提交，请等待审核',
+			icon: 'success'
+		})
 	}
 
-
-
-	// 点击了提交
 	const handleFeedbackSubmit = async (content) => {
 		await apiSendFeedback({
 			feedbackContent: content,
 			status: 2
 		})
 		uni.showToast({
-			title: '反馈成功可在我的反馈中查看',
-			icon: 'none',
-			duration: 2000
+			title: '反馈成功'
 		})
 	}
-
-
-	// 修改渐变背景计算属性，使上面更深，下面更浅
-	const getPageGradient = computed(() => {
-		const gradientMap = {
-			1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
-			2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
-			0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
-		}
-		return gradientMap[role.value] || gradientMap[0]
-	})
-
-	// 添加文字颜色的计算属性
-	const getTextColor = computed(() => {
-		const textColorMap = {
-			1: '#712a07',
-			2: '#564021',
-			0: '#203c71'
-		}
-		return textColorMap[role.value] || gradientMap[0]
-	})
-
-	// 配置
-	const config = ref({
-		pay: 1
-	})
-	// 支付配置
-	const payConfig = ref({})
-	const getWebConfig = async () => {
-		const res = await apiGetConfig(config.value.pay)
-		payConfig.value = res.data
-	}
-
-	// 去支付
-	const goToPay = async () => {
-		// 发送请求到通知
-		await apiRecordNotice({
-			status: 0
-		})
-		memberModal.value.close()
-		const tips = [
-			'感谢您的支持，让我们一起开启AI之旅~',
-			'谢谢您的信任，HaoAi与您同行！',
-			'支付成功！您已解锁全新体验~',
-		]
-		uni.showToast({
-			title: tips[Math.floor(Math.random() * tips.length)],
-			icon: 'none',
-			duration: 2000
-		})
-	}
-	// 是否有通知
-	const hasNotice = ref(false)
-	// 查询是否有通知
-	const getNotice = async () => {
-		const res = await apiGetNoticeHas()
-		hasNotice.value = res.data
-	}
-
-	// 反馈弹窗显示状态
-	const showFeedback = ref(false)
 </script>
-<template>
-	<view class="user-box" :style="{ background: getPageGradient }">
 
-
-		<!-- 联系我们的弹层 -->
-		<uni-popup ref="contactUsPopup" background-color="#fff">
-			<image src="../../static/images/qq.png" class="image-style" mode="aspectFill"></image>
-		</uni-popup>
-
-		<!-- 意见反馈的弹层 -->
-		<FeedbackPopup v-model:show="showFeedback" @submit="handleFeedbackSubmit" />
-
-		<!-- 头像位置 -->
-		<view class="user-top">
-			<view class="avatar-wrap" @click="previewAvatar">
-				<template v-if="userInfo.avatar">
-					<image :src="userInfo.avatar" class="avatar-image" mode="aspectFill"></image>
-				</template>
-				<template v-else>
-					<view class="avatar-placeholder">
-						<text>{{ userInfo.nickname?.[0] || userInfo.account?.[0] || 'Hao' }}</text>
-					</view>
-				</template>
-			</view>
-			<view class="user-info">
-				<view class="name-wrap">
-					<text class="nickname" :style="{ color: getTextColor }">{{ userInfo?.nickname || '暂无昵称' }}</text>
-					<text class="account-tag" :style="{ color: getTextColor }">账户: {{ userInfo.account }}</text>
-				</view>
-				<view class="role-wrap" v-if="roleDetail">
-					<view class="role-badge">
-						<uni-icons :type="getRoleIcon" size="16" :color="getRoleColor"></uni-icons>
-						<text class="role-name" :style="{ color: getTextColor }">{{ roleDetail?.name }}</text>
-					</view>
-				</view>
-				<view class="role-wrap" v-if="roleDetail">
-					<text class="role-desc" :style="{ color: getTextColor }">{{ roleDetail?.remark }}</text>
-				</view>
-			</view>
-		</view>
-		<!-- 操作列表 -->
-		<view class="section">
-			<!-- 外层盒子 -->
-			<view class="list">
-				<!-- 跳转链接 -->
-				<!-- 每一行 -->
-				<view class="row" v-if="role == 0 || role == 1">
-					<view class="left">
-						<uni-icons type="vip-filled" size="28" color="#1677ff"></uni-icons>
-						<view class="text">
-							我的会员
-						</view>
-					</view>
-					<view class="right" @click="unlockMember">
-						<view class="text">
-							解锁更多功能
-						</view>
-						<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-					</view>
-				</view>
-
-				<navigator url="/pages/user/favorite/favorite" class="border-row">
-					<view class="row">
-						<view class="left">
-							<uni-icons type="star-filled" size="28" color="#1677ff"></uni-icons>
-							<view class="text">
-								我的收藏
-							</view>
-						</view>
-						<view class="right">
-							<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-						</view>
-					</view>
-				</navigator>
-
-
-
-				<navigator url="/pages/user/feedback/feedback" class="border-row">
-					<view class="row">
-						<view class="left">
-							<uni-icons type="eye-filled" size="28" color="#1677ff"></uni-icons>
-							<view class="text">
-								我的反馈
-							</view>
-						</view>
-						<view class="right">
-							<view class="text">
-								<uv-badge :isDot="hasNotice"></uv-badge>
-							</view>
-							<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-						</view>
-					</view>
-				</navigator>
-
-				<navigator url="/pages/user/setting/setting">
-					<view class="row">
-						<view class="left">
-							<uni-icons type="gear-filled" size="28" color="#1677ff"></uni-icons>
-							<view class="text">
-								我的设置
-							</view>
-						</view>
-						<view class="right">
-							<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-						</view>
-					</view>
-				</navigator>
-			</view>
-		</view>
-
-
-		<view class="section">
-			<view class="list">
-				<view class="row">
-					<view class="left">
-						<uni-icons type="staff-filled" size="28" color="#1677ff"></uni-icons>
-						<view class="text">
-							联系我们
-						</view>
-					</view>
-					<view class="right" @click="contactUs">
-						<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-					</view>
-				</view>
-				<view class="row">
-					<view class="left">
-						<uni-icons type="paperplane" size="28" color="#1677ff"></uni-icons>
-						<view class="text">
-							意见反馈
-						</view>
-					</view>
-					<view class="right" @click="showFeedback = true">
-						<uni-icons type="right" size="22" color="#a6a6a6"></uni-icons>
-					</view>
-				</view>
-			</view>
-		</view>
-
-		<!-- 会员对话框 -->
-		<uv-modal :show-cancel-button="true" ref="memberModal" :title="role === '1' ? 'HaoAi刷题会员' : '会员服务'"
-			:confirm-text="role === '1' ? '关闭' : '我已支付'" @confirm="role === '1' ? memberModal.close() : goToPay()">
-			<template #default>
-				<view class="modal-box">
-					<view class="member-box" :class="{ 'is-vip': role === '1' }">
-						<view class="left">
-							<uni-icons type="vip" size="38" color="#ffd700"></uni-icons>
-							<view class="text">永久会员</view>
-						</view>
-						<view class="right">
-							<template v-if="role === '1'">
-								<view class="vip-badge">
-									<uni-icons type="checkmarkempty" size="24" color="#ffd700"></uni-icons>
-									<text>已开通</text>
-								</view>
-							</template>
-							<template v-else>
-								<view class="price">
-									<text class="symbol">￥</text>{{ payConfig.price }}
-								</view>
-							</template>
-						</view>
-					</view>
-
-					<template v-if="role === '1'">
-						<view class="vip-content">
-							<uni-icons type="star-filled" size="64" color="#ffd700"></uni-icons>
-							<text class="congrats">恭喜您已经是HaoAi刷题会员</text>
-							<text class="benefit">{{ roleDetail.remark }}</text>
-						</view>
-					</template>
-					<template v-else>
-						<view class="bottom">{{ payConfig.content }}</view>
-						<view class="pay-content">
-							<image :src="payConfig.url" mode="widthFix" class="pay-qrcode"></image>
-							<view class="pay-tips">
-								<text>{{ payConfig.remark }}</text>
-							</view>
-						</view>
-					</template>
-				</view>
-			</template>
-		</uv-modal>
-	</view>
-</template>
 <style lang="scss" scoped>
-	.user-box {
-		.modal-box {
-			padding: 20rpx;
-			background-color: #fff;
-			width: 100%;
+	.user-page-container {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
 
-			.member-box {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				padding: 20rpx;
-				background: #f8f8f8;
-				border-radius: 12rpx;
+	/* 顶部 Header */
+	.profile-header {
+		padding: 130rpx 50rpx 70rpx;
+		display: flex;
+		align-items: center;
 
-				.vip-badge {
+		.avatar-container {
+			position: relative;
+			margin-right: 34rpx;
+
+			.avatar-border {
+				width: 140rpx;
+				height: 140rpx;
+				border-radius: 50%;
+				border: 4rpx solid #fff;
+				overflow: hidden;
+				background: #fff;
+				box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+
+				.img {
+					width: 100%;
+					height: 100%;
+				}
+
+				.img-placeholder {
+					width: 100%;
+					height: 100%;
 					display: flex;
 					align-items: center;
-
-				}
-
-				.price {
-					font-size: 46rpx;
-					color: #ff4d4f;
+					justify-content: center;
+					color: #fff;
+					font-size: 50rpx;
 					font-weight: bold;
-
-					.symbol {
-						font-size: 32rpx;
-						margin-right: 4rpx;
-					}
 				}
 			}
 
-			.vip-content {
+			.role-corner-tag {
+				position: absolute;
+				bottom: 4rpx;
+				right: 4rpx;
+				width: 40rpx;
+				height: 40rpx;
+				border-radius: 50%;
+				border: 4rpx solid #fff;
 				display: flex;
-				flex-direction: column;
 				align-items: center;
-				padding: 40rpx 0;
+				justify-content: center;
+			}
+		}
 
-				.congrats {
-					font-size: 36rpx;
-					color: #333;
-					font-weight: bold;
-					margin: 20rpx 0 10rpx;
-				}
-
-				.benefit {
-					text-align: center;
-					font-size: 28rpx;
-					color: #666;
-				}
+		.user-info-box {
+			.user-nickname {
+				font-size: 42rpx;
+				color: #fff;
+				font-weight: bold;
+				display: block;
+				margin-bottom: 6rpx;
 			}
 
-			.pay-content {
-				display: flex;
-				flex-direction: column;
+			.user-account {
+				font-size: 24rpx;
+				color: rgba(255, 255, 255, 0.7);
+				display: block;
+				margin-bottom: 12rpx;
+			}
+
+			.identity-capsule {
+				display: inline-flex;
 				align-items: center;
-				padding: 20rpx 0;
+				background: rgba(255, 255, 255, 0.15);
+				backdrop-filter: blur(10px);
+				padding: 6rpx 20rpx;
+				border-radius: 100rpx;
 
-				.pay-qrcode {
-					width: 400rpx;
-					height: 400rpx;
-					margin-bottom: 20rpx;
+				.dot {
+					width: 10rpx;
+					height: 10rpx;
+					border-radius: 50%;
+					margin-right: 12rpx;
 				}
 
-				.pay-tips {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					gap: 10rpx;
-
-					text {
-						font-size: 28rpx;
-						color: #666;
-
-						&:first-child {
-							color: #333;
-							font-weight: 500;
-						}
-					}
+				.role-text {
+					font-size: 22rpx;
+					color: #fff;
+					font-weight: 500;
 				}
 			}
-
-			.bottom {
-				margin-top: 20rpx;
-				font-size: 26rpx;
-				color: #999;
-				text-align: center;
-				padding: 0 20rpx;
-			}
 		}
+	}
 
-		.border-row {
-			border-bottom: 1px solid #e6e6e6;
-		}
+	/* 主体内容区 */
+	.main-action-panel {
+		flex: 1;
+		background: #f8fafc;
+		border-radius: 64rpx 64rpx 0 0;
+		padding: 50rpx 40rpx 100rpx;
 
-
-
-		.image-style {
-			width: 500rpx;
-			height: 500rpx;
-		}
-
-		.bottom {
-			margin-top: 10rpx;
-			font-size: 28rpx;
-			color: #949494;
-		}
-
-		.member-box {
+		.vip-benefit-bar {
+			background: #fff;
+			border-radius: 32rpx;
+			padding: 28rpx 32rpx;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
+			box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.03);
+			margin-bottom: 48rpx;
 
-			.left {
-				display: flex;
-				align-items: center;
-
-				.text {
-					font-size: 38rpx;
-					color: #858585;
-					padding-left: 10rpx;
-					font-weight: bold;
-				}
-
-				.icon {
-					color: #28b28b;
-				}
+			&:active {
+				transform: scale(0.98);
 			}
 
-			.right {
+			.bar-left {
 				display: flex;
 				align-items: center;
+				gap: 24rpx;
 
-				.text {
-					font-size: 30rpx;
-					color: #aaa;
-					padding-right: 5rpx;
-				}
-			}
-		}
-
-		.section {
-			width: 690rpx;
-			margin: 28rpx auto;
-			border: 1px solid #eeeeee;
-			box-shadow: 0 0 30rpx rgba(0, 0, 0, 0.05);
-
-			.list {
-				.row {
-					background-color: #fff;
+				.vip-icon-bg {
+					width: 80rpx;
+					height: 80rpx;
+					background: #fffcf0;
+					border-radius: 20rpx;
 					display: flex;
 					align-items: center;
-					justify-content: space-between;
-					height: 120rpx;
-					border-bottom: 1px solid #eeeeee;
-					padding: 0 20rpx;
-					position: relative;
-					border-radius: 10rpx;
+					justify-content: center;
+				}
 
-					&:last-child {
-						border-bottom: 0;
+				.bar-text {
+					display: flex;
+					flex-direction: column;
+
+					.t1 {
+						font-size: 30rpx;
+						color: #333;
+						font-weight: bold;
 					}
 
-					.left {
+					.t2 {
+						font-size: 22rpx;
+						color: #999;
+						margin-top: 4rpx;
+					}
+				}
+			}
+
+			.bar-btn {
+				font-size: 22rpx;
+				color: #fff;
+				padding: 8rpx 28rpx;
+				border-radius: 100rpx;
+				font-weight: bold;
+			}
+		}
+
+		.list-section {
+			margin-bottom: 48rpx;
+
+			.section-title {
+				font-size: 24rpx;
+				color: #94a3b8;
+				font-weight: bold;
+				margin-bottom: 24rpx;
+				padding-left: 10rpx;
+				text-transform: uppercase;
+				letter-spacing: 1rpx;
+			}
+
+			/* 修复布局错乱的关键样式 */
+			.list-row-nav,
+			.list-row-click {
+				display: block;
+				width: 100%;
+				margin-bottom: 16rpx;
+			}
+
+			.row-content {
+				background: #fff;
+				border-radius: 28rpx;
+				padding: 32rpx 36rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				transition: all 0.2s;
+
+				&:active {
+					background: #f1f5f9;
+				}
+
+				.row-left {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					gap: 28rpx;
+
+					.label {
+						font-size: 28rpx;
+						color: #334155;
+						font-weight: 500;
+					}
+
+					.icon-circle {
+						width: 64rpx;
+						height: 64rpx;
+						border-radius: 50%;
 						display: flex;
 						align-items: center;
+						justify-content: center;
 
-						.text {
-							padding-left: 20rpx;
+						&.fav {
+							background: #eff6ff;
 						}
 
-						.icon {
-							color: #28b28b;
+						&.feedback {
+							background: #f0fdfa;
+						}
+
+						&.contact {
+							background: #eef2ff;
+						}
+
+						&.idea {
+							background: #fff1f2;
+						}
+
+						&.set {
+							background: #f1f5f9;
 						}
 					}
+				}
 
-					.right {
-						display: flex;
-						align-items: center;
-
-						.text {
-							font-size: 28rpx;
-							color: #aaa;
-							padding-right: 5rpx;
-						}
-					}
-
-					button {
-						position: absolute;
-						top: 0;
-						left: 0;
-						height: 100rpx;
-						width: 100%;
-						opacity: 0;
-
-					}
+				.row-right {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
 				}
 			}
 		}
 
-		.user-top {
-			padding: 55rpx 0rpx 23rpx 0rpx;
-			// background: linear-gradient(135deg, #1677ff, #4096ff);
+		.version-label {
+			text-align: center;
+			color: #cbd5e1;
+			font-size: 20rpx;
+			margin-top: 60rpx;
+		}
+	}
+
+	/* 会员弹窗 */
+	.premium-modal-box {
+		padding: 20rpx 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		.premium-header {
 			display: flex;
-			align-items: center;
-			justify-content: center;
 			flex-direction: column;
-			position: relative;
-			overflow: hidden;
-			border-radius: 0rpx 0rpx 5rpx 5rpx;
+			align-items: center;
+			margin-bottom: 40rpx;
 
-			&::after {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				// background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-			}
-
-			.avatar-wrap {
-				margin-bottom: 25rpx;
-				position: relative;
-				z-index: 1;
-				width: 180rpx;
-				height: 180rpx;
+			.medal-ring {
+				width: 130rpx;
+				height: 130rpx;
+				background: #fffbeb;
 				border-radius: 50%;
-				overflow: hidden;
-				border: 6rpx solid rgba(255, 255, 255, 0.8);
-				box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-bottom: 24rpx;
+				border: 2rpx solid #fef3c7;
+			}
 
-				.avatar-image {
-					width: 100%;
-					height: 100%;
-					transition: transform 0.3s;
+			.premium-title {
+				font-size: 38rpx;
+				color: #1a1a1a;
+				font-weight: bold;
+			}
 
-					&:active {
-						transform: scale(0.95);
-					}
+			.premium-status {
+				font-size: 24rpx;
+				color: #D97706;
+				margin-top: 8rpx;
+				font-weight: 500;
+			}
+		}
+
+		.privilege-list {
+			width: 100%;
+			background: #f8fafc;
+			border-radius: 24rpx;
+			padding: 32rpx;
+			margin-bottom: 40rpx;
+
+			.p-item {
+				display: flex;
+				align-items: center;
+				gap: 20rpx;
+				margin-bottom: 20rpx;
+				font-size: 26rpx;
+				color: #4b5563;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+		}
+
+		.premium-pay-section {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+
+			.price-tag {
+				font-size: 60rpx;
+				color: #D97706;
+				font-weight: bold;
+				margin-bottom: 32rpx;
+
+				.unit {
+					font-size: 32rpx;
 				}
 
-				.avatar-placeholder {
-					width: 100%;
-					height: 100%;
-					background: linear-gradient(45deg, #1677ff, #4096ff);
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					text {
-						font-size: 60rpx;
-						color: #fff;
-						font-weight: 600;
-						text-transform: uppercase;
-					}
+				.term {
+					font-size: 24rpx;
+					color: #9ca3af;
+					font-weight: normal;
+					margin-left: 12rpx;
 				}
 			}
 
-			.user-info {
-				text-align: center;
-				position: relative;
-				z-index: 1;
+			.qr-container {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
 
-				.name-wrap {
-					margin-bottom: 20rpx;
-
-					.nickname {
-						font-size: 42rpx;
-						color: #fff;
-						font-weight: 600;
-						text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-						display: block;
-						margin-bottom: 8rpx;
-
-					}
-
-					.account-tag {
-						font-size: 24rpx;
-						color: rgba(255, 255, 255, 0.9);
-						background: rgba(255, 255, 255, 0.15);
-						padding: 4rpx 16rpx;
-						border-radius: 20rpx;
-					}
+				.qr-img {
+					width: 360rpx;
+					height: 360rpx;
+					background: #fff;
+					padding: 12rpx;
+					border-radius: 16rpx;
+					border: 1rpx solid #e5e7eb;
 				}
 
-				.role-wrap {
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					gap: 16rpx;
-
-					.role-badge {
-						display: flex;
-						align-items: center;
-						gap: 6rpx;
-						background: rgba(255, 255, 255, 0.2);
-						padding: 6rpx 16rpx;
-						border-radius: 20rpx;
-						backdrop-filter: blur(4px);
-
-						.role-name {
-							font-size: 24rpx;
-							color: #712a07;
-							font-weight: 500;
-						}
-					}
-
-					.role-desc {
-						margin-top: 10rpx;
-						font-size: 24rpx;
-						color: #712a07;
-					}
+				.qr-tips {
+					font-size: 22rpx;
+					color: #94a3b8;
+					margin-top: 20rpx;
 				}
 			}
+		}
+	}
+
+	.qr-pop-content {
+		padding: 60rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 24rpx;
+		background: #fff;
+		border-radius: 48rpx;
+
+		.img {
+			width: 440rpx;
+		}
+
+		text {
+			font-size: 28rpx;
+			color: #64748b;
+			font-weight: 500;
 		}
 	}
 </style>
