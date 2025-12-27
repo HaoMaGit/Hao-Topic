@@ -1,3 +1,93 @@
+<template>
+	<view class="page-container">
+		<!-- 1. 顶部身份与背景 -->
+		<view class="header-section" :style="{ background: themeConfig.bg }">
+			<view class="user-info">
+				<view class="greeting">
+					<view class="time-row">
+						<text class="time-text">{{ getTimeOfDay() }}好，</text>
+						<view class="role-badge">{{ themeConfig.name }}</view>
+					</view>
+					<text class="nickname">{{ userInfo.nickname || userInfo.account || '同学' }}</text>
+				</view>
+			</view>
+
+			<!-- 2. 数据看板 -->
+			<view class="stats-board">
+				<view class="stats-item">
+					<text class="label">今日已刷</text>
+					<text class="value">{{ webHomeCount.todayTopicCount || 0 }}</text>
+				</view>
+				<view class="v-divider"></view>
+				<view class="stats-item">
+					<text class="label">今日次数</text>
+					<text class="value">{{ webHomeCount.todayCount || 0 }}</text>
+				</view>
+				<view class="v-divider"></view>
+				<view class="stats-item">
+					<text class="label">累计数量</text>
+					<view class="value-box">
+						<text class="current"
+							:style="{ color: themeConfig.accent }">{{ webHomeCount.totalTopicRecordCount || 0 }}</text>
+						<text class="split">/</text>
+						<text class="total">{{ webHomeCount.totalTopicCount || 0 }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<!-- 3. 排名引导 -->
+		<view class="ranking-bar" @click="tapRanking">
+			<view class="bar-left">
+				<image class="medal-icon" src="../../static/images/zzjb.png" mode="aspectFit" />
+				<view class="rank-text">
+					<text class="main-rank">当前排名：第 {{ webHomeCount.rank || 0 }} 名</text>
+					<text class="sub-rank">全站共 {{ webHomeCount.userCount || 0 }} 位活跃用户</text>
+				</view>
+			</view>
+			<uni-icons type="right" size="14" color="#999"></uni-icons>
+		</view>
+
+		<!-- 4. 每日任务列表 -->
+		<view class="task-section">
+			<view class="section-header">
+				<view class="title-left">
+					<view class="indicator" :style="{ background: themeConfig.accent }"></view>
+					<text class="title">每日必刷</text>
+				</view>
+				<text class="subtitle">{{ currentDate }}</text>
+			</view>
+
+			<view class="list-wrapper">
+				<view v-if="loading" class="state-box">数据加载中...</view>
+				<view v-else-if="topicTodayVo.length === 0" class="state-box">今日暂无推荐题目</view>
+
+				<view v-for="(item, index) in topicTodayVo" :key="index" class="topic-card"
+					@click="handleQuestion(item)">
+					<view class="topic-main">
+						<text class="topic-title">{{ item.topicName }}</text>
+						<view class="topic-tags">
+							<text v-for="tag in item.labelNames" :key="tag" class="tag">{{ tag }}</text>
+						</view>
+					</view>
+
+					<!-- 修改：根据状态和身份动态绑定样式 -->
+					<view class="status-btn" :style="item.status == 1 ? { 
+							background: themeConfig.doneBg, 
+							color: themeConfig.accent,
+							border: `1px solid ${themeConfig.doneBorder}`
+						} : { 
+							background: themeConfig.accent, 
+							color: '#fff' 
+						}">
+						{{ item.status == 1 ? '已刷' : '练习' }}
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
 <script setup>
 	import {
 		ref,
@@ -13,307 +103,315 @@
 		apiFlushTopic
 	} from '@/api/home/index'
 
-	// 数据对象
+	const loading = ref(true)
 	const webHomeCount = ref({})
-	// 获取数据
-	const getWebHomeCount = async () => {
-		const res = await apiQueryWebHomeCount()
-		webHomeCount.value = res.data
-	}
-	// 获取今日题目
 	const topicTodayVo = ref([])
-	const getTopicTodayVo = async () => {
-		const res = await apiQueryTopicTodayVo()
-		topicTodayVo.value = res.data
-	}
-	
+	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo') || '{}'))
+	const role = ref(uni.getStorageSync('role') || 0)
+
 	const initData = async () => {
-		uni.showLoading()
-		await Promise.all([
-			getWebHomeCount(),
-			getTopicTodayVo()
-		])
-		uni.hideLoading()
+		loading.value = true
+		try {
+			const [resCount, resTopic] = await Promise.all([apiQueryWebHomeCount(), apiQueryTopicTodayVo()])
+			if (resCount.code === 200) webHomeCount.value = resCount.data
+			if (resTopic.code === 200) topicTodayVo.value = resTopic.data
+		} finally {
+			loading.value = false
+		}
 	}
-	
+
 	onMounted(() => {
 		initData()
 	})
 
-	// 用户信息
-	const userInfo = ref(JSON.parse(uni.getStorageSync('h5UserInfo')))
-
-	// 当前身份
-	const role = ref(uni.getStorageSync('role'))
-	// 映射身份
-	const roleName = computed(() => {
-		const roleNameMap = {
-			1: '管理员',
-			2: '会员',
-			0: '用户'
+	// --- 颜色配置优化 ---
+	const themeConfig = computed(() => {
+		const configs = {
+			2: { // 管理员
+				name: '管理员',
+				accent: '#4F46E5',
+				bg: 'linear-gradient(135deg, #1E293B 0%, #334155 100%)',
+				doneBg: '#EEF2FF', // 极浅靛蓝
+				doneBorder: '#E0E7FF'
+			},
+			1: { // 会员：升级为质感古铜方案
+				name: '普通会员',
+				accent: '#D97706',
+				bg: 'linear-gradient(135deg, #2D241E 0%, #78350F 100%)',
+				doneBg: '#FFFBEB', // 极浅琥珀色（浅色不显深）
+				doneBorder: '#FEF3C7'
+			},
+			0: { // 普通用户
+				name: '普通用户',
+				accent: '#1677ff',
+				bg: 'linear-gradient(135deg, #1677ff 0%, #40a9ff 100%)',
+				doneBg: '#f0f7ff', // 极浅蓝色
+				doneBorder: '#d0e7ff'
+			}
 		}
-		return roleNameMap[role.value] || roleNameMap[0]
-	})
-	// 修改渐变背景计算属性，使上面更深，下面更浅
-	const getPageGradient = computed(() => {
-		const gradientMap = {
-			1: 'linear-gradient(to bottom, rgba(243, 156, 18, 0.6), rgba(243, 156, 18, 0.3) 30%, rgba(243, 156, 18, 0.1) 60%, transparent 90%)', // 管理员黑金色
-			2: 'linear-gradient(to bottom, rgba(33, 33, 33, 0.8), rgba(212, 175, 55, 0.4) 40%, rgba(212, 175, 55, 0.1) 70%, transparent 90%)', // 会员金色
-			0: 'linear-gradient(to bottom, rgba(22, 119, 255, 0.6), rgba(22, 119, 255, 0.3) 30%, rgba(22, 119, 255, 0.1) 60%, transparent 90%)' // 普通用户蓝色
-		}
-		return gradientMap[role.value] || gradientMap[0]
-	})
-	// 添加文字颜色的计算属性
-	const getTextColor = computed(() => {
-		const textColorMap = {
-			1: '#712a07',
-			2: '#564021',
-			0: '#203c71'
-		}
-		return textColorMap[role.value] || gradientMap[0]
+		return configs[role.value] || configs[0]
 	})
 
+	const currentDate = computed(() => {
+		const date = new Date()
+		return `${date.getMonth() + 1}月${date.getDate()}日`
+	})
 
-	// 点击了排名
-	const tapRanking = () => {
-		uni.navigateTo({
-			url: '/pages/index/ranking/ranking'
-		})
-	}
+	const tapRanking = () => uni.navigateTo({
+		url: '/pages/index/ranking/ranking'
+	})
 
-	// 点击跳转题目
 	const handleQuestion = async (item) => {
-		// 判断专题id是否为空
 		if (!item.subjectId) {
-			// 该专题不存在或被禁用了
 			uni.showToast({
-				title: '该专题不存在或被禁用了',
+				title: '专题不可用',
 				icon: 'none'
-			})
-			return
+			});
+			return;
 		}
-		uni.showLoading()
-		// 调用已刷接口
-		await apiFlushTopic(
-			item.id)
+		uni.showLoading({
+			title: '加载中'
+		})
+		await apiFlushTopic(item.id)
 		uni.hideLoading()
-		// 跳转
 		uni.navigateTo({
 			url: `/pages/database/topic/topic?id=${item.topicId}&name=${item.topicName}&subjectId=${item.subjectId}`
 		})
 	}
 </script>
-<template>
-	<view class="content" :style="{ background: getPageGradient }">
-		<!-- 顶部展示区域 时间 会员信息 图标刷题量 在线时间 -->
-		<view class="content-top">
-			<view class="user-identity">
-				<!-- 限制8个字 -->
-				<h2 class="welcome" :style="{ color: getTextColor }">{{ userInfo.nickname || userInfo.account }}<text>{{
-					roleName
-				}}</text>，{{ getTimeOfDay() }}好！
-				</h2>
-			</view>
-			<!-- 统计刷题区域 -->
-			<view class="content-bottom" :style="{ color: getTextColor }">
-				<view class="count">
-					今日已刷次数<text class="weight" style="color: #8a9ba8;">{{ webHomeCount.todayCount || 0 }}</text>
-				</view>
-				<view class="count">
-					今日已刷题<text class="weight"
-						:style="{ color: getTextColor }">{{ webHomeCount.todayTopicCount || 0 }}</text>
-				</view>
-				<view class="count">
-					共刷题<text class="weight" style="color: #1677ff;">{{ webHomeCount.totalTopicRecordCount || 0 }}/<span
-							style="color: #0056b3;font-weight: bold;">{{ webHomeCount.totalTopicCount || 0 }}</span></text>
-				</view>
-			</view>
-			<!-- 排名 -->
-			<view class="content-db" @click="tapRanking">
-				<view class="text-box">
-					<text class="sort" :style="{ color: getTextColor }">刷题次数排名：第{{ webHomeCount.rank || 0 }}名 / 总{{
-						webHomeCount?.userCount }}人</text>
-				</view>
-				<uni-icons type="arrow-right" size="24" :color="getTextColor" class="clickable-icon"></uni-icons>
-				<image class="rank-img" src="../../static/images/zzjb.png" mode="aspectFill"></image>
-			</view>
-		</view>
-		<!-- 每日必刷 -->
-		<view class="content-center">
-			<!-- 标题 -->
-			<view class="title-box">
-				<uni-icons type="calendar" :style="{ color: getTextColor }" size="30"></uni-icons>
-				<h4 class="title-text" :style="{ color: getTextColor }">每日刷题</h4>
-			</view>
-			<!-- 列表区域 -->
-			<view class="list-box">
-				<view class="list-wrapper">
-					<view class="list-item" v-for="item in topicTodayVo" :key="item">
-						<view class="item-content" @click="handleQuestion(item)">
-							<view class="item-right">
-								<text class="title">{{ item.topicName }}</text>
-								<text class="status-text" v-if="item.status == 0">未刷</text>
-								<text class="status-text ys" v-if="item.status == 1">已刷</text>
-							</view>
-							<view class="info-row">
-								<view class="tags-row" v-for="tag in item.labelNames">
-									<view class="tag">{{ tag }}</view>
-								</view>
-							</view>
-						</view>
-					</view>
-				</view>
-			</view>
-		</view>
-	</view>
-</template>
+
 <style lang="scss" scoped>
-	.content {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
+	.page-container {
+		min-height: 100vh;
+		background-color: #f7f8fa;
+		padding-bottom: 50rpx;
+	}
 
-		.content-center {
-			padding-top: 30rpx;
-			width: 100%;
-			height: 100%;
+	.header-section {
+		height: 280rpx;
+		padding: 70rpx 40rpx 0;
+		position: relative;
+		border-radius: 0 0 40rpx 40rpx;
 
-			.title-box {
-				margin-bottom: 5rpx;
-				padding-left: 30rpx;
-				display: flex;
-				align-items: center;
-				color: #1677ff;
+		.user-info {
+			.greeting {
+				.time-row {
+					display: flex;
+					align-items: center;
+					margin-bottom: 6rpx;
 
-				.title-text {
-					font-weight: 520;
-					margin-left: 5rpx;
+					.time-text {
+						font-size: 26rpx;
+						color: rgba(255, 255, 255, 0.85);
+					}
+
+					.role-badge {
+						margin-left: 12rpx;
+						padding: 2rpx 14rpx;
+						background: rgba(255, 255, 255, 0.15);
+						border-radius: 100rpx;
+						font-size: 18rpx;
+						color: #fff;
+						backdrop-filter: blur(4px);
+					}
+				}
+
+				.nickname {
+					font-size: 44rpx;
+					font-weight: bold;
+					color: #fff;
 				}
 			}
+		}
+	}
 
-			.list-box {
-				.list-wrapper {
-					.list-item {
-						background: #fff;
-						border-radius: 16rpx;
-						padding: 30rpx;
-						margin-bottom: 5rpx;
-						display: flex;
-						align-items: flex-start;
-						justify-content: space-between;
-						box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-						transition: all 0.3s ease;
+	.stats-board {
+		position: absolute;
+		bottom: -50rpx;
+		left: 30rpx;
+		right: 30rpx;
+		background: #fff;
+		border-radius: 20rpx;
+		display: flex;
+		padding: 34rpx 0;
+		box-shadow: 0 10rpx 25rpx rgba(0, 0, 0, 0.05);
+		z-index: 10;
 
-						&:active {
-							transform: scale(0.98);
-						}
+		.stats-item {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 
-						.item-content {
-							flex: 1;
+			.label {
+				font-size: 22rpx;
+				color: #999;
+				margin-bottom: 8rpx;
+			}
 
-							.item-right {
-								display: flex;
-								justify-content: space-between;
+			.value {
+				font-size: 36rpx;
+				font-weight: bold;
+				color: #333;
+				line-height: 1;
+			}
 
-								.status-text {
-									width: 100rpx;
-									text-align: right;
-									font-size: 24rpx;
-									color: #999;
-								}
+			.value-box {
+				display: flex;
+				align-items: baseline;
+				line-height: 1;
 
-								.ys {
-									color: #1677ff;
-								}
-							}
+				.current {
+					font-size: 36rpx;
+					font-weight: bold;
+				}
 
-							.info-row {
-								padding-top: 15rpx;
-								display: flex;
-								align-items: center;
+				.split {
+					font-size: 22rpx;
+					color: #cbd5e1;
+					margin: 0 4rpx;
+				}
 
-								.tags-row {
-									display: flex;
-									flex-wrap: wrap;
-									gap: 12rpx;
-
-									.tag {
-										padding: 6rpx 20rpx;
-										background: rgba(22, 119, 255, 0.08);
-										color: #1677ff;
-										font-size: 24rpx;
-										border-radius: 24rpx;
-										font-weight: 500;
-									}
-								}
-
-
-							}
-						}
-					}
+				.total {
+					font-size: 22rpx;
+					color: #999;
+					font-weight: 500;
 				}
 			}
 		}
 
-		.content-top {
-			border-radius: 0 0 10rpx 5rpx;
-			padding-top: 80rpx;
-			width: 100%;
-			height: 250rpx;
+		.v-divider {
+			width: 1px;
+			height: 32rpx;
+			background: #f0f0f0;
+			align-self: center;
+		}
+	}
+
+	.ranking-bar {
+		margin: 90rpx 30rpx 40rpx;
+		background: #fff;
+		padding: 26rpx 30rpx;
+		border-radius: 20rpx;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		.bar-left {
 			display: flex;
-			flex-direction: column;
-			border-radius: 0rpx 5rpx 5rpx 5rpx;
+			align-items: center;
+
+			.medal-icon {
+				width: 44rpx;
+				height: 44rpx;
+				margin-right: 20rpx;
+			}
+
+			.rank-text {
+				display: flex;
+				flex-direction: column;
+
+				.main-rank {
+					font-size: 26rpx;
+					color: #333;
+					font-weight: 500;
+				}
+
+				.sub-rank {
+					font-size: 20rpx;
+					color: #bbb;
+					margin-top: 2rpx;
+				}
+			}
+		}
+	}
+
+	.task-section {
+		padding: 0 30rpx;
+
+		.section-header {
+			margin-bottom: 24rpx;
+			display: flex;
 			justify-content: space-between;
+			align-items: flex-end;
 
-			.content-db {
-				font-style: italic;
-				font-size: 30rpx;
-				font-weight: bold;
+			.title-left {
 				display: flex;
 				align-items: center;
-				justify-content: space-between;
-				background: rgba(255, 255, 255, 0.2);
-				padding: 10rpx;
-				border-radius: 8rpx;
-				box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
 
-				.text-box {
-					padding-left: 58rpx;
+				.indicator {
+					width: 8rpx;
+					height: 32rpx;
+					border-radius: 4rpx;
+					margin-right: 14rpx;
 				}
 
-				.rank-img {
-					width: 62rpx;
-					height: 62rpx;
-					margin-right: 68rpx;
-				}
-			}
-
-			.content-bottom {
-				padding-left: 70rpx;
-				display: flex;
-				align-items: center;
-				color: #dedede;
-				font-size: 30rpx;
-
-				.weight {
+				.title {
+					font-size: 32rpx;
 					font-weight: bold;
-					margin-right: 15rpx;
+					color: #333;
 				}
 			}
 
+			.subtitle {
+				font-size: 24rpx;
+				color: #ccc;
+				font-weight: 500;
+			}
+		}
 
-			.user-identity {
-				padding-left: 70rpx;
-				display: flex;
-				align-items: center;
+		.topic-card {
+			background: #fff;
+			border-radius: 20rpx;
+			padding: 30rpx;
+			margin-bottom: 20rpx;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			transition: all 0.2s;
 
-				.welcome {
-					font-size: 45rpx;
-					color: #dedede;
+			&:active {
+				transform: scale(0.98);
+				background: #fafafa;
+			}
+
+			.topic-main {
+				flex: 1;
+				margin-right: 20rpx;
+
+				.topic-title {
+					font-size: 29rpx;
+					color: #333;
+					font-weight: 500;
+					margin-bottom: 14rpx;
+					display: block;
+					line-height: 1.4;
 				}
 
+				.topic-tags {
+					display: flex;
+					flex-wrap: wrap;
+					gap: 10rpx;
+
+					.tag {
+						padding: 4rpx 14rpx;
+						background: #f1f4f8;
+						color: #7a8b9a;
+						font-size: 20rpx;
+						border-radius: 6rpx;
+					}
+				}
+			}
+
+			.status-btn {
+				width: 100rpx;
+				height: 54rpx;
+				line-height: 54rpx;
+				text-align: center;
+				font-size: 24rpx;
+				border-radius: 12rpx;
+				flex-shrink: 0;
+				transition: all 0.2s;
 			}
 		}
 	}
