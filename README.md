@@ -73,12 +73,17 @@ h5端： Vue3 + Uv-ui + Uniapp + Zero-markdown-view...
 | SpringBoot    | 3.2   |
 | SpringCloud   | 2023  |
 | SpringAi      |1.0.0-M6|
+-mysql版本太高报错的话可以搜素mysql禁用groupby默认模式
 
 ### 项目效果 👀
 
 哔哩哔哩视频效果演示地址：[https://space.bilibili.com/1680425641?spm_id_from=333.788.0.0](https://space.bilibili.com/1680425641?spm_id_from=333.788.0.0)
 
 ##### 后台
+**大屏**
+
+![输入图片说明](%E5%9B%BE%E7%89%87/eaff5b1d217844249a763fb66bc689c9.png) 
+
 **管理员首页** 
 
 ![输入图片说明](图片/Snipaste_2025-05-08_18-37-22.png)
@@ -204,7 +209,7 @@ npm run dev
 
 ### 项目计划 🔄
 
-##### 后台大屏设计
+##### 后台大屏设计（已完善）
 - 大屏页面顶部左侧**展示不同等级用户的分布情况饼图**
 - 大屏页面顶部右侧**用户使用率系统使用率系统空闲率饼图**
 - 大屏界面中部**飞线图**
@@ -215,8 +220,8 @@ npm run dev
 
 ### 后续计划 📚
 
-- 使用AI智能刷题项目刷题
-- 找工作
+- 沉淀
+
 
 
 
